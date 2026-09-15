@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
-import com.cvpro.app.ui.screens.home.HomeScreen
+import com.cvpro.app.ui.navigation.CvProApp
 import com.cvpro.app.ui.theme.CvProTheme
 import dagger.hilt.android.AndroidEntryPoint
 
@@ -31,12 +31,8 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background,
                 ) {
-                    // El número de versión sale de BuildConfig, que Gradle genera
-                    // a partir del versionName. Requisito de la rúbrica: versión visible.
-                    HomeScreen(
-                        versionName = BuildConfig.VERSION_NAME,
-                        versionCode = BuildConfig.VERSION_CODE,
-                    )
+                    // Raíz de la app: decide entre login y pantalla principal según la sesión.
+                    CvProApp()
                 }
             }
         }

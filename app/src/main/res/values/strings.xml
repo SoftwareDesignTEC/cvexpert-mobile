@@ -4,5 +4,17 @@
     <!-- TODO: confirmar nombre comercial definitivo. -->
     <string name="app_name">CV Pro</string>
     <string name="home_tagline">Tu currículum profesional, sin experiencia previa.</string>
-    <string name="home_version">Versión %1$s (build %2$d)</string>
+    <string name="version_label">Versión %1$s (build %2$d)</string>
+
+    <!-- Login con Google -->
+    <string name="login_button">Continuar con Google</string>
+    <string name="login_retry">Reintentar</string>
+    <string name="login_loading">Iniciando sesión…</string>
+    <string name="login_error_no_account">No encontramos una cuenta de Google en este teléfono. Agrega una desde Ajustes e inténtalo de nuevo.</string>
+    <string name="login_error_configuration">El inicio de sesión no está configurado en esta versión de la app.</string>
+    <string name="login_error_generic">No se pudo iniciar sesión. Revisa tu conexión e inténtalo de nuevo.</string>
+
+    <!-- Pantalla principal -->
+    <string name="home_greeting">Hola, %1$s</string>
+    <string name="home_sign_out">Cerrar sesión</string>
 </resources>
