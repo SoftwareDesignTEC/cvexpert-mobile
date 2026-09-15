@@ -1,8 +1,10 @@
 package com.cvpro.app.ui.theme
 
 import androidx.compose.material3.Typography
+import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
 import com.cvpro.app.R
 
@@ -20,12 +22,21 @@ import com.cvpro.app.R
  * Arma una familia a partir de una fuente variable.
  *
  * Una fuente variable trae todos los pesos en un solo archivo. Por cada peso que usa la app
- * se declara un Font que apunta al mismo archivo; en Android 8+ (minSdk 26) Compose le aplica
- * ese grosor al eje de peso de la fuente automáticamente.
+ * se declara un Font que apunta al mismo archivo y le pide ese grosor con FontVariation.
+ *
+ * Solo pasar `weight` NO alcanza: Compose lo usa para elegir entre fuentes, pero no mueve el
+ * eje de peso del archivo, y todo se ve en el peso por defecto (verificado en el emulador).
+ * FontVariation está marcada como experimental; es la forma que da Compose para esto, y la
+ * versión de Compose está anclada en el catálogo, así que no cambia sin que lo decidamos.
  */
+@OptIn(ExperimentalTextApi::class)
 private fun variableFontFamily(resId: Int): FontFamily = FontFamily(
     listOf(FontWeight.Normal, FontWeight.Medium, FontWeight.SemiBold, FontWeight.Bold).map { weight ->
-        Font(resId = resId, weight = weight)
+        Font(
+            resId = resId,
+            weight = weight,
+            variationSettings = FontVariation.Settings(FontVariation.weight(weight.weight)),
+        )
     },
 )
 
