@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Capa frontal del ícono adaptativo: un documento (hoja de vida) dibujado como
+  vector, sin PNGs. El lienzo es de 108dp y el contenido se mantiene dentro de
+  los 72dp centrales (zona segura) para que ningún launcher lo recorte.
+  Los colores salen de colors.xml: acá no se repite ningún hex.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!-- Hoja con la esquina doblada -->
+    <path
+        android:fillColor="@color/ic_launcher_sheet"
+        android:pathData="M38,26h26l16,16v40c0,2.2 -1.8,4 -4,4H38c-2.2,0 -4,-1.8 -4,-4V30c0,-2.2 1.8,-4 4,-4z" />
+    <path
+        android:fillColor="@color/ic_launcher_fold"
+        android:pathData="M64,26l16,16H68c-2.2,0 -4,-1.8 -4,-4V26z" />
+
+    <!-- Líneas de texto del CV -->
+    <path
+        android:fillColor="@color/brand_blue"
+        android:pathData="M43,52h22v4H43z" />
+    <path
+        android:fillColor="@color/brand_blue"
+        android:pathData="M43,62h22v4H43z" />
+    <path
+        android:fillColor="@color/brand_blue"
+        android:pathData="M43,72h14v4H43z" />
+</vector>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Tema XML mínimo: solo lo que Android necesita ANTES de que arranque Compose
+  (fondo de la ventana y ausencia de ActionBar). El tema real de la app
+  (colores, tipografía, claro/oscuro) está en Kotlin: ui/theme/Theme.kt.
+-->
+<resources>
+    <style name="Theme.CvPro" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>

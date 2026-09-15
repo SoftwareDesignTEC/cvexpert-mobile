@@ -1,0 +1,8 @@
+# Normaliza los finales de linea: evita diffs falsos cuando Justin y yo
+# trabajemos el mismo archivo desde Windows.
+* text=auto eol=lf
+*.bat text eol=crlf
+gradlew text eol=lf
+*.jar binary
+*.apk binary
+*.png binary

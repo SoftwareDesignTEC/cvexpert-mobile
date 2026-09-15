@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Variante del tema XML cuando el sistema está en modo oscuro: evita el
+     "flash" blanco de la ventana antes de que Compose pinte la UI. -->
+<resources>
+    <style name="Theme.CvPro" parent="android:Theme.Material.NoActionBar" />
+</resources>
