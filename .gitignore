@@ -8,6 +8,7 @@ secrets.properties
 
 # --- Build ---
 .gradle/
+.kotlin/
 build/
 captures/
 .cxx/
