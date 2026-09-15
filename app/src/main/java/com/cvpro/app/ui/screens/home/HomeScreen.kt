@@ -6,6 +6,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -15,19 +17,22 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.cvpro.app.R
+import com.cvpro.app.domain.model.User
+import com.cvpro.app.ui.components.VersionLabel
 import com.cvpro.app.ui.theme.CvProTheme
 
 /**
- * Pantalla inicial provisional del scaffold (T1).
+ * Pantalla principal provisional: saluda al usuario con sesión iniciada.
  *
- * Es un composable "sin estado" (stateless): no conoce ViewModels ni BuildConfig,
- * solo recibe datos planos. Así se puede previsualizar y reutilizar.
- * En T2 esta pantalla se reemplaza por el grafo de navegación real.
+ * Es un composable sin estado: recibe el usuario y la acción de cerrar sesión, sin conocer
+ * ViewModels ni BuildConfig. En T2 se reemplaza por el Panel Principal del diseño.
  */
 @Composable
 fun HomeScreen(
+    user: User,
     versionName: String,
     versionCode: Int,
+    onSignOutClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -45,34 +50,51 @@ fun HomeScreen(
             color = MaterialTheme.colorScheme.primary,
         )
         Text(
-            text = stringResource(R.string.home_tagline),
-            style = MaterialTheme.typography.bodyLarge,
+            text = stringResource(R.string.home_greeting, user.name),
+            style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onBackground,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(top = 8.dp),
+            modifier = Modifier.padding(top = 16.dp),
         )
-        // Requisito de la rúbrica: el número de versión debe verse dentro de la app.
         Text(
-            text = stringResource(R.string.home_version, versionName, versionCode),
-            style = MaterialTheme.typography.labelMedium,
+            text = user.email,
+            style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 4.dp),
+        )
+        OutlinedButton(
+            onClick = onSignOutClick,
+            modifier = Modifier.padding(top = 32.dp),
+        ) {
+            Text(text = stringResource(R.string.home_sign_out))
+        }
+        VersionLabel(
+            versionName = versionName,
+            versionCode = versionCode,
             modifier = Modifier.padding(top = 24.dp),
         )
     }
 }
 
-@Preview(name = "Claro", showBackground = true)
+/** Envuelve los previews con el fondo del tema, para que el modo oscuro no salga sobre blanco. */
 @Composable
-private fun HomeScreenPreviewLight() {
-    CvProTheme(darkTheme = false) {
-        HomeScreen(versionName = "0.1.0", versionCode = 1)
+private fun HomePreview(darkTheme: Boolean) {
+    CvProTheme(darkTheme = darkTheme) {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            HomeScreen(
+                user = User(name = "María Rodríguez", email = "maria@ejemplo.com", photoUrl = null),
+                versionName = "0.1.0",
+                versionCode = 1,
+                onSignOutClick = {},
+            )
+        }
     }
 }
 
-@Preview(name = "Oscuro", showBackground = true)
+@Preview(name = "Claro")
 @Composable
-private fun HomeScreenPreviewDark() {
-    CvProTheme(darkTheme = true) {
-        HomeScreen(versionName = "0.1.0", versionCode = 1)
-    }
-}
+private fun HomeScreenPreviewLight() = HomePreview(darkTheme = false)
+
+@Preview(name = "Oscuro")
+@Composable
+private fun HomeScreenPreviewDark() = HomePreview(darkTheme = true)

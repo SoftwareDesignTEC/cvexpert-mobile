@@ -12,13 +12,17 @@ plugins {
     alias(libs.plugins.hilt)
 }
 
-// La URL del APIM NUNCA se hardcodea ni se sube al repo:
-// se lee de local.properties, que está en .gitignore, y se expone vía BuildConfig.
+// Valores de configuración que NUNCA se escriben en el código ni se suben al repo.
+// En local salen de local.properties (está en .gitignore); en GitHub Actions, de variables
+// de entorno que el workflow carga desde los secrets. Se exponen vía BuildConfig.
 val localProperties = Properties().apply {
     val file = rootProject.file("local.properties")
     if (file.exists()) file.inputStream().use { load(it) }
 }
-val apimBaseUrl: String = localProperties.getProperty("APIM_BASE_URL").orEmpty()
+
+fun configValue(name: String): String =
+    localProperties.getProperty(name)?.takeIf { it.isNotBlank() }
+        ?: System.getenv(name).orEmpty()
 
 android {
     // namespace = paquete de las clases generadas (R, BuildConfig).
@@ -35,8 +39,10 @@ android {
         versionCode = 1
         versionName = "0.1.0"
 
-        // Se inyecta como constante en BuildConfig.APIM_BASE_URL.
-        buildConfigField("String", "APIM_BASE_URL", "\"$apimBaseUrl\"")
+        // Se inyectan como constantes en BuildConfig.
+        buildConfigField("String", "APIM_BASE_URL", "\"${configValue("APIM_BASE_URL")}\"")
+        // Web client ID de Google (OAuth). Es el mismo que usa la web como VITE_GOOGLE_CLIENT_ID.
+        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"${configValue("GOOGLE_WEB_CLIENT_ID")}\"")
     }
 
     buildTypes {
@@ -77,7 +83,15 @@ kotlin {
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
+    implementation(libs.androidx.lifecycle.runtime.compose)
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
     implementation(libs.androidx.activity.compose)
+
+    // Login con Google: Credential Manager + Google ID (Google Sign-In nativo).
+    implementation(libs.androidx.credentials)
+    implementation(libs.androidx.credentials.play.services.auth)
+    implementation(libs.googleid)
 
     // El BOM alinea las versiones de todo Compose; por eso las libs de abajo no llevan versión.
     implementation(platform(libs.androidx.compose.bom))
