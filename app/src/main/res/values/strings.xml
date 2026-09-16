@@ -14,7 +14,34 @@
     <string name="login_error_configuration">El inicio de sesión no está configurado en esta versión de la app.</string>
     <string name="login_error_generic">No se pudo iniciar sesión. Revisa tu conexión e inténtalo de nuevo.</string>
 
-    <!-- Pantalla principal -->
+    <!-- Panel Principal -->
     <string name="home_greeting">Hola, %1$s</string>
+    <string name="home_subtitle">Desde aquí vas a manejar tus currículums, tus postulaciones y las ofertas que te sirven.</string>
+    <string name="home_shortcut_templates">Crear currículum sin conexión</string>
+    <string name="home_shortcut_skills_gap">Ver áreas de mejora</string>
     <string name="home_sign_out">Cerrar sesión</string>
+
+    <!-- Navegación: nombres de los destinos del menú -->
+    <string name="destination_dashboard">Panel Principal</string>
+    <string name="destination_cvs">Mis Currículums</string>
+    <string name="destination_profile">Mi Perfil</string>
+    <string name="destination_jobs">Ofertas Laborales</string>
+    <string name="destination_skills_gap">Análisis de Brechas</string>
+    <string name="destination_templates">Plantillas</string>
+    <string name="destination_applications">Postulaciones</string>
+    <string name="destination_settings">Configuración</string>
+
+    <!-- Navegación: descripciones para lectores de pantalla -->
+    <string name="nav_open_menu">Abrir el menú</string>
+    <string name="nav_notifications">Notificaciones</string>
+    <string name="nav_profile">Mi perfil</string>
+
+    <!-- Pantallas todavía sin contenido -->
+    <string name="placeholder_cvs">Acá vas a ver tus currículums, con vista previa, editar y descargar.</string>
+    <string name="placeholder_profile">Acá vas a completar tus datos personales, de contacto y tus preferencias.</string>
+    <string name="placeholder_jobs">Acá vas a buscar ofertas y ver qué tanto encajan con tu perfil.</string>
+    <string name="placeholder_skills_gap">Acá vas a comparar tus habilidades con las del mercado y ver cursos para mejorar.</string>
+    <string name="placeholder_templates">Acá vas a elegir una plantilla, incluso sin conexión, o descargar otras nuevas.</string>
+    <string name="placeholder_applications">Acá vas a seguir tus postulaciones en un tablero por estado.</string>
+    <string name="placeholder_settings">Acá vas a configurar tu cuenta, las notificaciones y el tema de la app.</string>
 </resources>

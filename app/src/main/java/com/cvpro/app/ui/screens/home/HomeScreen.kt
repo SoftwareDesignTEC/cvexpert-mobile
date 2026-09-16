@@ -3,8 +3,9 @@ package com.cvpro.app.ui.screens.home
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
@@ -22,56 +23,61 @@ import com.cvpro.app.ui.components.VersionLabel
 import com.cvpro.app.ui.theme.CvProTheme
 
 /**
- * Pantalla principal provisional: saluda al usuario con sesión iniciada.
+ * Panel Principal: la pantalla de entrada después del login.
  *
- * Es un composable sin estado: recibe el usuario y la acción de cerrar sesión, sin conocer
- * ViewModels ni BuildConfig. En T2 se reemplaza por el Panel Principal del diseño.
+ * Por ahora saluda al usuario y deja los dos accesos directos que tiene el prototipo.
+ * El contenido real (currículums recientes, análisis de habilidades y ofertas
+ * recomendadas) se arma cuando haya datos.
  */
 @Composable
 fun HomeScreen(
     user: User,
     versionName: String,
     versionCode: Int,
-    onSignOutClick: () -> Unit,
+    onTemplatesClick: () -> Unit,
+    onSkillsGapClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
         modifier = modifier
             .fillMaxSize()
-            // Deja libres las zonas del sistema (barra de estado y de gestos).
-            .safeDrawingPadding()
             .padding(24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Text(
-            text = stringResource(R.string.app_name),
-            style = MaterialTheme.typography.headlineLarge,
-            color = MaterialTheme.colorScheme.primary,
-        )
-        Text(
             text = stringResource(R.string.home_greeting, user.name),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onBackground,
             textAlign = TextAlign.Center,
-            modifier = Modifier.padding(top = 16.dp),
         )
         Text(
-            text = user.email,
+            text = stringResource(R.string.home_subtitle),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 4.dp),
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(top = 8.dp),
         )
-        OutlinedButton(
-            onClick = onSignOutClick,
-            modifier = Modifier.padding(top = 32.dp),
+        Button(
+            onClick = onTemplatesClick,
+            modifier = Modifier
+                .padding(top = 32.dp)
+                .fillMaxWidth(),
         ) {
-            Text(text = stringResource(R.string.home_sign_out))
+            Text(text = stringResource(R.string.home_shortcut_templates))
+        }
+        OutlinedButton(
+            onClick = onSkillsGapClick,
+            modifier = Modifier
+                .padding(top = 12.dp)
+                .fillMaxWidth(),
+        ) {
+            Text(text = stringResource(R.string.home_shortcut_skills_gap))
         }
         VersionLabel(
             versionName = versionName,
             versionCode = versionCode,
-            modifier = Modifier.padding(top = 24.dp),
+            modifier = Modifier.padding(top = 32.dp),
         )
     }
 }
@@ -85,7 +91,8 @@ private fun HomePreview(darkTheme: Boolean) {
                 user = User(name = "María Rodríguez", email = "maria@ejemplo.com", photoUrl = null),
                 versionName = "0.1.0",
                 versionCode = 1,
-                onSignOutClick = {},
+                onTemplatesClick = {},
+                onSkillsGapClick = {},
             )
         }
     }

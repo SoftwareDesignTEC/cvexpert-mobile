@@ -11,6 +11,7 @@
 #   - lifecycle 2.11+ exige compileSdk 37 y AGP 9.1
 #   - kotlin 2.4+ genera metadatos que Hilt 2.58 no sabe leer (máximo 2.3)
 #   - hiltLifecycleViewmodelCompose 1.4+ exige compileSdk 37 y AGP 9.1
+#   - navigation 2.10+ exige compileSdk 37 y AGP 9.1
 [versions]
 agp = "8.13.2"
 kotlin = "2.3.21"
@@ -21,6 +22,7 @@ coreKtx = "1.16.0"
 activityCompose = "1.10.1"
 lifecycle = "2.10.0"
 composeBom = "2026.06.01"
+navigation = "2.9.8"
 credentials = "1.6.0"
 googleid = "1.2.0"
 
@@ -45,6 +47,11 @@ androidx-compose-ui-graphics = { group = "androidx.compose.ui", name = "ui-graph
 androidx-compose-ui-tooling = { group = "androidx.compose.ui", name = "ui-tooling" }
 androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "ui-tooling-preview" }
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
+# Íconos básicos de Material (menú, perfil, notificaciones...). Material 3 ya no los incluye.
+androidx-compose-material-icons-core = { group = "androidx.compose.material", name = "material-icons-core" }
+
+# Navigation Component para Compose: el grafo de navegación de la app.
+androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigation" }
 
 hilt-android = { group = "com.google.dagger", name = "hilt-android", version.ref = "hilt" }
 hilt-compiler = { group = "com.google.dagger", name = "hilt-android-compiler", version.ref = "hilt" }
