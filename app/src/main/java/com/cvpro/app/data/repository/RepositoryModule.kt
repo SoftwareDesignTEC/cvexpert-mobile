@@ -1,6 +1,7 @@
 package com.cvpro.app.data.repository
 
 import com.cvpro.app.domain.repository.AuthRepository
+import com.cvpro.app.domain.repository.JobOfferRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -20,4 +21,9 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindAuthRepository(impl: GoogleAuthRepository): AuthRepository
+
+    // TODO: cambiar por la implementación contra el APIM cuando existan los mocks.
+    @Binds
+    @Singleton
+    abstract fun bindJobOfferRepository(impl: SampleJobOfferRepository): JobOfferRepository
 }
