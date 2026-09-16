@@ -9,7 +9,6 @@
     <!-- Login con Google -->
     <string name="login_button">Continuar con Google</string>
     <string name="login_retry">Reintentar</string>
-    <string name="login_loading">Iniciando sesión…</string>
     <string name="login_error_no_account">No encontramos una cuenta de Google en este teléfono. Agrega una desde Ajustes e inténtalo de nuevo.</string>
     <string name="login_error_configuration">El inicio de sesión no está configurado en esta versión de la app.</string>
     <string name="login_error_generic">No se pudo iniciar sesión. Revisa tu conexión e inténtalo de nuevo.</string>
@@ -36,9 +35,31 @@
     <string name="nav_notifications">Notificaciones</string>
     <string name="nav_profile">Mi perfil</string>
 
+    <!-- Validación de formularios -->
+    <string name="validation_required">Este campo es obligatorio.</string>
+    <string name="validation_email">Escribe un correo válido, por ejemplo nombre@correo.com.</string>
+    <string name="validation_phone">El teléfono debe tener 8 dígitos.</string>
+    <string name="validation_min_length">Escribe al menos 3 caracteres.</string>
+
+    <!-- Estados de las pantallas -->
+    <string name="state_loading">Cargando…</string>
+    <string name="state_error_title">Algo salió mal</string>
+    <string name="state_retry">Reintentar</string>
+
+    <!-- Mi Perfil -->
+    <string name="profile_section_personal">Información personal</string>
+    <string name="profile_pending_notice">Tus datos todavía no se envían a ningún lado: falta conectar el servicio.</string>
+    <string name="profile_field_name">Nombre completo</string>
+    <string name="profile_field_email">Correo electrónico</string>
+    <string name="profile_field_phone">Teléfono</string>
+    <string name="profile_field_phone_helper">Opcional. 8 dígitos.</string>
+    <string name="profile_field_location">Residencia</string>
+    <string name="profile_save">Guardar cambios</string>
+    <string name="profile_saved_pending">Datos validados. Falta conectar el servicio para guardarlos.</string>
+    <string name="profile_form_invalid">Revisa los campos marcados en rojo.</string>
+
     <!-- Pantallas todavía sin contenido -->
     <string name="placeholder_cvs">Acá vas a ver tus currículums, con vista previa, editar y descargar.</string>
-    <string name="placeholder_profile">Acá vas a completar tus datos personales, de contacto y tus preferencias.</string>
     <string name="placeholder_jobs">Acá vas a buscar ofertas y ver qué tanto encajan con tu perfil.</string>
     <string name="placeholder_skills_gap">Acá vas a comparar tus habilidades con las del mercado y ver cursos para mejorar.</string>
     <string name="placeholder_templates">Acá vas a elegir una plantilla, incluso sin conexión, o descargar otras nuevas.</string>
