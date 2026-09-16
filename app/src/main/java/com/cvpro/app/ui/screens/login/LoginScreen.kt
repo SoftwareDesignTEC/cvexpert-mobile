@@ -3,11 +3,8 @@ package com.cvpro.app.ui.screens.login
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
-import androidx.compose.material3.Button
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -24,6 +21,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cvpro.app.BuildConfig
 import com.cvpro.app.R
+import com.cvpro.app.ui.components.PrimaryButton
 import com.cvpro.app.ui.components.VersionLabel
 import com.cvpro.app.ui.theme.CvProTheme
 
@@ -85,38 +83,25 @@ fun LoginScreen(
             modifier = Modifier.padding(top = 8.dp),
         )
 
-        if (uiState.isLoading) {
-            CircularProgressIndicator(modifier = Modifier.padding(top = 48.dp))
+        uiState.errorMessage?.let { message ->
             Text(
-                text = stringResource(R.string.login_loading),
+                text = stringResource(message),
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 16.dp),
+                color = MaterialTheme.colorScheme.error,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.padding(top = 32.dp),
             )
-        } else {
-            uiState.errorMessage?.let { message ->
-                Text(
-                    text = stringResource(message),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.error,
-                    textAlign = TextAlign.Center,
-                    modifier = Modifier.padding(top = 32.dp),
-                )
-            }
-            Button(
-                onClick = onSignInClick,
-                modifier = Modifier
-                    .padding(top = if (uiState.errorMessage == null) 48.dp else 16.dp)
-                    .fillMaxWidth(),
-            ) {
-                // Con error, el mismo botón funciona como "Reintentar".
-                Text(
-                    text = stringResource(
-                        if (uiState.errorMessage == null) R.string.login_button else R.string.login_retry,
-                    ),
-                )
-            }
         }
+        // El botón muestra la rueda mientras carga, así que no hace falta manejarlo acá.
+        // Con error, el mismo botón funciona como "Reintentar".
+        PrimaryButton(
+            text = stringResource(
+                if (uiState.errorMessage == null) R.string.login_button else R.string.login_retry,
+            ),
+            onClick = onSignInClick,
+            isLoading = uiState.isLoading,
+            modifier = Modifier.padding(top = if (uiState.errorMessage == null) 48.dp else 16.dp),
+        )
 
         VersionLabel(
             versionName = versionName,
