@@ -1,19 +1,28 @@
 package com.cvpro.app.ui.navigation
 
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.DrawerValue
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.cvpro.app.BuildConfig
-import com.cvpro.app.ui.screens.home.HomeScreen
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.cvpro.app.ui.screens.login.LoginRoute
+import kotlinx.coroutines.launch
 
 /**
- * Raíz de la app: sin sesión muestra el login; con sesión, la pantalla principal.
+ * Raíz de la app.
  *
- * Es una puerta de sesión provisional. En T2 se reemplaza por el grafo de navegación
- * (Navigation Component), que va a mantener esta misma regla.
+ * Sin sesión muestra el login, y solo eso: no hay menú ni barra superior.
+ * Con sesión arma el marco de la app (menú lateral + barra superior) y adentro el grafo
+ * de navegación, que es el que cambia de pantalla.
  */
 @Composable
 fun CvProApp(
@@ -25,13 +34,53 @@ fun CvProApp(
 
     if (user == null) {
         LoginRoute(modifier = modifier)
-    } else {
-        HomeScreen(
-            user = user,
-            versionName = BuildConfig.VERSION_NAME,
-            versionCode = BuildConfig.VERSION_CODE,
-            onSignOutClick = sessionViewModel::signOut,
-            modifier = modifier,
-        )
+        return
+    }
+
+    val navController = rememberNavController()
+    val drawerState = rememberDrawerState(DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+
+    // Destino actual: lo usan el título de la barra y el resaltado del menú.
+    val backStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = CvProDestination.fromRoute(backStackEntry?.destination?.route)
+        ?: CvProDestination.START
+
+    val goTo: (CvProDestination) -> Unit = { destination ->
+        navController.navigateToDestination(destination)
+        scope.launch { drawerState.close() }
+    }
+
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            CvProDrawer(
+                user = user,
+                currentDestination = currentDestination,
+                onDestinationClick = goTo,
+                onSignOutClick = {
+                    scope.launch { drawerState.close() }
+                    sessionViewModel.signOut()
+                },
+            )
+        },
+        modifier = modifier,
+    ) {
+        Scaffold(
+            topBar = {
+                CvProTopBar(
+                    title = stringResource(currentDestination.titleRes),
+                    onMenuClick = { scope.launch { drawerState.open() } },
+                    onNotificationsClick = { goTo(CvProDestination.APPLICATIONS) },
+                    onProfileClick = { goTo(CvProDestination.PROFILE) },
+                )
+            },
+        ) { innerPadding ->
+            CvProNavGraph(
+                navController = navController,
+                user = user,
+                modifier = Modifier.padding(innerPadding),
+            )
+        }
     }
 }
