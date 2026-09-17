@@ -89,9 +89,15 @@
     <string name="application_status_rejected">Rechazado</string>
     <string name="application_status_accepted">Aceptado</string>
 
+    <!-- Configuración -->
+    <string name="settings_theme_title">Tema</string>
+    <string name="settings_theme_description">Elegí cómo querés ver la app. Tu elección se guarda en este teléfono.</string>
+    <string name="settings_theme_system">Seguir el ajuste del sistema</string>
+    <string name="settings_theme_light">Claro</string>
+    <string name="settings_theme_dark">Oscuro</string>
+
     <!-- Pantallas todavía sin contenido -->
     <string name="placeholder_cvs">Acá vas a ver tus currículums, con vista previa, editar y descargar.</string>
     <string name="placeholder_skills_gap">Acá vas a comparar tus habilidades con las del mercado y ver cursos para mejorar.</string>
     <string name="placeholder_templates">Acá vas a elegir una plantilla, incluso sin conexión, o descargar otras nuevas.</string>
-    <string name="placeholder_settings">Acá vas a configurar tu cuenta, las notificaciones y el tema de la app.</string>
 </resources>

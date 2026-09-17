@@ -2,6 +2,7 @@ package com.cvpro.app.data.repository
 
 import com.cvpro.app.domain.repository.AuthRepository
 import com.cvpro.app.domain.repository.JobOfferRepository
+import com.cvpro.app.domain.repository.SettingsRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -26,4 +27,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindJobOfferRepository(impl: SampleJobOfferRepository): JobOfferRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindSettingsRepository(impl: DataStoreSettingsRepository): SettingsRepository
 }

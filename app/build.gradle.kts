@@ -101,6 +101,7 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.core)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.navigation.compose)
+    implementation(libs.androidx.datastore.preferences)
     // Solo en debug: motor de los @Preview de Android Studio.
     debugImplementation(libs.androidx.compose.ui.tooling)
 
