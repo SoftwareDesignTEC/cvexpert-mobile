@@ -89,7 +89,22 @@
     <string name="application_status_in_progress">En proceso</string>
     <string name="application_status_interview">Entrevista</string>
     <string name="application_status_rejected">Rechazado</string>
-    <string name="application_status_accepted">Aceptado</string>
+
+    <!-- Análisis de Brechas -->
+    <string name="skills_gap_target">Comparado con: %1$s</string>
+    <string name="skills_gap_series_user">Tus habilidades</string>
+    <string name="skills_gap_series_market">Lo que piden las ofertas</string>
+    <string name="skills_gap_to_improve_title">Habilidades por mejorar</string>
+    <string name="skills_gap_no_gaps">Estás al nivel que piden las ofertas en todas tus habilidades.</string>
+    <string name="skills_gap_levels">Vos %1$d · Mercado %2$d</string>
+    <string name="skills_gap_amount">-%1$d</string>
+    <string name="skills_gap_courses_title">Cursos para mejorar</string>
+    <string name="skills_gap_course_details">%1$s · %2$s</string>
+    <string name="skills_gap_course_no_duration">Duración no indicada</string>
+    <string name="skills_gap_course_paid">De paga</string>
+    <string name="skills_gap_course_free">Gratis</string>
+    <string name="skills_gap_error_network">No pudimos cargar tu análisis. Revisa tu conexión e inténtalo de nuevo.</string>
+    <string name="skills_gap_error_generic">Algo salió mal al cargar tu análisis.</string>
 
     <!-- Configuración -->
     <string name="settings_theme_title">Tema</string>
@@ -100,6 +115,5 @@
 
     <!-- Pantallas todavía sin contenido -->
     <string name="placeholder_cvs">Acá vas a ver tus currículums, con vista previa, editar y descargar.</string>
-    <string name="placeholder_skills_gap">Acá vas a comparar tus habilidades con las del mercado y ver cursos para mejorar.</string>
     <string name="placeholder_templates">Acá vas a elegir una plantilla, incluso sin conexión, o descargar otras nuevas.</string>
 </resources>

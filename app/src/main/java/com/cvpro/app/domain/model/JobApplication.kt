@@ -20,12 +20,11 @@ data class JobApplication(
 /**
  * Columnas del tablero de postulaciones, en el orden en que avanza el proceso.
  *
- * Son los cinco estados del contrato de la web.
+ * Son los cuatro estados del contrato de la web.
  */
 enum class ApplicationStatus {
     APPLIED,
     IN_PROGRESS,
     INTERVIEW,
     REJECTED,
-    ACCEPTED,
 }

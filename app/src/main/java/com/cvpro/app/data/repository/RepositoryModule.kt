@@ -3,6 +3,7 @@ package com.cvpro.app.data.repository
 import com.cvpro.app.domain.repository.AuthRepository
 import com.cvpro.app.domain.repository.JobOfferRepository
 import com.cvpro.app.domain.repository.SettingsRepository
+import com.cvpro.app.domain.repository.SkillsGapRepository
 import dagger.Binds
 import dagger.Module
 import dagger.hilt.InstallIn
@@ -31,4 +32,9 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindSettingsRepository(impl: DataStoreSettingsRepository): SettingsRepository
+
+    // TODO: cambiar por la implementación contra el APIM cuando existan los mocks.
+    @Binds
+    @Singleton
+    abstract fun bindSkillsGapRepository(impl: SampleSkillsGapRepository): SkillsGapRepository
 }

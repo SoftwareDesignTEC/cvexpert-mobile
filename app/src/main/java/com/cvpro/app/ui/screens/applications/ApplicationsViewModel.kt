@@ -14,7 +14,7 @@ import javax.inject.Inject
 /**
  * Estado del tablero de postulaciones.
  *
- * @property selectedStatus columna que se está viendo. En la web las cinco columnas se ven a
+ * @property selectedStatus columna que se está viendo. En la web las columnas se ven todas a
  * la vez; en el teléfono no caben, así que se muestran como pestañas y se ve una a la vez.
  */
 data class ApplicationsUiState(
@@ -52,7 +52,6 @@ class ApplicationsViewModel @Inject constructor() : ViewModel() {
             JobApplication("3", "Agente de servicio al cliente", "Teleperformance", "Heredia", JobModality.HYBRID, ApplicationStatus.IN_PROGRESS, "08/09/2026"),
             JobApplication("4", "Practicante de mercadeo digital", "Pozuelo", "San José", JobModality.HYBRID, ApplicationStatus.INTERVIEW, "05/09/2026"),
             JobApplication("5", "Auxiliar contable", "Despacho Carvajal", "Heredia", JobModality.HYBRID, ApplicationStatus.REJECTED, "01/09/2026"),
-            JobApplication("6", "Community manager junior", "Agencia Nova", "Todo el país", JobModality.REMOTE, ApplicationStatus.ACCEPTED, "28/08/2026"),
         )
     }
 }

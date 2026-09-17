@@ -47,7 +47,7 @@ fun ApplicationsScreen(
 /**
  * Tablero de postulaciones.
  *
- * Las cinco columnas del diseño web se convierten en pestañas, con el número de
+ * Las cuatro columnas del diseño se convierten en pestañas, con el número de
  * postulaciones de cada una. Cada pestaña muestra su lista, o el estado vacío si no tiene.
  */
 @Composable
@@ -141,7 +141,6 @@ private fun ApplicationStatus.labelRes(): Int = when (this) {
     ApplicationStatus.IN_PROGRESS -> R.string.application_status_in_progress
     ApplicationStatus.INTERVIEW -> R.string.application_status_interview
     ApplicationStatus.REJECTED -> R.string.application_status_rejected
-    ApplicationStatus.ACCEPTED -> R.string.application_status_accepted
 }
 
 private fun JobModality.labelRes(): Int = when (this) {

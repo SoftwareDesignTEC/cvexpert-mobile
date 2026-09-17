@@ -100,8 +100,7 @@ export type ApplicationStatus =
     | 'applied'      // Aplicado
     | 'in-progress'  // En proceso
     | 'interview'    // Entrevista
-    | 'rejected'     // Rechazado
-    | 'accepted';    // Aceptado
+    | 'rejected';   // Rechazado
 
 export interface JobApplication {
     id: string;
@@ -117,11 +116,17 @@ export interface JobApplication {
 
 // ─── ANÁLISIS DE BRECHA DE HABILIDADES ───────────────────────────────────────
 
+export interface SkillGapItem {
+    name: string;        // ej: "Comunicación"
+    userLevel: number;   // 0-100, nivel actual del usuario
+    marketLevel: number; // 0-100, lo que pide el mercado
+}
+
 export interface SkillsGapAnalysis {
     id: string;
     userId: string;
     targetJobTitle: string;
-    missingSkills: string[];
+    skills: SkillGapItem[];        // reemplaza missingSkills
     recommendations: CourseRecommendation[];
     createdAt: string;
 }
