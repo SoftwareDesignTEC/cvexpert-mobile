@@ -33,6 +33,8 @@
     <!-- Navegación: descripciones para lectores de pantalla -->
     <string name="nav_open_menu">Abrir el menú</string>
     <string name="nav_notifications">Notificaciones</string>
+    <string name="nav_theme_to_dark">Cambiar a modo oscuro</string>
+    <string name="nav_theme_to_light">Cambiar a modo claro</string>
     <string name="nav_profile">Mi perfil</string>
 
     <!-- Validación de formularios -->

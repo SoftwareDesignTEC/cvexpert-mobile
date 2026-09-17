@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Sol: se muestra cuando la app está en oscuro, para indicar que al tocar se pasa a claro.
+  El color lo pone quien lo dibuja (Icon aplica el tinte del tema), por eso acá va blanco.
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="@android:color/white">
+
+    <!-- Centro -->
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M12,7c-2.76,0 -5,2.24 -5,5s2.24,5 5,5 5,-2.24 5,-5 -2.24,-5 -5,-5z" />
+
+    <!-- Rayos: arriba, abajo, izquierda y derecha -->
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M11,1h2v3h-2zM11,20h2v3h-2zM1,11h3v2H1zM20,11h3v2h-3z" />
+
+    <!-- Rayos en diagonal -->
+    <path
+        android:fillColor="@android:color/white"
+        android:pathData="M4.22,5.64l1.42,-1.42 2.12,2.12 -1.42,1.42zM16.24,17.66l1.42,-1.42 2.12,2.12 -1.42,1.42zM17.66,7.76l-1.42,-1.42 2.12,-2.12 1.42,1.42zM5.64,19.78l-1.42,-1.42 2.12,-2.12 1.42,1.42z" />
+</vector>
