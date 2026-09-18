@@ -1,5 +1,6 @@
 package com.cvpro.app.ui.navigation
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ModalNavigationDrawer
@@ -20,6 +21,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.cvpro.app.ui.components.LocalSnackbarHostState
 import com.cvpro.app.ui.screens.login.LoginRoute
+import com.cvpro.app.ui.theme.ThemeViewModel
 import kotlinx.coroutines.launch
 
 /**
@@ -33,9 +35,15 @@ import kotlinx.coroutines.launch
 fun CvProApp(
     modifier: Modifier = Modifier,
     sessionViewModel: SessionViewModel = hiltViewModel(),
+    themeViewModel: ThemeViewModel = hiltViewModel(),
 ) {
     val currentUser by sessionViewModel.currentUser.collectAsStateWithLifecycle()
     val user = currentUser
+
+    // Cómo se está viendo la app ahora mismo: la preferencia guardada, y si es "seguir al
+    // sistema", lo que diga el teléfono. Lo usa el botón de la barra para saber qué ofrecer.
+    val themePreference by themeViewModel.themePreference.collectAsStateWithLifecycle()
+    val isDarkTheme = themePreference.isDark(isSystemInDarkTheme())
 
     if (user == null) {
         LoginRoute(modifier = modifier)
@@ -78,7 +86,9 @@ fun CvProApp(
             topBar = {
                 CvProTopBar(
                     title = stringResource(currentDestination.titleRes),
+                    isDarkTheme = isDarkTheme,
                     onMenuClick = { scope.launch { drawerState.open() } },
+                    onToggleThemeClick = { themeViewModel.toggleTheme(isDarkTheme) },
                     onNotificationsClick = { goTo(CvProDestination.APPLICATIONS) },
                     onProfileClick = { goTo(CvProDestination.PROFILE) },
                 )

@@ -11,6 +11,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import com.cvpro.app.R
 
@@ -25,7 +26,9 @@ import com.cvpro.app.R
 @Composable
 fun CvProTopBar(
     title: String,
+    isDarkTheme: Boolean,
     onMenuClick: () -> Unit,
+    onToggleThemeClick: () -> Unit,
     onNotificationsClick: () -> Unit,
     onProfileClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -41,6 +44,18 @@ fun CvProTopBar(
             }
         },
         actions = {
+            // Cambio rápido de tema. El ícono muestra a qué se va a cambiar: luna si ahora
+            // está claro, sol si está oscuro. La opción completa vive en Configuración.
+            IconButton(onClick = onToggleThemeClick) {
+                Icon(
+                    painter = painterResource(
+                        if (isDarkTheme) R.drawable.ic_light_mode else R.drawable.ic_dark_mode,
+                    ),
+                    contentDescription = stringResource(
+                        if (isDarkTheme) R.string.nav_theme_to_light else R.string.nav_theme_to_dark,
+                    ),
+                )
+            }
             IconButton(onClick = onNotificationsClick) {
                 Icon(
                     imageVector = Icons.Default.Notifications,
