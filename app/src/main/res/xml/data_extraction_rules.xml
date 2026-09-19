@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Reglas de backup/transferencia de dispositivo para Android 12+.
+     TODO: excluir tokens de sesión cuando se implemente el login (16 sep). -->
+<data-extraction-rules>
+    <cloud-backup />
+    <device-transfer />
+</data-extraction-rules>

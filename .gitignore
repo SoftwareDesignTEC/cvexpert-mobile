@@ -1,0 +1,23 @@
+# --- Secretos y configuracion local: NUNCA se suben ---
+local.properties
+google-services.json
+*.jks
+*.keystore
+keystore.properties
+secrets.properties
+
+# --- Build ---
+.gradle/
+.kotlin/
+build/
+captures/
+.cxx/
+*.apk
+*.aab
+*.ap_
+*.dex
+
+# --- IDE ---
+.idea/
+*.iml
+.DS_Store

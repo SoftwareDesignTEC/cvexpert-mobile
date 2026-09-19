@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Reglas de backup para Android 11 e inferior. Sin exclusiones por ahora.
+     TODO: excluir tokens de sesión cuando se implemente el login (16 sep). -->
+<full-backup-content />

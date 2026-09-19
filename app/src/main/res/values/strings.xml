@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Todos los textos de la app viven aqui, en espanol. -->
+<resources>
+    <!-- TODO: confirmar nombre comercial definitivo. -->
+    <string name="app_name">CV Pro</string>
+    <string name="home_tagline">Tu currículum profesional, sin experiencia previa.</string>
+    <string name="version_label">Versión %1$s (build %2$d)</string>
+
+    <!-- Login con Google -->
+    <string name="login_button">Continuar con Google</string>
+    <string name="login_retry">Reintentar</string>
+    <string name="login_error_no_account">No encontramos una cuenta de Google en este teléfono. Agrega una desde Ajustes e inténtalo de nuevo.</string>
+    <string name="login_error_configuration">El inicio de sesión no está configurado en esta versión de la app.</string>
+    <string name="login_error_generic">No se pudo iniciar sesión. Revisa tu conexión e inténtalo de nuevo.</string>
+
+    <!-- Panel Principal -->
+    <string name="home_greeting">Hola, %1$s</string>
+    <string name="home_subtitle">Desde aquí vas a manejar tus currículums, tus postulaciones y las ofertas que te sirven.</string>
+    <string name="home_shortcut_templates">Crear currículum sin conexión</string>
+    <string name="home_shortcut_skills_gap">Ver áreas de mejora</string>
+    <string name="home_sign_out">Cerrar sesión</string>
+
+    <!-- Navegación: nombres de los destinos del menú -->
+    <string name="destination_dashboard">Panel Principal</string>
+    <string name="destination_cvs">Mis Currículums</string>
+    <string name="destination_profile">Mi Perfil</string>
+    <string name="destination_jobs">Ofertas Laborales</string>
+    <string name="destination_skills_gap">Análisis de Brechas</string>
+    <string name="destination_templates">Plantillas</string>
+    <string name="destination_applications">Postulaciones</string>
+    <string name="destination_settings">Configuración</string>
+
+    <!-- Navegación: descripciones para lectores de pantalla -->
+    <string name="nav_open_menu">Abrir el menú</string>
+    <string name="nav_notifications">Notificaciones</string>
+    <string name="nav_theme_to_dark">Cambiar a modo oscuro</string>
+    <string name="nav_theme_to_light">Cambiar a modo claro</string>
+    <string name="nav_profile">Mi perfil</string>
+
+    <!-- Validación de formularios -->
+    <string name="validation_required">Este campo es obligatorio.</string>
+    <string name="validation_email">Escribe un correo válido, por ejemplo nombre@correo.com.</string>
+    <string name="validation_phone">El teléfono debe tener 8 dígitos.</string>
+    <string name="validation_min_length">Escribe al menos 3 caracteres.</string>
+
+    <!-- Estados de las pantallas -->
+    <string name="state_loading">Cargando…</string>
+    <string name="state_error_title">Algo salió mal</string>
+    <string name="state_retry">Reintentar</string>
+
+    <!-- Mi Perfil -->
+    <string name="profile_section_personal">Información personal</string>
+    <string name="profile_pending_notice">Tus datos todavía no se envían a ningún lado: falta conectar el servicio.</string>
+    <string name="profile_field_name">Nombre completo</string>
+    <string name="profile_field_email">Correo electrónico</string>
+    <string name="profile_field_phone">Teléfono</string>
+    <string name="profile_field_phone_helper">Opcional. 8 dígitos.</string>
+    <string name="profile_field_location">Residencia</string>
+    <string name="profile_save">Guardar cambios</string>
+    <string name="profile_saved_pending">Datos validados. Falta conectar el servicio para guardarlos.</string>
+    <string name="profile_form_invalid">Revisa los campos marcados en rojo.</string>
+
+    <!-- Ofertas Laborales -->
+    <string name="jobs_search_label">Buscar por puesto, empresa o lugar</string>
+    <string name="jobs_empty_title">Sin resultados</string>
+    <string name="jobs_empty_message">No encontramos ofertas con esa búsqueda. Probá con otra palabra.</string>
+    <string name="jobs_error_network">No pudimos cargar las ofertas. Revisa tu conexión e inténtalo de nuevo.</string>
+    <string name="jobs_error_generic">Algo salió mal al cargar las ofertas.</string>
+    <string name="jobs_match_score">%1$d%%</string>
+    <string name="jobs_location_and_modality">%1$s · %2$s</string>
+    <string name="jobs_requirement_bullet">• %1$s</string>
+    <string name="jobs_end_of_list">No hay más ofertas.</string>
+    <plurals name="jobs_result_count">
+        <item quantity="one">%1$d oferta</item>
+        <item quantity="other">%1$d ofertas</item>
+    </plurals>
+
+    <!-- Modalidad de trabajo -->
+    <string name="modality_remote">Remoto</string>
+    <string name="modality_on_site">Presencial</string>
+    <string name="modality_hybrid">Híbrido</string>
+
+    <!-- Postulaciones -->
+    <string name="applications_tab_with_count">%1$s (%2$d)</string>
+    <string name="applications_applied_at">Postulado el %1$s</string>
+    <string name="applications_empty_title">Nada por acá</string>
+    <string name="applications_empty_message">No tenés postulaciones en \"%1$s\".</string>
+    <string name="application_status_applied">Aplicado</string>
+    <string name="application_status_in_progress">En proceso</string>
+    <string name="application_status_interview">Entrevista</string>
+    <string name="application_status_rejected">Rechazado</string>
+
+    <!-- Análisis de Brechas -->
+    <string name="skills_gap_target">Comparado con: %1$s</string>
+    <string name="skills_gap_series_user">Tus habilidades</string>
+    <string name="skills_gap_series_market">Lo que piden las ofertas</string>
+    <string name="skills_gap_to_improve_title">Habilidades por mejorar</string>
+    <string name="skills_gap_no_gaps">Estás al nivel que piden las ofertas en todas tus habilidades.</string>
+    <string name="skills_gap_levels">Vos %1$d · Mercado %2$d</string>
+    <string name="skills_gap_amount">-%1$d</string>
+    <string name="skills_gap_courses_title">Cursos para mejorar</string>
+    <string name="skills_gap_course_details">%1$s · %2$s</string>
+    <string name="skills_gap_course_no_duration">Duración no indicada</string>
+    <string name="skills_gap_course_paid">De paga</string>
+    <string name="skills_gap_course_free">Gratis</string>
+    <string name="skills_gap_error_network">No pudimos cargar tu análisis. Revisa tu conexión e inténtalo de nuevo.</string>
+    <string name="skills_gap_error_generic">Algo salió mal al cargar tu análisis.</string>
+
+    <!-- Configuración -->
+    <string name="settings_theme_title">Tema</string>
+    <string name="settings_theme_description">Elegí cómo querés ver la app. Tu elección se guarda en este teléfono.</string>
+    <string name="settings_theme_system">Seguir el ajuste del sistema</string>
+    <string name="settings_theme_light">Claro</string>
+    <string name="settings_theme_dark">Oscuro</string>
+
+    <!-- Pantallas todavía sin contenido -->
+    <string name="placeholder_cvs">Acá vas a ver tus currículums, con vista previa, editar y descargar.</string>
+    <string name="placeholder_templates">Acá vas a elegir una plantilla, incluso sin conexión, o descargar otras nuevas.</string>
+</resources>
