@@ -116,4 +116,11 @@
     <!-- Pantallas todavía sin contenido -->
     <string name="placeholder_cvs">Acá vas a ver tus currículums, con vista previa, editar y descargar.</string>
     <string name="placeholder_templates">Acá vas a elegir una plantilla, incluso sin conexión, o descargar otras nuevas.</string>
+
+
+
+    <!-- Error de perfil -->
+    <string name="profile_load_error">No se pudo cargar el perfil.</string>
+    <string name="profile_save_success">Perfil guardado correctamente.</string>
+    <string name="profile_save_error">No se pudo guardar el perfil.</string>
 </resources>

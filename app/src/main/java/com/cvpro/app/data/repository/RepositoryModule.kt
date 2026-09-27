@@ -9,6 +9,10 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import com.cvpro.app.domain.repository.ApplicationRepository
+import com.cvpro.app.domain.repository.ProfileRepository
+import com.cvpro.app.domain.repository.TemplateRepository
+import com.cvpro.app.domain.repository.CvRepository
 
 /**
  * Le dice a Hilt qué implementación entregar cuando alguien pide una interfaz del dominio.
@@ -27,7 +31,7 @@ abstract class RepositoryModule {
     // TODO: cambiar por la implementación contra el APIM cuando existan los mocks.
     @Binds
     @Singleton
-    abstract fun bindJobOfferRepository(impl: SampleJobOfferRepository): JobOfferRepository
+    abstract fun bindJobOfferRepository(impl: ApiJobOfferRepository): JobOfferRepository
 
     @Binds
     @Singleton
@@ -37,4 +41,22 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindSkillsGapRepository(impl: SampleSkillsGapRepository): SkillsGapRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindApplicationRepository(impl: ApiApplicationRepository, ): ApplicationRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindProfileRepository(impl: ApiProfileRepository, ): ProfileRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindTemplateRepository(impl: ApiTemplateRepository, ): TemplateRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindCvRepository(
+        impl: ApiCvRepository,
+    ): CvRepository
 }

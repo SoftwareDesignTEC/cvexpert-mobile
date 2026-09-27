@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cvpro.app.R
 import com.cvpro.app.domain.repository.AuthRepository
+import com.cvpro.app.domain.repository.ProfileRepository
 import com.cvpro.app.ui.components.FormValidation
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -17,62 +18,115 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
-/**
- * Estado del formulario de Mi Perfil.
- *
- * Los nombres de los campos son los de UserProfile en el contrato de la web, para no perder
- * la paridad. Cada campo tiene su propio error, que es null mientras el valor esté bien.
- */
 data class ProfileUiState(
     val name: String = "",
     val email: String = "",
     val phone: String = "",
     val location: String = "",
+
     @param:StringRes val nameError: Int? = null,
     @param:StringRes val emailError: Int? = null,
     @param:StringRes val phoneError: Int? = null,
     @param:StringRes val locationError: Int? = null,
+
+    val isLoading: Boolean = false,
+    val isSaving: Boolean = false,
+    val error: String? = null,
 ) {
-    /** El botón de guardar se habilita solo si hay algo escrito en los campos obligatorios. */
-    val canSave: Boolean = name.isNotBlank() && email.isNotBlank() && location.isNotBlank()
+    val canSave: Boolean =
+        name.isNotBlank() &&
+                email.isNotBlank() &&
+                location.isNotBlank() &&
+                !isLoading &&
+                !isSaving
 }
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
     authRepository: AuthRepository,
+    private val profileRepository: ProfileRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
     val uiState: StateFlow<ProfileUiState> = _uiState.asStateFlow()
 
-    // Avisos de una sola vez (el snackbar). Un Channel evita que el mensaje se repita al
-    // girar la pantalla, cosa que sí pasaría si fuera parte del estado.
     private val _messages = Channel<Int>()
     val messages: Flow<Int> = _messages.receiveAsFlow()
 
+    /*
+     * En esta fase usamos el correo de Google como identificador
+     * para /profiles/{id}.
+     */
+    private var profileId: String? = null
+
     init {
-        // El nombre y el correo ya los sabemos por la sesión de Google: se precargan.
         val user = authRepository.currentUser.value
+
         if (user != null) {
-            _uiState.update { it.copy(name = user.name, email = user.email) }
+            profileId = user.email
+
+            // Se muestran inmediatamente los datos que ya conocemos por Google.
+            _uiState.update {
+                it.copy(
+                    name = user.name,
+                    email = user.email,
+                )
+            }
+
+            loadProfile(user.email)
         }
     }
 
-    fun onNameChange(value: String) = _uiState.update { it.copy(name = value, nameError = null) }
+    private fun loadProfile(id: String) {
+        viewModelScope.launch {
+            _uiState.update {
+                it.copy(
+                    isLoading = true,
+                    error = null,
+                )
+            }
 
-    fun onEmailChange(value: String) = _uiState.update { it.copy(email = value, emailError = null) }
+            try {
+                val profile = profileRepository.getProfile(id)
 
-    fun onPhoneChange(value: String) = _uiState.update { it.copy(phone = value, phoneError = null) }
+                _uiState.update {
+                    it.copy(
+                        name = profile.name,
+                        email = profile.email,
+                        phone = profile.phone.orEmpty(),
+                        location = profile.location,
+                        isLoading = false,
+                        error = null,
+                    )
+                }
+            } catch (exception: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        error = exception.message,
+                    )
+                }
 
-    fun onLocationChange(value: String) = _uiState.update { it.copy(location = value, locationError = null) }
+                _messages.send(R.string.profile_load_error)
+            }
+        }
+    }
 
-    /**
-     * Valida los cuatro campos. Si alguno falla, marca los errores y no guarda nada.
-     *
-     * TODO: cuando existan los endpoints del APIM, acá va el envío al servicio.
-     */
+    fun onNameChange(value: String) =
+        _uiState.update { it.copy(name = value, nameError = null) }
+
+    fun onEmailChange(value: String) =
+        _uiState.update { it.copy(email = value, emailError = null) }
+
+    fun onPhoneChange(value: String) =
+        _uiState.update { it.copy(phone = value, phoneError = null) }
+
+    fun onLocationChange(value: String) =
+        _uiState.update { it.copy(location = value, locationError = null) }
+
     fun onSaveClick() {
         val state = _uiState.value
+
         val nameError = FormValidation.minLength(state.name, min = 3)
         val emailError = FormValidation.email(state.email)
         val phoneError = FormValidation.phoneOptional(state.phone)
@@ -87,9 +141,63 @@ class ProfileViewModel @Inject constructor(
             )
         }
 
-        val hayErrores = listOfNotNull(nameError, emailError, phoneError, locationError).isNotEmpty()
+        val hayErrores = listOfNotNull(
+            nameError,
+            emailError,
+            phoneError,
+            locationError,
+        ).isNotEmpty()
+
+        if (hayErrores) {
+            viewModelScope.launch {
+                _messages.send(R.string.profile_form_invalid)
+            }
+            return
+        }
+
+        val id = profileId ?: run {
+            viewModelScope.launch {
+                _messages.send(R.string.profile_save_error)
+            }
+            return
+        }
+
         viewModelScope.launch {
-            _messages.send(if (hayErrores) R.string.profile_form_invalid else R.string.profile_saved_pending)
+            _uiState.update {
+                it.copy(
+                    isSaving = true,
+                    error = null,
+                )
+            }
+
+            try {
+                profileRepository.updateProfile(
+                    id = id,
+                    name = state.name.trim(),
+                    email = state.email.trim(),
+                    phone = state.phone.trim().takeIf { it.isNotEmpty() },
+                    location = state.location.trim(),
+                )
+
+                _uiState.update {
+                    it.copy(
+                        isSaving = false,
+                        error = null,
+                    )
+                }
+
+                _messages.send(R.string.profile_save_success)
+
+            } catch (exception: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isSaving = false,
+                        error = exception.message,
+                    )
+                }
+
+                _messages.send(R.string.profile_save_error)
+            }
         }
     }
 }

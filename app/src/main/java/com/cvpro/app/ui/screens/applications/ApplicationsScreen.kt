@@ -28,6 +28,11 @@ import com.cvpro.app.domain.model.JobApplication
 import com.cvpro.app.domain.model.JobModality
 import com.cvpro.app.ui.components.EmptyState
 import com.cvpro.app.ui.theme.CvProTheme
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.size
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.Alignment
 
 /** Rastreador de postulaciones con estado. */
 @Composable
@@ -41,6 +46,7 @@ fun ApplicationsScreen(
         uiState = uiState,
         onStatusSelected = viewModel::onStatusSelected,
         modifier = modifier,
+        onRetry = viewModel::retry,
     )
 }
 
@@ -55,50 +61,95 @@ fun ApplicationsBoard(
     uiState: ApplicationsUiState,
     onStatusSelected: (ApplicationStatus) -> Unit,
     modifier: Modifier = Modifier,
-) {
-    Column(modifier = modifier.fillMaxSize()) {
-        PrimaryScrollableTabRow(
-            selectedTabIndex = ApplicationStatus.entries.indexOf(uiState.selectedStatus),
-            edgePadding = 8.dp,
+    onRetry: () -> Unit,
+)    { when {
+    uiState.isLoading -> {
+        Box(
+            modifier = modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center,
         ) {
-            ApplicationStatus.entries.forEach { status ->
-                Tab(
-                    selected = status == uiState.selectedStatus,
-                    onClick = { onStatusSelected(status) },
-                    text = {
-                        Text(
-                            text = stringResource(
-                                R.string.applications_tab_with_count,
-                                stringResource(status.labelRes()),
-                                uiState.countFor(status),
-                            ),
-                        )
-                    },
-                )
-            }
+            CircularProgressIndicator()
         }
+    }
 
-        val applications = uiState.visibleApplications
-        if (applications.isEmpty()) {
-            EmptyState(
-                title = stringResource(R.string.applications_empty_title),
-                message = stringResource(
-                    R.string.applications_empty_message,
-                    stringResource(uiState.selectedStatus.labelRes()),
-                ),
-            )
-        } else {
-            LazyColumn(
-                contentPadding = PaddingValues(16.dp),
+    uiState.error != null -> {
+        Box(
+            modifier = modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center,
+        ) {
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxSize(),
             ) {
-                items(items = applications, key = { it.id }) { application ->
-                    ApplicationCard(application = application)
+                Text(
+                    text = "Algo salió mal al cargar las postulaciones",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+
+                Text(
+                    text = uiState.error,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+
+                Button(onClick = onRetry) {
+                    Text("Reintentar")
                 }
             }
         }
     }
+
+    else -> {
+        Column(modifier = modifier.fillMaxSize()) {
+            PrimaryScrollableTabRow(
+                selectedTabIndex = ApplicationStatus.entries.indexOf(uiState.selectedStatus),
+                edgePadding = 8.dp,
+            ) {
+                ApplicationStatus.entries.forEach { status ->
+                    Tab(
+                        selected = status == uiState.selectedStatus,
+                        onClick = { onStatusSelected(status) },
+                        text = {
+                            Text(
+                                text = stringResource(
+                                    R.string.applications_tab_with_count,
+                                    stringResource(status.labelRes()),
+                                    uiState.countFor(status),
+                                ),
+                            )
+                        },
+                    )
+                }
+            }
+
+            val applications = uiState.visibleApplications
+
+            if (applications.isEmpty()) {
+                EmptyState(
+                    title = stringResource(R.string.applications_empty_title),
+                    message = stringResource(
+                        R.string.applications_empty_message,
+                        stringResource(uiState.selectedStatus.labelRes()),
+                    ),
+                )
+            } else {
+                LazyColumn(
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxSize(),
+                ) {
+                    items(
+                        items = applications,
+                        key = { it.id },
+                    ) { application ->
+                        ApplicationCard(application = application)
+                    }
+                }
+            }
+        }
+    }
+}
 }
 
 /** Tarjeta de una postulación, con lo mismo que muestra la tarjeta del tablero web. */
@@ -161,6 +212,7 @@ private fun ApplicationsBoardPreview() {
                     ),
                 ),
                 onStatusSelected = {},
+                onRetry = {},
             )
         }
     }

@@ -88,6 +88,7 @@ dependencies {
     implementation(libs.androidx.hilt.lifecycle.viewmodel.compose)
     implementation(libs.androidx.activity.compose)
 
+
     // Login con Google: Credential Manager + Google ID (Google Sign-In nativo).
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services.auth)
@@ -102,9 +103,17 @@ dependencies {
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.navigation.compose)
     implementation(libs.androidx.datastore.preferences)
+
+    // Red: cliente HTTP y conversión JSON.
+    implementation(libs.retrofit.core)
+    implementation(libs.retrofit.gson)
+
+
     // Solo en debug: motor de los @Preview de Android Studio.
     debugImplementation(libs.androidx.compose.ui.tooling)
 
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
+
+    implementation(libs.coil.compose)
 }

@@ -27,6 +27,9 @@ import com.cvpro.app.ui.components.FormTextField
 import com.cvpro.app.ui.components.LocalSnackbarHostState
 import com.cvpro.app.ui.components.PrimaryButton
 import com.cvpro.app.ui.theme.CvProTheme
+import androidx.compose.foundation.layout.Box
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.ui.Alignment
 
 /**
  * Mi Perfil con estado: conecta el ViewModel y muestra los avisos en el snackbar de la app.
@@ -55,15 +58,24 @@ fun ProfileScreen(
         if (messageText != null) snackbarHostState.showSnackbar(messageText)
     }
 
-    ProfileForm(
-        uiState = uiState,
-        onNameChange = viewModel::onNameChange,
-        onEmailChange = viewModel::onEmailChange,
-        onPhoneChange = viewModel::onPhoneChange,
-        onLocationChange = viewModel::onLocationChange,
-        onSaveClick = viewModel::onSaveClick,
-        modifier = modifier,
-    )
+    if (uiState.isLoading) {
+        Box(
+            modifier = modifier.fillMaxSize(),
+            contentAlignment = Alignment.Center,
+        ) {
+            CircularProgressIndicator()
+        }
+    } else {
+        ProfileForm(
+            uiState = uiState,
+            onNameChange = viewModel::onNameChange,
+            onEmailChange = viewModel::onEmailChange,
+            onPhoneChange = viewModel::onPhoneChange,
+            onLocationChange = viewModel::onLocationChange,
+            onSaveClick = viewModel::onSaveClick,
+            modifier = modifier,
+        )
+    }
 }
 
 /**
