@@ -22,6 +22,33 @@
     <string name="home_shortcut_skills_gap">Ver Áreas de Mejora</string>
     <string name="home_sign_out">Cerrar sesión</string>
 
+    <!-- Configuración -->
+    <string name="settings_eyebrow">TU CUENTA</string>
+    <string name="settings_security_title">Seguridad de la Cuenta</string>
+    <string name="settings_security_subtitle">Administra el acceso y protege tu información.</string>
+    <string name="settings_security_sessions">Sesiones Activas</string>
+    <string name="settings_notifications_title">Notificaciones</string>
+    <string name="settings_notifications_subtitle">Elige qué novedades quieres recibir.</string>
+    <string name="settings_notifications_applications">Estado de Postulación</string>
+    <string name="settings_notifications_courses">Recomendación de Curso</string>
+    <string name="settings_notifications_jobs">Alertas de Empleo</string>
+    <string name="settings_data_title">Datos</string>
+    <string name="settings_data_subtitle">Controla tus datos y documentos legales.</string>
+    <string name="settings_data_download">Descargar mis datos</string>
+    <string name="settings_data_delete">Eliminar Cuenta</string>
+    <string name="settings_data_privacy">Políticas de Privacidad</string>
+    <string name="settings_data_terms">Términos y Condiciones</string>
+    <string name="settings_system_title">Preferencias del Sistema</string>
+    <string name="settings_system_subtitle">Personaliza Careerly para trabajar a tu manera.</string>
+    <string name="settings_system_language">Idioma</string>
+    <string name="settings_system_language_value">Español</string>
+    <string name="settings_system_timezone">Zona Horaria</string>
+    <string name="settings_system_timezone_value">Costa Rica (GMT-6)</string>
+    <string name="settings_help_title">¿Necesitas ayuda?</string>
+    <string name="settings_help_subtitle">Contacta a nuestro equipo de soporte técnico.</string>
+    <string name="settings_help_email">Enviar Correo Electrónico</string>
+    <string name="settings_help_email_subject">Soporte de Careerly</string>
+
     <!-- Plantillas -->
     <string name="templates_eyebrow">CREA DONDE QUIERAS</string>
     <string name="templates_title">Plantillas sin conexión</string>
