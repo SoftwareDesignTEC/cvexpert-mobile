@@ -234,8 +234,8 @@ private fun JobsContentPreview() {
             JobsContent(
                 uiState = JobsUiState(
                     offers = listOf(
-                        JobOffer("1", "Cajero de tienda", "Automercado", "Heredia", JobModality.ON_SITE, "Comercio", listOf("Atención al cliente"), 76),
-                        JobOffer("2", "Community manager junior", "Agencia Nova", "Remoto", JobModality.REMOTE, "Mercadeo", listOf("Redacción"), 58),
+                        JobOffer("1", "Cajero de tienda", "Automercado", null, "Heredia", JobModality.ON_SITE, "Comercio", listOf("Atención al cliente"), 76),
+                        JobOffer("2", "Community manager junior", "Agencia Nova", null, "Remoto", JobModality.REMOTE, "Mercadeo", listOf("Redacción"), 58),
                     ),
                     totalRecords = 2,
                 ),

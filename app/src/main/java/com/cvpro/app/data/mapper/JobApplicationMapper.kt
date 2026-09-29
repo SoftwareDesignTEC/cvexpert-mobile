@@ -10,10 +10,12 @@ fun JobApplicationDto.toDomain(): JobApplication {
         id = id,
         jobTitle = jobTitle,
         company = company,
+        companyLogoUrl = companyLogoUrl,
         location = location,
         modality = modality.toJobModality(),
         status = status.toApplicationStatus(),
-        appliedAt = appliedAt,
+        // El servicio manda ISO 8601; la tarjeta muestra la fecha ya legible.
+        appliedAt = appliedAt.toDisplayDate(),
     )
 }
 

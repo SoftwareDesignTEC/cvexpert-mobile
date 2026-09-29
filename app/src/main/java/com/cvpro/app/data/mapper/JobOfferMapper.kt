@@ -9,6 +9,7 @@ fun JobOfferDto.toDomain(): JobOffer {
         id = id,
         title = title,
         company = company,
+        companyLogoUrl = companyLogoUrl,
         location = location,
         modality = modality.toJobModality(),
         sector = sector,
