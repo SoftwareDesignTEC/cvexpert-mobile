@@ -35,16 +35,25 @@ fun CvProNavGraph(
     ) {
         composable(CvProDestination.DASHBOARD.route) {
             HomeScreen(
-                user = user,
                 versionName = BuildConfig.VERSION_NAME,
                 versionCode = BuildConfig.VERSION_CODE,
-                // Accesos directos del Panel Principal, como en el prototipo.
+                // Accesos de cada sección del panel, como en el wireframe de Samuel.
                 onTemplatesClick = { navController.navigateToDestination(CvProDestination.TEMPLATES) },
+                onSkillsGapClick = { navController.navigateToDestination(CvProDestination.SKILLS_GAP) },
+                onJobsClick = { navController.navigateToDestination(CvProDestination.JOBS) },
+                onCvsClick = { navController.navigateToDestination(CvProDestination.CVS) },
+            )
+        }
+        composable(CvProDestination.CVS.route) {
+            CvsScreen(
+                onTemplatesClick = { navController.navigateToDestination(CvProDestination.TEMPLATES) },
+            )
+        }
+        composable(CvProDestination.PROFILE.route) {
+            ProfileScreen(
                 onSkillsGapClick = { navController.navigateToDestination(CvProDestination.SKILLS_GAP) },
             )
         }
-        composable(CvProDestination.CVS.route) { CvsScreen() }
-        composable(CvProDestination.PROFILE.route) { ProfileScreen() }
         composable(CvProDestination.JOBS.route) { JobsScreen() }
         composable(CvProDestination.SKILLS_GAP.route) { SkillsGapScreen() }
         composable(CvProDestination.TEMPLATES.route) { TemplatesScreen() }

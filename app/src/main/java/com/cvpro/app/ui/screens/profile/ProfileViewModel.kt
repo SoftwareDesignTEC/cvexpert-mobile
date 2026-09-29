@@ -4,8 +4,11 @@ import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cvpro.app.R
+import com.cvpro.app.domain.model.SkillsGapAnalysis
+import com.cvpro.app.domain.model.UserProfile
 import com.cvpro.app.domain.repository.AuthRepository
 import com.cvpro.app.domain.repository.ProfileRepository
+import com.cvpro.app.domain.repository.SkillsGapRepository
 import com.cvpro.app.ui.components.FormValidation
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.channels.Channel
@@ -29,6 +32,15 @@ data class ProfileUiState(
     @param:StringRes val phoneError: Int? = null,
     @param:StringRes val locationError: Int? = null,
 
+    /** Perfil completo tal como lo devuelve el servicio, para la vista de solo lectura. */
+    val profile: UserProfile? = null,
+
+    /** Radar de habilidades que el diseño muestra dentro del perfil. */
+    val skillsGap: SkillsGapAnalysis? = null,
+
+    /** true mientras se está editando; false muestra la ficha del diseño. */
+    val isEditing: Boolean = false,
+
     val isLoading: Boolean = false,
     val isSaving: Boolean = false,
     val error: String? = null,
@@ -45,6 +57,7 @@ data class ProfileUiState(
 class ProfileViewModel @Inject constructor(
     authRepository: AuthRepository,
     private val profileRepository: ProfileRepository,
+    private val skillsGapRepository: SkillsGapRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
@@ -75,7 +88,28 @@ class ProfileViewModel @Inject constructor(
 
             loadProfile(user.email)
         }
+
+        loadSkillsGap()
     }
+
+    /**
+     * Carga el radar de habilidades.
+     *
+     * Va aparte del perfil a propósito: si el análisis falla, la ficha se sigue viendo y
+     * solo se oculta esa tarjeta.
+     */
+    private fun loadSkillsGap() {
+        viewModelScope.launch {
+            val analysis = runCatching { skillsGapRepository.getAnalysis() }.getOrNull()
+            _uiState.update { it.copy(skillsGap = analysis) }
+        }
+    }
+
+    /** Abre el formulario de edición sobre los datos ya cargados. */
+    fun onEditClick() = _uiState.update { it.copy(isEditing = true) }
+
+    /** Vuelve a la ficha sin guardar. */
+    fun onCancelEdit() = _uiState.update { it.copy(isEditing = false) }
 
     private fun loadProfile(id: String) {
         viewModelScope.launch {
@@ -91,6 +125,7 @@ class ProfileViewModel @Inject constructor(
 
                 _uiState.update {
                     it.copy(
+                        profile = profile,
                         name = profile.name,
                         email = profile.email,
                         phone = profile.phone.orEmpty(),
@@ -171,7 +206,7 @@ class ProfileViewModel @Inject constructor(
             }
 
             try {
-                profileRepository.updateProfile(
+                val updated = profileRepository.updateProfile(
                     id = id,
                     name = state.name.trim(),
                     email = state.email.trim(),
@@ -179,8 +214,11 @@ class ProfileViewModel @Inject constructor(
                     location = state.location.trim(),
                 )
 
+                // Al guardar bien se vuelve a la ficha, ya con los datos nuevos.
                 _uiState.update {
                     it.copy(
+                        profile = updated,
+                        isEditing = false,
                         isSaving = false,
                         error = null,
                     )

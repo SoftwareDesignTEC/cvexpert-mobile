@@ -36,8 +36,17 @@ val Slate700 = Color(0xFF334155)
 val Slate800 = Color(0xFF1E293B)
 val Slate950 = Color(0xFF020617)
 
+// Fondo azulado del diseño: las tarjetas blancas se recortan sobre él. Sin esto, con el
+// fondo en blanco puro, las tarjetas de sección no se distinguen.
+val Blue50 = Color(0xFFEFF4FF)
 val Blue100 = Color(0xFFDBEAFE)
 val Blue900 = Color(0xFF1E3A8A)
+
+// Verde del porcentaje de compatibilidad de las ofertas.
+val Green100 = Color(0xFFDCFCE7)
+val Green700 = Color(0xFF15803D)
+val Green900 = Color(0xFF14532D)
+val Green300 = Color(0xFF86EFAC)
 
 val Sky100 = Color(0xFFE0F2FE)
 val Sky800 = Color(0xFF075985)

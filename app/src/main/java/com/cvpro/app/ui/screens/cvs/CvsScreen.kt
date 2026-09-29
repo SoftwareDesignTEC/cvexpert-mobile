@@ -1,5 +1,6 @@
 package com.cvpro.app.ui.screens.cvs
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -7,91 +8,288 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cvpro.app.R
 import com.cvpro.app.domain.model.Cv
 import com.cvpro.app.ui.components.EmptyState
+import com.cvpro.app.ui.theme.CvProTheme
 
+/** Mis Currículums: la lista de CV guardados, con buscador. */
 @Composable
 fun CvsScreen(
+    onTemplatesClick: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: CvsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
-    val error = uiState.error
 
-    when {
-        uiState.isLoading -> {
-            Box(
-                modifier = modifier.fillMaxSize(),
+    CvsContent(
+        uiState = uiState,
+        onQueryChange = viewModel::onQueryChange,
+        onRetry = viewModel::retry,
+        onDeleteClick = viewModel::deleteCv,
+        onTemplatesClick = onTemplatesClick,
+        modifier = modifier,
+    )
+}
+
+/**
+ * Pantalla de currículums, siguiendo el diseño de Samuel.
+ *
+ * Arriba el encabezado con el buscador, después la banda oscura para crear uno nuevo, y
+ * abajo la grilla de tarjetas.
+ */
+@Composable
+fun CvsContent(
+    uiState: CvsUiState,
+    onQueryChange: (String) -> Unit,
+    onRetry: () -> Unit,
+    onDeleteClick: (String) -> Unit,
+    onTemplatesClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier.fillMaxSize()) {
+        CvsHeader(query = uiState.query, onQueryChange = onQueryChange)
+
+        CreateCvBanner(
+            onOfflineClick = onTemplatesClick,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+        )
+
+        when {
+            uiState.isLoading -> Box(
+                modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center,
             ) {
                 CircularProgressIndicator()
             }
-        }
 
-        error != null -> {
-            Box(
-                modifier = modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center,
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    Text(
-                        text = "No se pudieron cargar los currículums",
-                        style = MaterialTheme.typography.titleMedium,
-                    )
+            uiState.error != null -> CvsError(message = uiState.error, onRetry = onRetry)
 
-                    Text(
-                        text = error,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    )
-
-                    Button(onClick = viewModel::retry) {
-                        Text("Reintentar")
-                    }
-                }
-            }
-        }
-
-        uiState.cvs.isEmpty() -> {
-            EmptyState(
-                title = "No hay currículums",
-                message = "Todavía no hay currículums disponibles.",
+            uiState.cvs.isEmpty() -> EmptyState(
+                title = stringResource(R.string.cvs_empty_title),
+                message = stringResource(R.string.cvs_empty_message),
             )
-        }
 
-        else -> {
-            LazyColumn(
-                modifier = modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
+            else -> LazyVerticalGrid(
+                // Dos columnas: es lo que entra cómodo en un teléfono. En el diseño web son
+                // tres porque hay más ancho.
+                columns = GridCells.Fixed(2),
+                contentPadding = PaddingValues(12.dp),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxSize(),
             ) {
-                items(
-                    items = uiState.cvs,
-                    key = { it.id },
-                ) { cv ->
+                items(items = uiState.cvs, key = { it.id }) { cv ->
                     CvCard(
                         cv = cv,
                         isDeleting = uiState.deletingId == cv.id,
-                        onDelete = { viewModel.deleteCv(cv.id) },
+                        onDeleteClick = { onDeleteClick(cv.id) },
+                    )
+                }
+            }
+        }
+    }
+}
+
+/** Antetítulo, título y buscador. */
+@Composable
+private fun CvsHeader(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
+        Text(
+            text = stringResource(R.string.cvs_eyebrow),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.primary,
+        )
+        Text(
+            text = stringResource(R.string.destination_cvs),
+            style = MaterialTheme.typography.headlineMedium,
+            color = MaterialTheme.colorScheme.onBackground,
+        )
+        OutlinedTextField(
+            value = query,
+            onValueChange = onQueryChange,
+            placeholder = { Text(stringResource(R.string.cvs_search_placeholder)) },
+            singleLine = true,
+            shape = RoundedCornerShape(50),
+            colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 12.dp),
+        )
+    }
+}
+
+/** Banda oscura con los dos caminos para crear un currículum. */
+@Composable
+private fun CreateCvBanner(
+    onOfflineClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        color = MaterialTheme.colorScheme.onSurface,
+        shape = RoundedCornerShape(12.dp),
+        modifier = modifier.fillMaxWidth(),
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = stringResource(R.string.home_create_cv_title),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.surface,
+            )
+            Text(
+                text = stringResource(R.string.cvs_create_subtitle),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.surface,
+            )
+
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                modifier = Modifier.padding(top = 12.dp),
+            ) {
+                // TODO: sin acción. La generación con IA no entra en la Fase I.
+                Button(onClick = {}, modifier = Modifier.weight(1f)) {
+                    Text(stringResource(R.string.cvs_create_ai))
+                }
+                Button(
+                    onClick = onOfflineClick,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                    ),
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(stringResource(R.string.cvs_create_offline))
+                }
+            }
+        }
+    }
+}
+
+/** Tarjeta de un currículum: vista previa, título, fecha y acciones. */
+@Composable
+private fun CvCard(
+    cv: Cv,
+    isDeleting: Boolean,
+    onDeleteClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
+    ) {
+        Column {
+            // El modelo del CV no trae imagen de vista previa: por ahora va el recuadro gris
+            // del diseño.
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(120.dp)
+                    .background(MaterialTheme.colorScheme.surfaceVariant),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = stringResource(R.string.home_cv_preview),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
+            Column(modifier = Modifier.padding(10.dp)) {
+                Text(
+                    text = cv.title,
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    text = stringResource(R.string.home_cv_updated_at, cv.updatedAt),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 2.dp),
+                )
+
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.padding(top = 10.dp),
+                ) {
+                    // TODO: sin acción. Falta la pantalla de edición del currículum.
+                    Button(
+                        onClick = {},
+                        contentPadding = TIGHT_BUTTON_PADDING,
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.home_cv_edit),
+                            style = MaterialTheme.typography.labelSmall,
+                            maxLines = 1,
+                        )
+                    }
+                    // TODO: sin acción. La exportación a PDF no entra en la Fase I.
+                    Button(
+                        onClick = {},
+                        contentPadding = TIGHT_BUTTON_PADDING,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.onSurface,
+                            contentColor = MaterialTheme.colorScheme.surface,
+                        ),
+                        modifier = Modifier.weight(1f),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.home_cv_download),
+                            style = MaterialTheme.typography.labelSmall,
+                            maxLines = 1,
+                        )
+                    }
+                }
+
+                // El diseño no dibuja el borrado, pero es la única operación de eliminar del
+                // CRUD y la rúbrica la pide, así que queda discreta al pie.
+                TextButton(
+                    onClick = onDeleteClick,
+                    enabled = !isDeleting,
+                    contentPadding = TIGHT_BUTTON_PADDING,
+                    modifier = Modifier.align(Alignment.End),
+                ) {
+                    Text(
+                        text = stringResource(
+                            if (isDeleting) R.string.cvs_deleting else R.string.cvs_delete,
+                        ),
+                        style = MaterialTheme.typography.labelSmall,
                     )
                 }
             }
@@ -100,63 +298,60 @@ fun CvsScreen(
 }
 
 @Composable
-private fun CvCard(
-    cv: Cv,
-    isDeleting: Boolean,
-    onDelete: () -> Unit,
+private fun CvsError(
+    message: String,
+    onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Card(
-        modifier = modifier.fillMaxWidth(),
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        contentAlignment = Alignment.Center,
     ) {
         Column(
-            modifier = Modifier.padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp),
         ) {
             Text(
-                text = cv.title,
+                text = stringResource(R.string.cvs_error_title),
                 style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
             )
-
             Text(
-                text = cv.personalInfo.name,
+                text = message,
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
-
-            Text(
-                text = "${cv.skills.size} habilidades",
-                style = MaterialTheme.typography.bodySmall,
-            )
-
-            Text(
-                text = "${cv.workExperiences.size} experiencias laborales",
-                style = MaterialTheme.typography.bodySmall,
-            )
-
-            Text(
-                text = "Actualizado: ${cv.updatedAt}",
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.End,
-            ) {
-                TextButton(
-                    onClick = onDelete,
-                    enabled = !isDeleting,
-                ) {
-                    Text(
-                        if (isDeleting) {
-                            "Eliminando..."
-                        } else {
-                            "Eliminar"
-                        }
-                    )
-                }
+            Button(onClick = onRetry) {
+                Text(stringResource(R.string.applications_retry))
             }
+        }
+    }
+}
+
+/** Relleno angosto: los dos botones de la tarjeta tienen que caber en una columna estrecha. */
+private val TIGHT_BUTTON_PADDING = PaddingValues(horizontal = 6.dp, vertical = 4.dp)
+
+@Preview(name = "Currículums · claro", widthDp = 390, heightDp = 900)
+@Composable
+private fun CvsPreviewLight() = CvsPreview(darkTheme = false)
+
+@Preview(name = "Currículums · oscuro", widthDp = 390, heightDp = 900)
+@Composable
+private fun CvsPreviewDark() = CvsPreview(darkTheme = true)
+
+@Composable
+private fun CvsPreview(darkTheme: Boolean) {
+    CvProTheme(darkTheme = darkTheme) {
+        Surface(color = MaterialTheme.colorScheme.background) {
+            CvsContent(
+                uiState = CvsUiState(),
+                onQueryChange = {},
+                onRetry = {},
+                onDeleteClick = {},
+                onTemplatesClick = {},
+            )
         }
     }
 }

@@ -14,7 +14,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.currentBackStackEntryAsState
@@ -44,6 +43,9 @@ fun CvProApp(
     // sistema", lo que diga el teléfono. Lo usa el botón de la barra para saber qué ofrecer.
     val themePreference by themeViewModel.themePreference.collectAsStateWithLifecycle()
     val isDarkTheme = themePreference.isDark(isSystemInDarkTheme())
+
+    // Si hay internet: lo muestra el indicador de la barra superior.
+    val isOnline by sessionViewModel.isOnline.collectAsStateWithLifecycle()
 
     if (user == null) {
         LoginRoute(modifier = modifier)
@@ -85,8 +87,8 @@ fun CvProApp(
         Scaffold(
             topBar = {
                 CvProTopBar(
-                    title = stringResource(currentDestination.titleRes),
                     isDarkTheme = isDarkTheme,
+                    isOnline = isOnline,
                     onMenuClick = { scope.launch { drawerState.open() } },
                     onToggleThemeClick = { themeViewModel.toggleTheme(isDarkTheme) },
                     onNotificationsClick = { goTo(CvProDestination.APPLICATIONS) },

@@ -1,10 +1,17 @@
 package com.cvpro.app.ui.navigation
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
@@ -14,19 +21,23 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.cvpro.app.R
 import com.cvpro.app.domain.model.User
 
 /**
- * Menú lateral con los ocho destinos, igual que en el prototipo.
+ * Menú lateral con los ocho destinos, según el diseño de Samuel.
  *
- * En la versión web el menú está siempre visible; en el teléfono no cabe, así que se abre
- * con el botón de las tres líneas de la barra superior. El contenido es el mismo.
+ * Arriba el logo con el lema, en medio los destinos —el abierto queda resaltado en azul— y
+ * abajo el centro de ayuda. En la versión web el menú está siempre visible; en el teléfono
+ * se abre con el botón de las tres líneas, pero el contenido es el mismo.
  */
 @Composable
 fun CvProDrawer(
@@ -43,27 +54,9 @@ fun CvProDrawer(
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 12.dp, vertical = 16.dp),
         ) {
-            // Encabezado: quién tiene la sesión abierta.
-            Text(
-                text = stringResource(R.string.app_name),
-                style = MaterialTheme.typography.titleLarge,
-                color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(start = 16.dp),
-            )
-            Text(
-                text = user.name,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(start = 16.dp, top = 12.dp),
-            )
-            Text(
-                text = user.email,
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 16.dp),
-            )
+            DrawerHeader()
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
+            Spacer(modifier = Modifier.padding(top = 8.dp))
 
             CvProDestination.entries.forEach { destination ->
                 NavigationDrawerItem(
@@ -77,6 +70,8 @@ fun CvProDrawer(
 
             HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
 
+            // El diseño no dibuja el cierre de sesión, pero tiene que estar en algún lado:
+            // es la única forma de salir de la cuenta.
             NavigationDrawerItem(
                 label = { Text(stringResource(R.string.home_sign_out)) },
                 icon = { Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = null) },
@@ -85,7 +80,107 @@ fun CvProDrawer(
                 modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding),
             )
 
-            Spacer(modifier = Modifier.padding(bottom = 16.dp))
+            // Nada de weight acá: la columna tiene scroll, así que su altura es infinita y
+            // un hijo con weight se mediría contra esa altura y rompería en ejecución.
+            Spacer(modifier = Modifier.padding(top = 8.dp))
+
+            HelpCard(email = user.email)
+        }
+    }
+}
+
+/** Logo, nombre y lema de la app, como en el encabezado del diseño. */
+@Composable
+private fun DrawerHeader(modifier: Modifier = Modifier) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier.padding(start = 12.dp),
+    ) {
+        LogoTile()
+        Spacer(modifier = Modifier.width(10.dp))
+        Column {
+            Text(
+                text = stringResource(R.string.app_name),
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Text(
+                text = stringResource(R.string.nav_tagline),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+/** Cuadrito azul con la inicial de la marca. */
+@Composable
+private fun LogoTile(modifier: Modifier = Modifier) {
+    Box(
+        modifier = modifier
+            .size(36.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(MaterialTheme.colorScheme.primary),
+        contentAlignment = Alignment.Center,
+    ) {
+        Text(
+            text = stringResource(R.string.app_name).take(1),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onPrimary,
+        )
+    }
+}
+
+/**
+ * Centro de ayuda al pie del menú.
+ *
+ * Muestra el correo de la sesión, que en el diseño anterior estaba en el encabezado: así
+ * sigue habiendo forma de saber con qué cuenta se entró.
+ */
+@Composable
+private fun HelpCard(
+    email: String,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        shape = RoundedCornerShape(12.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(top = 16.dp),
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(12.dp),
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(32.dp)
+                    .clip(RoundedCornerShape(50))
+                    .background(MaterialTheme.colorScheme.onSurface),
+                contentAlignment = Alignment.Center,
+            ) {
+                Text(
+                    text = "?",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.surface,
+                )
+            }
+
+            Spacer(modifier = Modifier.width(10.dp))
+
+            Column {
+                Text(
+                    text = stringResource(R.string.nav_help_title),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    text = email,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
         }
     }
 }
