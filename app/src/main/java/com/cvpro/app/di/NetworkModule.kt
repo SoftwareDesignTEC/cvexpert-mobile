@@ -1,7 +1,10 @@
 package com.cvpro.app.di
 
 import com.cvpro.app.BuildConfig
+import com.cvpro.app.data.remote.AuthInterceptor
 import com.cvpro.app.data.remote.api.JobApi
+import okhttp3.OkHttpClient
+import java.util.concurrent.TimeUnit
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -18,9 +21,24 @@ import com.cvpro.app.data.remote.api.CvApi
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
 
+    /**
+     * Cliente HTTP con el token de Google adjunto y tiempos de espera propios.
+     *
+     * Sin tiempos de espera, una llamada que no responde deja la pantalla cargando para
+     * siempre en vez de mostrar el error.
+     */
     @Provides
     @Singleton
-    fun provideRetrofit(): Retrofit {
+    fun provideOkHttpClient(authInterceptor: AuthInterceptor): OkHttpClient =
+        OkHttpClient.Builder()
+            .addInterceptor(authInterceptor)
+            .connectTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .readTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .build()
+
+    @Provides
+    @Singleton
+    fun provideRetrofit(client: OkHttpClient): Retrofit {
         // Si la URL del APIM todavía no está configurada (local.properties vacío o el
         // workflow sin el secret), Retrofit lanzaría IllegalArgumentException al construirse
         // y la app se caería al abrir cualquier pantalla con datos. Con este reemplazo la
@@ -34,6 +52,7 @@ object NetworkModule {
 
         return Retrofit.Builder()
             .baseUrl(baseUrl)
+            .client(client)
             .addConverterFactory(GsonConverterFactory.create())
             .build()
     }
@@ -76,4 +95,7 @@ object NetworkModule {
      * correcto cuando no hay servicio configurado.
      */
     private const val PLACEHOLDER_BASE_URL = "https://apim-sin-configurar.invalid/"
+
+    /** Tiempo máximo de espera de una llamada, en segundos. */
+    private const val TIMEOUT_SECONDS = 20L
 }

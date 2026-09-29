@@ -17,6 +17,15 @@ interface AuthRepository {
     val currentUser: StateFlow<User?>
 
     /**
+     * Token de Google de la sesión abierta, o null si no hay sesión.
+     *
+     * El APIM valida este token en cada llamada, así que la capa de red lo adjunta a cada
+     * petición. Ojo: los tokens de Google vencen a la hora; pasado ese tiempo el servicio
+     * responde 401 hasta que se vuelva a iniciar sesión.
+     */
+    val idToken: StateFlow<String?>
+
+    /**
      * Abre el selector de cuentas de Google.
      *
      * Recibe el Context de la Activity porque Android necesita una ventana visible sobre la

@@ -17,8 +17,9 @@ fun CvDto.toDomain(): Cv {
         userId = userId,
         title = title,
         templateId = templateId,
-        createdAt = createdAt,
-        updatedAt = updatedAt,
+        // El servicio manda ISO 8601; las tarjetas muestran la fecha ya legible.
+        createdAt = createdAt.toDisplayDate(),
+        updatedAt = updatedAt.toDisplayDate(),
         personalInfo = personalInfo.toDomain(),
         workExperiences = workExperiences.map { it.toDomain() },
         education = education.map { it.toDomain() },

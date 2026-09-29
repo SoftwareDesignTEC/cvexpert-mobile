@@ -5,6 +5,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
 /**
@@ -27,7 +29,8 @@ private val LightColors = lightColorScheme(
     onTertiary = Color.White,
     tertiaryContainer = Slate100,
     onTertiaryContainer = Slate900,
-    background = Color.White,
+    // Fondo azulado con tarjetas blancas encima, como en el diseño de Samuel.
+    background = Blue50,
     onBackground = Slate900,
     surface = Color.White,
     onSurface = Slate900,
@@ -75,7 +78,8 @@ private val DarkColors = darkColorScheme(
     onTertiary = Slate900,
     tertiaryContainer = Slate700,
     onTertiaryContainer = Slate100,
-    background = Slate900,
+    // En oscuro el fondo va más abajo que las tarjetas, para que se sigan distinguiendo.
+    background = Slate950,
     onBackground = Color.White,
     surface = Slate900,
     onSurface = Color.White,
@@ -118,6 +122,40 @@ fun CvProTheme(
     MaterialTheme(
         colorScheme = if (darkTheme) DarkColors else LightColors,
         typography = CvProTypography,
-        content = content,
-    )
+    ) {
+        CompositionLocalProvider(
+            LocalCvProExtraColors provides if (darkTheme) DarkExtraColors else LightExtraColors,
+            content = content,
+        )
+    }
 }
+
+/**
+ * Colores del diseño que Material 3 no tiene.
+ *
+ * Material 3 no define un color de "éxito", y el diseño de Samuel usa verde para el
+ * porcentaje de compatibilidad de las ofertas. En vez de escribir el hex dentro de la
+ * pantalla —que rompería la regla de que todo color sale del tema— vive acá, con su versión
+ * clara y su versión oscura, y se lee con `MaterialTheme.extraColors`.
+ */
+data class CvProExtraColors(
+    val successContainer: Color,
+    val onSuccessContainer: Color,
+)
+
+private val LightExtraColors = CvProExtraColors(
+    successContainer = Green100,
+    onSuccessContainer = Green700,
+)
+
+private val DarkExtraColors = CvProExtraColors(
+    successContainer = Green900,
+    onSuccessContainer = Green300,
+)
+
+private val LocalCvProExtraColors = staticCompositionLocalOf { LightExtraColors }
+
+/** Acceso a los colores extra desde cualquier composable, igual que `MaterialTheme.colorScheme`. */
+val MaterialTheme.extraColors: CvProExtraColors
+    @Composable
+    get() = LocalCvProExtraColors.current

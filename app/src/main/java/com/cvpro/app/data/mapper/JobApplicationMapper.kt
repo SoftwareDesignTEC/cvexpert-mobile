@@ -14,8 +14,9 @@ fun JobApplicationDto.toDomain(): JobApplication {
         location = location,
         modality = modality.toJobModality(),
         status = status.toApplicationStatus(),
-        // El servicio manda ISO 8601; la tarjeta muestra la fecha ya legible.
-        appliedAt = appliedAt.toDisplayDate(),
+        // Se guarda tal cual llega, en ISO 8601: la tarjeta del tablero muestra cuántos días
+        // pasaron, y para eso hace falta la fecha y no un texto ya formateado.
+        appliedAt = appliedAt,
     )
 }
 

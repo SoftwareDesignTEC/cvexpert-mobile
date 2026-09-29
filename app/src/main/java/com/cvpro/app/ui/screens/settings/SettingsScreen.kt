@@ -1,14 +1,26 @@
 package com.cvpro.app.ui.screens.settings
 
+import android.content.Intent
+import androidx.core.net.toUri
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
-import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
@@ -17,6 +29,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.tooling.preview.Preview
@@ -43,10 +58,11 @@ fun SettingsScreen(
 }
 
 /**
- * Configuración sin estado.
+ * Configuración, siguiendo el diseño de Samuel.
  *
- * El tema se elige entre tres opciones y queda guardado en el teléfono: al volver a abrir la
- * app se respeta lo elegido, que es lo que pide el enunciado.
+ * De los cuatro bloques, el único que hace algo hoy es el tema, que se guarda en el
+ * dispositivo. El resto está dibujado y marcado con TODO: son opciones que necesitan
+ * pantallas o endpoints que la Fase I no tiene.
  */
 @Composable
 fun SettingsContent(
@@ -54,27 +70,76 @@ fun SettingsContent(
     onThemeSelected: (ThemePreference) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val context = LocalContext.current
+
     Column(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(24.dp),
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text(
-            text = stringResource(R.string.settings_theme_title),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
-        Text(
-            text = stringResource(R.string.settings_theme_description),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
-        )
+        Column {
+            Text(
+                text = stringResource(R.string.settings_eyebrow),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            Text(
+                text = stringResource(R.string.destination_settings),
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onBackground,
+            )
+        }
 
-        // selectableGroup avisa a los lectores de pantalla que las tres opciones son
-        // excluyentes, como un grupo de radio buttons.
-        Column(modifier = Modifier.selectableGroup()) {
+        // Seguridad. Ninguna opción aplica todavía: la sesión es de Google, así que no hay
+        // contraseña ni correo propios que cambiar.
+        // TODO: revisar con Samuel si estas opciones tienen sentido con login de Google.
+        SettingsCard(
+            title = stringResource(R.string.settings_security_title),
+            subtitle = stringResource(R.string.settings_security_subtitle),
+        ) {
+            SettingsRow(label = stringResource(R.string.settings_security_sessions))
+        }
+
+        SettingsCard(
+            title = stringResource(R.string.settings_notifications_title),
+            subtitle = stringResource(R.string.settings_notifications_subtitle),
+        ) {
+            SettingsRow(label = stringResource(R.string.settings_notifications_applications))
+            SettingsRow(label = stringResource(R.string.settings_notifications_courses))
+            SettingsRow(label = stringResource(R.string.settings_notifications_jobs))
+        }
+
+        SettingsCard(
+            title = stringResource(R.string.settings_data_title),
+            subtitle = stringResource(R.string.settings_data_subtitle),
+        ) {
+            SettingsRow(label = stringResource(R.string.settings_data_download))
+            SettingsRow(
+                label = stringResource(R.string.settings_data_delete),
+                isDestructive = true,
+            )
+            SettingsRow(label = stringResource(R.string.settings_data_privacy))
+            SettingsRow(label = stringResource(R.string.settings_data_terms))
+        }
+
+        // Preferencias del sistema. El tema sí funciona y se guarda en el dispositivo.
+        SettingsCard(
+            title = stringResource(R.string.settings_system_title),
+            subtitle = stringResource(R.string.settings_system_subtitle),
+        ) {
+            Text(
+                text = stringResource(R.string.settings_theme_title),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(top = 12.dp),
+            )
+            Text(
+                text = stringResource(R.string.settings_theme_description),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
             ThemePreference.entries.forEach { preference ->
                 ThemeOptionRow(
                     label = stringResource(preference.labelRes()),
@@ -82,11 +147,180 @@ fun SettingsContent(
                     onSelect = { onThemeSelected(preference) },
                 )
             }
+
+            // Idioma y zona horaria van fijos: la app solo está en español y no hay ajuste
+            // de zona horaria en la Fase I.
+            ReadOnlyPreference(
+                label = stringResource(R.string.settings_system_language),
+                value = stringResource(R.string.settings_system_language_value),
+            )
+            ReadOnlyPreference(
+                label = stringResource(R.string.settings_system_timezone),
+                value = stringResource(R.string.settings_system_timezone_value),
+            )
+        }
+
+        HelpCard(
+            onEmailClick = {
+                val email = Intent(Intent.ACTION_SENDTO, "mailto:".toUri()).apply {
+                    putExtra(
+                        Intent.EXTRA_SUBJECT,
+                        context.getString(R.string.settings_help_email_subject),
+                    )
+                }
+                context.startActivity(email)
+            },
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+    }
+}
+
+/** Tarjeta blanca de un bloque de ajustes. */
+@Composable
+private fun SettingsCard(
+    title: String,
+    subtitle: String,
+    modifier: Modifier = Modifier,
+    content: @Composable ColumnScope.() -> Unit,
+) {
+    Surface(
+        color = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(12.dp),
+        modifier = modifier.fillMaxWidth(),
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+            )
+            Text(
+                text = subtitle,
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            content()
         }
     }
 }
 
-/** Una opción de tema: toda la fila es tocable, no solo el círculo. */
+/**
+ * Una fila de ajuste: el cuadrito de color, el nombre y la flecha.
+ *
+ * TODO: ninguna tiene acción todavía. Faltan las pantallas y los endpoints detrás.
+ */
+@Composable
+private fun SettingsRow(
+    label: String,
+    modifier: Modifier = Modifier,
+    isDestructive: Boolean = false,
+) {
+    val accent = if (isDestructive) {
+        MaterialTheme.colorScheme.error
+    } else {
+        MaterialTheme.colorScheme.primary
+    }
+
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        shape = RoundedCornerShape(8.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(top = 10.dp)
+            .clickable(enabled = false) { },
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(10.dp),
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(28.dp)
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(accent),
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (isDestructive) accent else MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 10.dp),
+            )
+            Text(
+                text = "›",
+                style = MaterialTheme.typography.titleMedium,
+                color = accent,
+            )
+        }
+    }
+}
+
+/** Preferencia que se muestra pero no se puede cambiar en esta fase. */
+@Composable
+private fun ReadOnlyPreference(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier.padding(top = 12.dp)) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Surface(
+            color = MaterialTheme.colorScheme.surfaceVariant,
+            shape = RoundedCornerShape(8.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 4.dp),
+        ) {
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(10.dp),
+            )
+        }
+    }
+}
+
+/** Tarjeta oscura de soporte, al pie del diseño. */
+@Composable
+private fun HelpCard(
+    onEmailClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        color = MaterialTheme.colorScheme.onSurface,
+        shape = RoundedCornerShape(12.dp),
+        modifier = modifier.fillMaxWidth(),
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = stringResource(R.string.settings_help_title),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.surface,
+            )
+            Text(
+                text = stringResource(R.string.settings_help_subtitle),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.surface,
+            )
+            Button(
+                onClick = onEmailClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp),
+            ) {
+                Text(stringResource(R.string.settings_help_email))
+            }
+        }
+    }
+}
+
 @Composable
 private fun ThemeOptionRow(
     label: String,
@@ -99,14 +333,14 @@ private fun ThemeOptionRow(
         modifier = modifier
             .fillMaxWidth()
             .selectable(selected = selected, onClick = onSelect, role = Role.RadioButton)
-            .padding(vertical = 12.dp),
+            .padding(vertical = 6.dp),
     ) {
         RadioButton(selected = selected, onClick = null)
         Text(
             text = label,
-            style = MaterialTheme.typography.bodyLarge,
+            style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurface,
-            modifier = Modifier.padding(start = 12.dp),
+            modifier = Modifier.padding(start = 8.dp),
         )
     }
 }
@@ -117,22 +351,28 @@ private fun ThemePreference.labelRes(): Int = when (this) {
     ThemePreference.DARK -> R.string.settings_theme_dark
 }
 
-@Preview(name = "Configuración - claro")
+@Preview(name = "Configuración · claro", widthDp = 390, heightDp = 1300)
 @Composable
-private fun SettingsContentPreview() {
+private fun SettingsPreviewLight() {
     CvProTheme(darkTheme = false) {
         Surface(color = MaterialTheme.colorScheme.background) {
-            SettingsContent(uiState = SettingsUiState(ThemePreference.LIGHT), onThemeSelected = {})
+            SettingsContent(
+                uiState = SettingsUiState(ThemePreference.LIGHT),
+                onThemeSelected = {},
+            )
         }
     }
 }
 
-@Preview(name = "Configuración - oscuro")
+@Preview(name = "Configuración · oscuro", widthDp = 390, heightDp = 1300)
 @Composable
-private fun SettingsContentDarkPreview() {
+private fun SettingsPreviewDark() {
     CvProTheme(darkTheme = true) {
         Surface(color = MaterialTheme.colorScheme.background) {
-            SettingsContent(uiState = SettingsUiState(ThemePreference.DARK), onThemeSelected = {})
+            SettingsContent(
+                uiState = SettingsUiState(ThemePreference.DARK),
+                onThemeSelected = {},
+            )
         }
     }
 }

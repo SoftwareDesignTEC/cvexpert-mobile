@@ -3,6 +3,8 @@
 
     <!-- Necesario para consumir los mocks del APIM (T3). -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <!-- Para saber si hay conexión: lo muestra el indicador de la barra superior. -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:name=".CvApplication"

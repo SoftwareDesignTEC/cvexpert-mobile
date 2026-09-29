@@ -4,6 +4,7 @@ import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cvpro.app.R
+import com.cvpro.app.domain.model.JobModality
 import com.cvpro.app.domain.model.JobOffer
 import com.cvpro.app.domain.repository.JobOfferRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -32,9 +33,36 @@ data class JobsUiState(
     @param:StringRes val errorMessage: Int? = null,
     val totalRecords: Int = 0,
     val hasMore: Boolean = false,
+    val selectedFilter: JobsFilter = JobsFilter.RECOMMENDED,
 ) {
+    /**
+     * Ofertas que se ven con el filtro elegido.
+     *
+     * El filtro se aplica sobre lo ya cargado, no en el servicio: los mocks del APIM no
+     * reciben modalidad como parámetro.
+     */
+    val visibleOffers: List<JobOffer> = when (selectedFilter) {
+        JobsFilter.RECOMMENDED -> offers.sortedByDescending { it.matchScore ?: 0 }
+        JobsFilter.REMOTE -> offers.filter { it.modality == JobModality.REMOTE }
+        JobsFilter.HYBRID -> offers.filter { it.modality == JobModality.HYBRID }
+        JobsFilter.RECENT -> offers
+    }
+
     /** Sin error y sin resultados: hay que mostrar el estado vacío, no una lista en blanco. */
-    val isEmpty: Boolean = !isLoading && errorMessage == null && offers.isEmpty()
+    val isEmpty: Boolean = !isLoading && errorMessage == null && visibleOffers.isEmpty()
+}
+
+/**
+ * Filtros rápidos del diseño.
+ *
+ * RECENT está dibujado pero no filtra: el modelo de oferta no trae la fecha de publicación.
+ * TODO: pedirle a Pérez que postedAt llegue al dominio para poder filtrar por fecha.
+ */
+enum class JobsFilter(@param:StringRes val labelRes: Int) {
+    RECOMMENDED(R.string.jobs_filter_recommended),
+    REMOTE(R.string.jobs_filter_remote),
+    HYBRID(R.string.jobs_filter_hybrid),
+    RECENT(R.string.jobs_filter_recent),
 }
 
 @HiltViewModel
@@ -66,6 +94,11 @@ class JobsViewModel @Inject constructor(
     }
 
     fun onRetryClick() = loadFirstPage()
+
+    /** Cambia el filtro rápido. No vuelve a pedir: se aplica sobre lo que ya está cargado. */
+    fun onFilterChange(filter: JobsFilter) {
+        _uiState.update { it.copy(selectedFilter = filter) }
+    }
 
     /** Pide la siguiente página. No hace nada si ya está cargando o si no quedan más. */
     fun onLoadMore() {

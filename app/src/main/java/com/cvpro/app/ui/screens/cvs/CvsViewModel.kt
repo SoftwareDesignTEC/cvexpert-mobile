@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.cvpro.app.domain.model.Cv
 import com.cvpro.app.domain.repository.CvRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -14,6 +16,7 @@ import javax.inject.Inject
 
 data class CvsUiState(
     val cvs: List<Cv> = emptyList(),
+    val query: String = "",
     val isLoading: Boolean = false,
     val error: String? = null,
     val deletingId: String? = null,
@@ -27,12 +30,30 @@ class CvsViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(CvsUiState())
     val uiState: StateFlow<CvsUiState> = _uiState.asStateFlow()
 
+    /** Espera de la búsqueda, para no pedirle al servicio en cada tecla. */
+    private var searchJob: Job? = null
+
     init {
         loadCvs()
     }
 
     fun retry() {
         loadCvs()
+    }
+
+    /**
+     * Texto del buscador.
+     *
+     * No pide al servicio en cada tecla: cancela la búsqueda anterior y espera un momento a
+     * que el usuario deje de escribir.
+     */
+    fun onQueryChange(value: String) {
+        _uiState.update { it.copy(query = value) }
+        searchJob?.cancel()
+        searchJob = viewModelScope.launch {
+            delay(SEARCH_DELAY_MS)
+            loadCvs()
+        }
     }
 
     fun deleteCv(id: String) {
@@ -76,8 +97,8 @@ class CvsViewModel @Inject constructor(
             try {
                 val result = repository.getCvs(
                     page = 1,
-                    pageSize = 50,
-                    query = "",
+                    pageSize = PAGE_SIZE,
+                    query = _uiState.value.query.trim(),
                 )
 
                 _uiState.update {
@@ -97,5 +118,10 @@ class CvsViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    private companion object {
+        const val PAGE_SIZE = 50
+        const val SEARCH_DELAY_MS = 350L
     }
 }

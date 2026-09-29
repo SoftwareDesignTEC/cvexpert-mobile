@@ -2,7 +2,9 @@
 <!-- Todos los textos de la app viven aqui, en espanol. -->
 <resources>
     <!-- TODO: confirmar nombre comercial definitivo. -->
-    <string name="app_name">CV Pro</string>
+    <!-- PROVISIONAL: nombre del diseño de Samuel, todavía sin confirmar por el equipo.
+         Es el que se ve en el lanzador de Android y en el logo de la barra superior. -->
+    <string name="app_name">Careerly</string>
     <string name="home_tagline">Tu currículum profesional, sin experiencia previa.</string>
     <string name="version_label">Versión %1$s (build %2$d)</string>
 
@@ -17,8 +19,79 @@
     <string name="home_greeting">Hola, %1$s</string>
     <string name="home_subtitle">Desde aquí vas a manejar tus currículums, tus postulaciones y las ofertas que te sirven.</string>
     <string name="home_shortcut_templates">Crear currículum sin conexión</string>
-    <string name="home_shortcut_skills_gap">Ver áreas de mejora</string>
+    <string name="home_shortcut_skills_gap">Ver Áreas de Mejora</string>
     <string name="home_sign_out">Cerrar sesión</string>
+
+    <!-- Configuración -->
+    <string name="settings_eyebrow">TU CUENTA</string>
+    <string name="settings_security_title">Seguridad de la Cuenta</string>
+    <string name="settings_security_subtitle">Administra el acceso y protege tu información.</string>
+    <string name="settings_security_sessions">Sesiones Activas</string>
+    <string name="settings_notifications_title">Notificaciones</string>
+    <string name="settings_notifications_subtitle">Elige qué novedades quieres recibir.</string>
+    <string name="settings_notifications_applications">Estado de Postulación</string>
+    <string name="settings_notifications_courses">Recomendación de Curso</string>
+    <string name="settings_notifications_jobs">Alertas de Empleo</string>
+    <string name="settings_data_title">Datos</string>
+    <string name="settings_data_subtitle">Controla tus datos y documentos legales.</string>
+    <string name="settings_data_download">Descargar mis datos</string>
+    <string name="settings_data_delete">Eliminar Cuenta</string>
+    <string name="settings_data_privacy">Políticas de Privacidad</string>
+    <string name="settings_data_terms">Términos y Condiciones</string>
+    <string name="settings_system_title">Preferencias del Sistema</string>
+    <string name="settings_system_subtitle">Personaliza Careerly para trabajar a tu manera.</string>
+    <string name="settings_system_language">Idioma</string>
+    <string name="settings_system_language_value">Español</string>
+    <string name="settings_system_timezone">Zona Horaria</string>
+    <string name="settings_system_timezone_value">Costa Rica (GMT-6)</string>
+    <string name="settings_help_title">¿Necesitas ayuda?</string>
+    <string name="settings_help_subtitle">Contacta a nuestro equipo de soporte técnico.</string>
+    <string name="settings_help_email">Enviar Correo Electrónico</string>
+    <string name="settings_help_email_subject">Soporte de Careerly</string>
+
+    <!-- Plantillas -->
+    <string name="templates_eyebrow">CREA DONDE QUIERAS</string>
+    <string name="templates_title">Plantillas sin conexión</string>
+    <string name="templates_see_all">Ver todas</string>
+    <string name="templates_preview">Vista previa</string>
+    <string name="templates_use">Usar esta plantilla</string>
+    <string name="templates_premium">Premium</string>
+    <string name="templates_empty_title">Sin plantillas</string>
+    <string name="templates_empty_message">Todavía no hay plantillas disponibles.</string>
+    <string name="templates_error_title">No se pudieron cargar las plantillas</string>
+
+    <!-- Mis Currículums -->
+    <string name="cvs_eyebrow">TU ESPACIO PROFESIONAL</string>
+    <string name="cvs_search_placeholder">Buscar Currículum</string>
+    <string name="cvs_create_subtitle">Elige cómo quieres comenzar tu próxima oportunidad.</string>
+    <string name="cvs_create_ai">Modo IA</string>
+    <string name="cvs_create_offline">Offline / Plantilla</string>
+    <string name="cvs_delete">Eliminar</string>
+    <string name="cvs_deleting">Eliminando…</string>
+    <string name="cvs_empty_title">Sin currículums</string>
+    <string name="cvs_empty_message">Creá tu primer currículum para empezar.</string>
+    <string name="cvs_error_title">No se pudieron cargar los currículums</string>
+
+    <!-- Panel Principal: secciones del diseño de Samuel -->
+    <string name="home_recent_cvs_title">Currículums Recientes</string>
+    <string name="home_recent_cvs_see_all">Ver todos</string>
+    <string name="home_recent_cvs_empty">Todavía no tenés currículums guardados.</string>
+    <string name="home_cv_preview">Vista previa</string>
+    <string name="home_cv_updated_at">Modificado %1$s</string>
+    <string name="home_cv_edit">Ver/Editar</string>
+    <string name="home_cv_download">Descargar</string>
+    <string name="home_create_cv_title">Crear Nuevo Currículum</string>
+    <string name="home_create_cv_subtitle">Empieza desde cero o usa una plantilla</string>
+    <string name="home_create_cv_ai">IA</string>
+    <string name="home_create_cv_offline">Offline</string>
+    <string name="home_skills_title">Análisis de Habilidades</string>
+    <string name="home_skills_subtitle">Métrica de compatibilidad con ofertas del mercado</string>
+    <string name="home_skills_empty">Todavía no hay análisis disponible.</string>
+    <string name="home_offers_title">Recomendación de Ofertas Laborales</string>
+    <string name="home_offers_see_all">Ver todas las Ofertas</string>
+    <string name="home_offers_empty">No hay ofertas recomendadas por ahora.</string>
+    <string name="home_offer_title_company">%1$s · %2$s</string>
+    <string name="home_offer_match">%1$d%% compatible</string>
 
     <!-- Navegación: nombres de los destinos del menú -->
     <string name="destination_dashboard">Panel Principal</string>
@@ -26,16 +99,21 @@
     <string name="destination_profile">Mi Perfil</string>
     <string name="destination_jobs">Ofertas Laborales</string>
     <string name="destination_skills_gap">Análisis de Brechas</string>
-    <string name="destination_templates">Plantillas</string>
-    <string name="destination_applications">Postulaciones</string>
+    <string name="destination_templates">Plantillas / Offline</string>
+    <string name="destination_applications">Postulaciones (Kanban)</string>
     <string name="destination_settings">Configuración</string>
 
     <!-- Navegación: descripciones para lectores de pantalla -->
     <string name="nav_open_menu">Abrir el menú</string>
     <string name="nav_notifications">Notificaciones</string>
+    <string name="nav_status_online">En línea</string>
+    <string name="nav_status_offline">Sin conexión</string>
     <string name="nav_theme_to_dark">Cambiar a modo oscuro</string>
     <string name="nav_theme_to_light">Cambiar a modo claro</string>
     <string name="nav_profile">Mi perfil</string>
+    <string name="nav_tagline">Tu carrera, más clara</string>
+    <string name="nav_help_title">Centro de ayuda</string>
+    <string name="nav_help_subtitle">Estamos para ayudarte</string>
 
     <!-- Validación de formularios -->
     <string name="validation_required">Este campo es obligatorio.</string>
@@ -49,8 +127,23 @@
     <string name="state_retry">Reintentar</string>
 
     <!-- Mi Perfil -->
-    <string name="profile_section_personal">Información personal</string>
-    <string name="profile_pending_notice">Tus datos todavía no se envían a ningún lado: falta conectar el servicio.</string>
+    <string name="profile_section_personal">Información Personal</string>
+    <string name="profile_eyebrow">PERFIL PROFESIONAL</string>
+    <string name="profile_edit">Editar Perfil</string>
+    <string name="profile_edit_cancel">Cancelar</string>
+    <string name="profile_no_bio">Todavía no escribiste tu descripción profesional.</string>
+    <string name="profile_not_set">Sin definir</string>
+    <string name="profile_contact_title">Datos de Contacto</string>
+    <string name="profile_contact_phone">Número de teléfono</string>
+    <string name="profile_contact_email">Correo Electrónico</string>
+    <string name="profile_contact_residence">Residencia</string>
+    <string name="profile_edit_contact">Editar Contacto</string>
+    <string name="profile_preferences_title">Preferencias</string>
+    <string name="profile_pref_sector">Sector de interés</string>
+    <string name="profile_pref_availability">Disponibilidad</string>
+    <string name="profile_pref_modality">Modalidad</string>
+    <string name="profile_edit_preferences">Editar Preferencias</string>
+    <string name="profile_pending_notice">Revisá tus datos y guardá los cambios.</string>
     <string name="profile_field_name">Nombre completo</string>
     <string name="profile_field_email">Correo electrónico</string>
     <string name="profile_field_phone">Teléfono</string>
@@ -62,6 +155,17 @@
 
     <!-- Ofertas Laborales -->
     <string name="jobs_search_label">Buscar por puesto, empresa o lugar</string>
+    <string name="jobs_eyebrow">OPORTUNIDADES PARA TI</string>
+    <string name="jobs_search_placeholder">Buscar ofertas, empresas o puestos</string>
+    <string name="jobs_found_count">%1$d ofertas encontradas</string>
+    <string name="jobs_filter_recommended">Recomendadas</string>
+    <string name="jobs_filter_remote">Remoto</string>
+    <string name="jobs_filter_hybrid">Híbrido</string>
+    <string name="jobs_filter_recent">Últimos 7 días</string>
+    <string name="jobs_match_percentage">%1$d%%</string>
+    <string name="jobs_match_label">Compatibilidad</string>
+    <string name="jobs_requirements_title">Requisitos principales</string>
+    <string name="jobs_details">Ver Detalles</string>
     <string name="jobs_empty_title">Sin resultados</string>
     <string name="jobs_empty_message">No encontramos ofertas con esa búsqueda. Probá con otra palabra.</string>
     <string name="jobs_error_network">No pudimos cargar las ofertas. Revisa tu conexión e inténtalo de nuevo.</string>
@@ -82,7 +186,15 @@
 
     <!-- Postulaciones -->
     <string name="applications_title">Rastreador de Postulaciones</string>
-    <string name="applications_count">Postulaciones: %1$d</string>
+    <string name="applications_eyebrow">TU BÚSQUEDA EN MOVIMIENTO</string>
+    <string name="applications_count">Postulaciones %1$d</string>
+    <string name="applications_column_see_all">Ver todo</string>
+    <string name="applications_applied_today">Hoy</string>
+    <string name="applications_applied_yesterday">Ayer</string>
+    <plurals name="applications_applied_days_ago">
+        <item quantity="one">Hace %1$d día</item>
+        <item quantity="other">Hace %1$d días</item>
+    </plurals>
     <string name="applications_applied_at">Postulado el %1$s</string>
     <string name="applications_see_all">Ver Todo</string>
     <string name="applications_action_status">Estado</string>
@@ -99,6 +211,18 @@
     <string name="application_status_rejected">Rechazado</string>
 
     <!-- Análisis de Brechas -->
+    <string name="skills_gap_eyebrow">CRECIMIENTO PROFESIONAL</string>
+    <string name="skills_gap_screen_title">Análisis de Brecha</string>
+    <string name="skills_gap_updated">Actualizado hoy</string>
+    <string name="skills_gap_comparison_eyebrow">COMPARATIVA DE MERCADO</string>
+    <string name="skills_gap_comparison_title">Tu perfil frente al objetivo</string>
+    <string name="skills_gap_points_title">Puntos a Mejorar</string>
+    <string name="skills_gap_points_subtitle">Habilidades por Mejorar</string>
+    <string name="skills_gap_row_number">%1$d.</string>
+    <string name="skills_gap_gap_percent">-%1$d%% brecha</string>
+    <string name="skills_gap_courses_see_more">Ver más</string>
+    <string name="skills_gap_course_duration">Duración: %1$s</string>
+    <string name="skills_gap_course_open">Ver Curso</string>
     <string name="skills_gap_target">Comparado con: %1$s</string>
     <string name="skills_gap_series_user">Tus habilidades</string>
     <string name="skills_gap_series_market">Lo que piden las ofertas</string>

@@ -1,45 +1,49 @@
 package com.cvpro.app.ui.screens.jobs
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
-import androidx.compose.material3.Card
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.snapshotFlow
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.pluralStringResource
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
 import com.cvpro.app.R
 import com.cvpro.app.domain.model.JobModality
 import com.cvpro.app.domain.model.JobOffer
+import com.cvpro.app.ui.components.CompatibilityRing
 import com.cvpro.app.ui.components.EmptyState
-import com.cvpro.app.ui.components.ErrorState
-import com.cvpro.app.ui.components.FormTextField
-import com.cvpro.app.ui.components.LoadingState
 import com.cvpro.app.ui.theme.CvProTheme
 
-/** Ofertas Laborales con estado: conecta el ViewModel con la pantalla. */
+/** Ofertas Laborales con estado. */
 @Composable
 fun JobsScreen(
     modifier: Modifier = Modifier,
@@ -50,6 +54,7 @@ fun JobsScreen(
     JobsContent(
         uiState = uiState,
         onQueryChange = viewModel::onQueryChange,
+        onFilterChange = viewModel::onFilterChange,
         onRetryClick = viewModel::onRetryClick,
         onLoadMore = viewModel::onLoadMore,
         modifier = modifier,
@@ -57,34 +62,42 @@ fun JobsScreen(
 }
 
 /**
- * Lista de ofertas con buscador.
+ * Ofertas Laborales, siguiendo el diseño de Samuel.
  *
- * Maneja los cuatro estados: cargando, error con reintentar, vacío y la lista. La
- * paginación es "scroll infinito": cuando el usuario se acerca al final, se pide la
- * página siguiente.
+ * Arriba el encabezado con el contador y el buscador, después los filtros rápidos, y abajo
+ * la lista de ofertas que se va cargando por páginas al llegar al final.
  */
 @Composable
 fun JobsContent(
     uiState: JobsUiState,
     onQueryChange: (String) -> Unit,
+    onFilterChange: (JobsFilter) -> Unit,
     onRetryClick: () -> Unit,
     onLoadMore: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxSize()) {
-        FormTextField(
-            value = uiState.query,
-            onValueChange = onQueryChange,
-            label = stringResource(R.string.jobs_search_label),
-            imeAction = ImeAction.Search,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+        JobsHeader(
+            query = uiState.query,
+            totalRecords = uiState.totalRecords,
+            onQueryChange = onQueryChange,
+        )
+
+        JobsFilters(
+            selected = uiState.selectedFilter,
+            onFilterChange = onFilterChange,
         )
 
         when {
-            uiState.isLoading -> LoadingState()
+            uiState.isLoading -> Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center,
+            ) {
+                CircularProgressIndicator()
+            }
 
-            uiState.errorMessage != null -> ErrorState(
-                message = stringResource(uiState.errorMessage),
+            uiState.errorMessage != null -> JobsError(
+                messageRes = uiState.errorMessage,
                 onRetryClick = onRetryClick,
             )
 
@@ -93,126 +106,267 @@ fun JobsContent(
                 message = stringResource(R.string.jobs_empty_message),
             )
 
-            else -> JobOfferList(
-                offers = uiState.offers,
-                totalRecords = uiState.totalRecords,
-                isLoadingMore = uiState.isLoadingMore,
-                hasMore = uiState.hasMore,
-                onLoadMore = onLoadMore,
-            )
+            else -> LazyColumn(
+                contentPadding = PaddingValues(12.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+                modifier = Modifier.fillMaxSize(),
+            ) {
+                items(items = uiState.visibleOffers, key = { it.id }) { offer ->
+                    JobCard(offer = offer)
+                }
+
+                if (uiState.hasMore) {
+                    item {
+                        // Al llegar acá se pide la página siguiente: es el scroll infinito.
+                        LaunchLoadMore(onLoadMore = onLoadMore)
+                    }
+                }
+            }
         }
     }
 }
 
+/** Antetítulo, título, contador de resultados y buscador. */
 @Composable
-private fun JobOfferList(
-    offers: List<JobOffer>,
+private fun JobsHeader(
+    query: String,
     totalRecords: Int,
-    isLoadingMore: Boolean,
-    hasMore: Boolean,
-    onLoadMore: () -> Unit,
+    onQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val listState = rememberLazyListState()
+    Column(modifier = modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
+        Text(
+            text = stringResource(R.string.jobs_eyebrow),
+            style = MaterialTheme.typography.labelSmall,
+            color = MaterialTheme.colorScheme.primary,
+        )
 
-    // Avisa cuando faltan pocas tarjetas para el final, así la página siguiente se pide
-    // antes de que el usuario llegue al borde y la lista no se corta.
-    val shouldLoadMore by remember {
-        derivedStateOf {
-            val lastVisible = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-            lastVisible >= offers.size - PRELOAD_ITEMS
-        }
-    }
-    LaunchedEffect(listState) {
-        snapshotFlow { shouldLoadMore }.collect { cerca -> if (cerca) onLoadMore() }
-    }
-
-    LazyColumn(
-        state = listState,
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-        modifier = modifier.fillMaxSize(),
-    ) {
-        item {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             Text(
-                text = pluralStringResource(R.plurals.jobs_result_count, totalRecords, totalRecords),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                text = stringResource(R.string.destination_jobs),
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.onBackground,
+                modifier = Modifier.weight(1f),
             )
-        }
-
-        items(items = offers, key = { it.id }) { offer ->
-            JobOfferCard(offer = offer)
-        }
-
-        if (isLoadingMore) {
-            item {
-                Row(
-                    horizontalArrangement = Arrangement.Center,
-                    modifier = Modifier.fillMaxWidth().padding(16.dp),
-                ) {
-                    CircularProgressIndicator()
-                }
-            }
-        } else if (!hasMore && offers.isNotEmpty()) {
-            item {
+            Surface(
+                color = MaterialTheme.colorScheme.primaryContainer,
+                shape = RoundedCornerShape(50),
+            ) {
                 Text(
-                    text = stringResource(R.string.jobs_end_of_list),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                    text = stringResource(R.string.jobs_found_count, totalRecords),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                 )
             }
         }
+
+        OutlinedTextField(
+            value = query,
+            onValueChange = onQueryChange,
+            placeholder = { Text(stringResource(R.string.jobs_search_placeholder)) },
+            singleLine = true,
+            shape = RoundedCornerShape(50),
+            colors = OutlinedTextFieldDefaults.colors(
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+            ),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 12.dp),
+        )
     }
 }
 
-/** Tarjeta de una oferta: puesto, empresa, dónde y qué tanto encaja con el perfil. */
+/** Fila de filtros rápidos. */
 @Composable
-private fun JobOfferCard(offer: JobOffer, modifier: Modifier = Modifier) {
-    Card(modifier = modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Row(verticalAlignment = Alignment.Top, modifier = Modifier.fillMaxWidth()) {
+private fun JobsFilters(
+    selected: JobsFilter,
+    onFilterChange: (JobsFilter) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        modifier = modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+    ) {
+        JobsFilter.entries.forEach { filter ->
+            FilterChip(
+                selected = filter == selected,
+                onClick = { onFilterChange(filter) },
+                label = {
+                    Text(
+                        text = stringResource(filter.labelRes),
+                        style = MaterialTheme.typography.labelSmall,
+                    )
+                },
+            )
+        }
+    }
+}
+
+/**
+ * Tarjeta de una oferta: el logo y los datos arriba, el anillo de compatibilidad, los
+ * requisitos, y el botón de detalle abajo.
+ */
+@Composable
+private fun JobCard(
+    offer: JobOffer,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        color = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(12.dp),
+        modifier = modifier.fillMaxWidth(),
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                CompanyLogo(logoUrl = offer.companyLogoUrl, company = offer.company)
+
+                Spacer(modifier = Modifier.width(10.dp))
+
                 Column(modifier = Modifier.weight(1f)) {
                     Text(
                         text = offer.title,
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleSmall,
                         color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                     Text(
                         text = offer.company,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MaterialTheme.typography.labelLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    Text(
+                        text = stringResource(
+                            R.string.jobs_location_and_modality,
+                            offer.location,
+                            stringResource(offer.modality.labelRes()),
+                        ),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.primary,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
                     )
                 }
-                if (offer.matchScore != null) {
-                    Text(
-                        text = stringResource(R.string.jobs_match_score, offer.matchScore),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
+
+                offer.matchScore?.let { score ->
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        CompatibilityRing(percentage = score)
+                        Text(
+                            text = stringResource(R.string.jobs_match_label),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
                 }
             }
 
-            Text(
-                text = stringResource(
-                    R.string.jobs_location_and_modality,
-                    offer.location,
-                    stringResource(offer.modality.labelRes()),
-                ),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(top = 8.dp),
-            )
-
-            offer.requirements.take(MAX_REQUIREMENTS).forEach { requisito ->
+            if (offer.requirements.isNotEmpty()) {
                 Text(
-                    text = stringResource(R.string.jobs_requirement_bullet, requisito),
-                    style = MaterialTheme.typography.bodyMedium,
+                    text = stringResource(R.string.jobs_requirements_title),
+                    style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurface,
-                    modifier = Modifier.padding(top = 4.dp),
+                    modifier = Modifier.padding(top = 12.dp),
+                )
+                Text(
+                    text = offer.requirements.joinToString(", "),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(top = 2.dp),
                 )
             }
+
+            // TODO: sin acción. Falta la pantalla de detalle de la oferta.
+            Button(
+                onClick = {},
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp),
+            ) {
+                Text(stringResource(R.string.jobs_details))
+            }
+        }
+    }
+}
+
+@Composable
+private fun JobsError(
+    messageRes: Int,
+    onRetryClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            Text(
+                text = stringResource(messageRes),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Button(onClick = onRetryClick) {
+                Text(stringResource(R.string.applications_retry))
+            }
+        }
+    }
+}
+
+/** Pie de la lista: muestra el cargando de la página siguiente y la dispara. */
+@Composable
+private fun LaunchLoadMore(
+    onLoadMore: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    androidx.compose.runtime.LaunchedEffect(Unit) { onLoadMore() }
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(16.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        CircularProgressIndicator()
+    }
+}
+
+/** Recuadro del logo de la empresa, con su inicial cuando no hay imagen. */
+@Composable
+private fun CompanyLogo(
+    logoUrl: String?,
+    company: String,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .size(48.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(MaterialTheme.colorScheme.primaryContainer),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (logoUrl != null) {
+            AsyncImage(
+                model = logoUrl,
+                contentDescription = stringResource(R.string.applications_logo_description, company),
+                contentScale = ContentScale.Fit,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(4.dp),
+            )
+        } else {
+            Text(
+                text = company.take(1).uppercase(),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary,
+            )
         }
     }
 }
@@ -223,38 +377,48 @@ private fun JobModality.labelRes(): Int = when (this) {
     JobModality.HYBRID -> R.string.modality_hybrid
 }
 
-private const val PRELOAD_ITEMS = 3
-private const val MAX_REQUIREMENTS = 2
-
-@Preview(name = "Ofertas - lista")
+@Preview(name = "Ofertas · claro", widthDp = 390, heightDp = 900)
 @Composable
-private fun JobsContentPreview() {
-    CvProTheme(darkTheme = false) {
+private fun JobsPreviewLight() = JobsPreview(darkTheme = false)
+
+@Preview(name = "Ofertas · oscuro", widthDp = 390, heightDp = 900)
+@Composable
+private fun JobsPreviewDark() = JobsPreview(darkTheme = true)
+
+@Composable
+private fun JobsPreview(darkTheme: Boolean) {
+    CvProTheme(darkTheme = darkTheme) {
         Surface(color = MaterialTheme.colorScheme.background) {
             JobsContent(
                 uiState = JobsUiState(
-                    offers = listOf(
-                        JobOffer("1", "Cajero de tienda", "Automercado", null, "Heredia", JobModality.ON_SITE, "Comercio", listOf("Atención al cliente"), 76),
-                        JobOffer("2", "Community manager junior", "Agencia Nova", null, "Remoto", JobModality.REMOTE, "Mercadeo", listOf("Redacción"), 58),
-                    ),
                     totalRecords = 2,
+                    offers = listOf(
+                        JobOffer(
+                            id = "1",
+                            title = "Data Analyst",
+                            company = "TechCorp",
+                            companyLogoUrl = null,
+                            location = "Escazú, San José",
+                            modality = JobModality.HYBRID,
+                            sector = "Tecnología",
+                            requirements = listOf("SQL avanzado", "Power BI"),
+                            matchScore = 80,
+                        ),
+                        JobOffer(
+                            id = "2",
+                            title = "BI Developer",
+                            company = "Nimbus",
+                            companyLogoUrl = null,
+                            location = "Heredia",
+                            modality = JobModality.REMOTE,
+                            sector = "Tecnología",
+                            requirements = listOf("Modelado de datos", "ETL"),
+                            matchScore = 76,
+                        ),
+                    ),
                 ),
                 onQueryChange = {},
-                onRetryClick = {},
-                onLoadMore = {},
-            )
-        }
-    }
-}
-
-@Preview(name = "Ofertas - vacío")
-@Composable
-private fun JobsEmptyPreview() {
-    CvProTheme(darkTheme = true) {
-        Surface(color = MaterialTheme.colorScheme.background) {
-            JobsContent(
-                uiState = JobsUiState(query = "arquitecto naval"),
-                onQueryChange = {},
+                onFilterChange = {},
                 onRetryClick = {},
                 onLoadMore = {},
             )

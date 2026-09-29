@@ -47,6 +47,11 @@ class GoogleAuthRepository @Inject constructor(
     private val _currentUser = MutableStateFlow<User?>(null)
     override val currentUser: StateFlow<User?> = _currentUser.asStateFlow()
 
+    // El token que devuelve Google. Antes se descartaba, porque la Fase I no tenía servicio
+    // que lo validara; desde que el APIM exige autenticación, la capa de red lo necesita.
+    private val _idToken = MutableStateFlow<String?>(null)
+    override val idToken: StateFlow<String?> = _idToken.asStateFlow()
+
     override suspend fun signIn(activityContext: Context): SignInResult {
         // Viene de local.properties (local) o de un secret de GitHub Actions (CI), vía BuildConfig.
         val webClientId = BuildConfig.GOOGLE_WEB_CLIENT_ID
@@ -76,6 +81,7 @@ class GoogleAuthRepository @Inject constructor(
                     email = googleCredential.id,
                     photoUrl = googleCredential.profilePictureUri?.toString(),
                 )
+                _idToken.value = googleCredential.idToken
                 _currentUser.value = user
                 SignInResult.Success(user)
             } else {
@@ -103,6 +109,7 @@ class GoogleAuthRepository @Inject constructor(
             Log.w(TAG, "Could not clear credential state", e)
         }
         _currentUser.value = null
+        _idToken.value = null
     }
 
     private companion object {
