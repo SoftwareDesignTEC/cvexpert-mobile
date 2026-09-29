@@ -81,8 +81,16 @@
     <string name="modality_hybrid">Híbrido</string>
 
     <!-- Postulaciones -->
-    <string name="applications_tab_with_count">%1$s (%2$d)</string>
+    <string name="applications_title">Rastreador de Postulaciones</string>
+    <string name="applications_count">Postulaciones: %1$d</string>
     <string name="applications_applied_at">Postulado el %1$s</string>
+    <string name="applications_see_all">Ver Todo</string>
+    <string name="applications_action_status">Estado</string>
+    <string name="applications_action_details">Detalles</string>
+    <string name="applications_change_status">Cambiar estado</string>
+    <string name="applications_logo_description">Logo de %1$s</string>
+    <string name="applications_error_title">Algo salió mal al cargar las postulaciones</string>
+    <string name="applications_retry">Reintentar</string>
     <string name="applications_empty_title">Nada por acá</string>
     <string name="applications_empty_message">No tenés postulaciones en \"%1$s\".</string>
     <string name="application_status_applied">Aplicado</string>

@@ -5,14 +5,13 @@ package com.cvpro.app.domain.model
  *
  * Los nombres de los campos son los de JobOffer en docs/contract/models.ts, para mantener la
  * paridad con la web.
- *
- * TODO: confirmar con Pérez los campos que el diseño muestra y el contrato no tiene todavía
- * (logo de la empresa) y el formato de postedAt.
  */
 data class JobOffer(
     val id: String,
     val title: String,
     val company: String,
+    /** Logo de la empresa que muestra la tarjeta del diseño. Opcional: puede no venir. */
+    val companyLogoUrl: String?,
     val location: String,
     val modality: JobModality,
     val sector: String,

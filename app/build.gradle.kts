@@ -36,8 +36,10 @@ android {
         applicationId = "com.cvpro.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.1.0"
+        // Se sube en cada hito etiquetado. versionCode siempre crece: Firebase y Play
+        // rechazan una subida con un número igual o menor al anterior.
+        versionCode = 2
+        versionName = "0.2.0"
 
         // Se inyectan como constantes en BuildConfig.
         buildConfigField("String", "APIM_BASE_URL", "\"${configValue("APIM_BASE_URL")}\"")

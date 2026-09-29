@@ -82,6 +82,8 @@ class SampleJobOfferRepository @Inject constructor() : JobOfferRepository {
             id = id,
             title = title,
             company = company,
+            // Los datos de prueba no traen logo: la tarjeta cae al recuadro con la inicial.
+            companyLogoUrl = null,
             location = location,
             modality = modality,
             sector = sector,

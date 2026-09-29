@@ -10,6 +10,8 @@ data class JobApplication(
     val id: String,
     val jobTitle: String,
     val company: String,
+    /** Logo de la empresa que muestra la tarjeta del diseño. Opcional: puede no venir. */
+    val companyLogoUrl: String?,
     val location: String,
     val modality: JobModality,
     val status: ApplicationStatus,

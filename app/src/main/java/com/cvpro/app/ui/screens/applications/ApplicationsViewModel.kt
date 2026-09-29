@@ -6,7 +6,6 @@ import com.cvpro.app.domain.model.ApplicationStatus
 import com.cvpro.app.domain.model.JobApplication
 import com.cvpro.app.domain.repository.ApplicationRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
-import com.cvpro.app.domain.model.JobModality
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,23 +14,23 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 /**
- * Estado del tablero de postulaciones.
+ * Estado del rastreador de postulaciones.
  *
- * @property selectedStatus columna que se está viendo. En la web las columnas se ven todas a
- * la vez; en el teléfono no caben, así que se muestran como pestañas y se ve una a la vez.
+ * @property selectedStatus pestaña que se está viendo. En el wireframe de Samuel los cuatro
+ * estados son pestañas y se ve una lista a la vez.
+ * @property totalRecords cuántas postulaciones hay en total, para el contador de arriba.
+ * Viene del servicio, no del tamaño de la lista cargada, porque la lista está paginada.
  */
 data class ApplicationsUiState(
     val applications: List<JobApplication> = emptyList(),
     val selectedStatus: ApplicationStatus = ApplicationStatus.APPLIED,
+    val totalRecords: Int = 0,
     val isLoading: Boolean = false,
     val error: String? = null,
 ) {
-    /** Postulaciones de la columna abierta. */
+    /** Postulaciones de la pestaña abierta. */
     val visibleApplications: List<JobApplication> =
         applications.filter { it.status == selectedStatus }
-
-    /** Cuántas hay en cada columna, para el número que va en cada pestaña. */
-    fun countFor(status: ApplicationStatus): Int = applications.count { it.status == status }
 }
 
 @HiltViewModel
@@ -52,25 +51,49 @@ class ApplicationsViewModel @Inject constructor(
         loadApplications()
     }
 
+    /**
+     * Cambia el estado de una postulación (el botón "Estado" de la tarjeta).
+     *
+     * Es la operación de actualización del CRUD: manda el PUT y reemplaza en la lista la
+     * postulación que devuelve el servicio, para no tener que recargar todo.
+     */
+    fun onStatusChange(application: JobApplication, newStatus: ApplicationStatus) {
+        if (application.status == newStatus) return
+
+        viewModelScope.launch {
+            try {
+                val updated = repository.updateApplicationStatus(
+                    id = application.id,
+                    status = newStatus,
+                )
+                _uiState.update { state ->
+                    state.copy(
+                        applications = state.applications.map { current ->
+                            if (current.id == updated.id) updated else current
+                        },
+                    )
+                }
+            } catch (exception: Exception) {
+                _uiState.update { it.copy(error = exception.message) }
+            }
+        }
+    }
+
     private fun loadApplications() {
         viewModelScope.launch {
-            _uiState.update {
-                it.copy(
-                    isLoading = true,
-                    error = null,
-                )
-            }
+            _uiState.update { it.copy(isLoading = true, error = null) }
 
             try {
                 val result = repository.getApplications(
                     page = 1,
-                    pageSize = 50,
+                    pageSize = PAGE_SIZE,
                     query = "",
                 )
 
                 _uiState.update {
                     it.copy(
                         applications = result.items,
+                        totalRecords = result.totalRecords,
                         isLoading = false,
                         error = null,
                     )
@@ -80,10 +103,15 @@ class ApplicationsViewModel @Inject constructor(
                     it.copy(
                         applications = emptyList(),
                         isLoading = false,
-                        error = exception.message ?: "Error al cargar las postulaciones",
+                        error = exception.message,
                     )
                 }
             }
         }
+    }
+
+    private companion object {
+        /** El rastreador muestra todo junto; no tiene scroll infinito como las ofertas. */
+        const val PAGE_SIZE = 50
     }
 }
