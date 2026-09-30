@@ -24,6 +24,34 @@ fun configValue(name: String): String =
     localProperties.getProperty(name)?.takeIf { it.isNotBlank() }
         ?: System.getenv(name).orEmpty()
 
+/**
+ * Datos de firma del APK de release.
+ *
+ * Igual que el resto de la configuración: en local salen de local.properties (ignorado por
+ * git) y en GitHub Actions de los secrets RELEASE_*, que el workflow expone como variables
+ * de entorno. La contraseña nunca se escribe en este archivo ni viaja al repositorio.
+ *
+ * El keystore no está versionado: en el runner lo escribe el paso que decodifica
+ * RELEASE_KEYSTORE_BASE64, y en local es el archivo que cada quien tenga.
+ */
+val keystorePath = configValue("RELEASE_KEYSTORE_PATH").ifBlank { "release-key.jks" }
+val keystoreFile = rootProject.file("../../$keystorePath")
+val keystorePassword = configValue("RELEASE_KEYSTORE_PASSWORD")
+val keystoreAlias = configValue("RELEASE_KEY_ALIAS")
+val keystoreKeyPassword = configValue("RELEASE_KEY_PASSWORD")
+
+/**
+ * Solo se firma si están los cuatro datos y el archivo existe.
+ *
+ * Sin esto, compilar el release en una máquina sin las credenciales fallaría. Así sale un
+ * APK sin firmar —que no se puede instalar, pero deja seguir trabajando— y el runner, que sí
+ * tiene los secrets, produce el firmado.
+ */
+val canSignRelease = keystoreFile.exists() &&
+    keystorePassword.isNotBlank() &&
+    keystoreAlias.isNotBlank() &&
+    keystoreKeyPassword.isNotBlank()
+
 android {
     // namespace = paquete de las clases generadas (R, BuildConfig).
     namespace = "com.cvpro.app"
@@ -47,6 +75,17 @@ android {
         buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"${configValue("GOOGLE_WEB_CLIENT_ID")}\"")
     }
 
+    signingConfigs {
+        if (canSignRelease) {
+            create("release") {
+                storeFile = keystoreFile
+                storePassword = keystorePassword
+                keyAlias = keystoreAlias
+                keyPassword = keystoreKeyPassword
+            }
+        }
+    }
+
     buildTypes {
         debug {
             // Sufijo para poder tener debug y release instalados a la vez.
@@ -54,6 +93,10 @@ android {
             versionNameSuffix = "-debug"
         }
         release {
+            // Si no hay credenciales, el APK sale sin firmar en vez de romper el build.
+            if (canSignRelease) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
