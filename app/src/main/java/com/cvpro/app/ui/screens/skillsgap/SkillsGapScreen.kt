@@ -336,16 +336,17 @@ private fun CoursesCard(
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.weight(1f),
             )
-            // TODO: sin acción. No hay pantalla con el catálogo completo de cursos.
-            OutlinedButton(
-                onClick = {},
-                colors = androidx.compose.material3.ButtonDefaults.outlinedButtonColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                ),
+            // La tarjeta ya lista todos los cursos que devuelve el análisis, así que en vez
+            // del "Ver más" del diseño va el contador: no hay más que abrir.
+            Surface(
+                color = MaterialTheme.colorScheme.primaryContainer,
+                shape = RoundedCornerShape(50),
             ) {
                 Text(
-                    text = stringResource(R.string.skills_gap_courses_see_more),
+                    text = stringResource(R.string.skills_gap_courses_count, courses.size),
                     style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
                 )
             }
         }

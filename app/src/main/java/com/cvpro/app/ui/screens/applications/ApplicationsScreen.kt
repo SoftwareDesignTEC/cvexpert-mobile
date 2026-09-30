@@ -46,6 +46,7 @@ import com.cvpro.app.data.mapper.daysSince
 import com.cvpro.app.domain.model.ApplicationStatus
 import com.cvpro.app.domain.model.JobApplication
 import com.cvpro.app.domain.model.JobModality
+import com.cvpro.app.ui.components.JobApplicationDetailSheet
 import com.cvpro.app.ui.theme.CvProTheme
 import com.cvpro.app.ui.theme.extraColors
 
@@ -78,10 +79,21 @@ fun ApplicationsTracker(
     onStatusChange: (JobApplication, ApplicationStatus) -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
-    // TODO: confirmar con Samuel a dónde llevan. No hay pantalla de detalle todavía.
-    onDetailsClick: (JobApplication) -> Unit = {},
-    onSeeAllClick: (ApplicationStatus) -> Unit = {},
 ) {
+    // Postulación abierta en el detalle, o null si la hoja está cerrada.
+    var detailApplication by remember { mutableStateOf<JobApplication?>(null) }
+
+    detailApplication?.let { application ->
+        JobApplicationDetailSheet(
+            application = application,
+            onDismiss = { detailApplication = null },
+            onStatusChange = { newStatus ->
+                onStatusChange(application, newStatus)
+                detailApplication = null
+            },
+        )
+    }
+
     Column(modifier = modifier.fillMaxSize()) {
         ApplicationsHeader(totalRecords = uiState.totalRecords)
 
@@ -110,8 +122,7 @@ fun ApplicationsTracker(
                         status = status,
                         applications = uiState.applications.filter { it.status == status },
                         onStatusChange = onStatusChange,
-                        onDetailsClick = onDetailsClick,
-                        onSeeAllClick = { onSeeAllClick(status) },
+                        onDetailsClick = { detailApplication = it },
                     )
                 }
             }
@@ -167,7 +178,6 @@ private fun StatusColumn(
     applications: List<JobApplication>,
     onStatusChange: (JobApplication, ApplicationStatus) -> Unit,
     onDetailsClick: (JobApplication) -> Unit,
-    onSeeAllClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val accent = status.accentColor()
@@ -229,16 +239,15 @@ private fun StatusColumn(
                     )
                 }
 
-                TextButton(
-                    onClick = onSeeAllClick,
-                    colors = ButtonDefaults.textButtonColors(contentColor = accent),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 10.dp),
-                ) {
+                // El diseño web tiene un "Ver todo" por columna porque allá se recorta la
+                // lista. Acá la columna ya trae todas las postulaciones de ese estado y se
+                // desplaza hacia abajo, así que el botón no tendría nada que abrir.
+                if (applications.isEmpty()) {
                     Text(
-                        text = stringResource(R.string.applications_column_see_all),
-                        style = MaterialTheme.typography.labelMedium,
+                        text = stringResource(R.string.applications_column_empty),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(vertical = 16.dp),
                     )
                 }
             }

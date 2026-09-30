@@ -68,7 +68,7 @@ fun TemplatesContent(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.fillMaxSize()) {
-        TemplatesHeader()
+        TemplatesHeader(count = uiState.templates.size)
 
         when {
             uiState.isLoading -> Box(
@@ -100,7 +100,10 @@ fun TemplatesContent(
 
 /** Antetítulo, título y el acceso al catálogo completo. */
 @Composable
-private fun TemplatesHeader(modifier: Modifier = Modifier) {
+private fun TemplatesHeader(
+    count: Int,
+    modifier: Modifier = Modifier,
+) {
     Row(
         verticalAlignment = Alignment.CenterVertically,
         modifier = modifier.padding(horizontal = 12.dp, vertical = 8.dp),
@@ -117,16 +120,18 @@ private fun TemplatesHeader(modifier: Modifier = Modifier) {
                 color = MaterialTheme.colorScheme.onBackground,
             )
         }
-        // TODO: sin acción. No hay tienda de plantillas en línea todavía.
-        OutlinedButton(
-            onClick = {},
-            colors = ButtonDefaults.outlinedButtonColors(
-                containerColor = MaterialTheme.colorScheme.surface,
-            ),
+        // El diseño web tiene un "Ver todas" porque allá se recorta el catálogo. Acá la
+        // pantalla ya trae todas las plantillas del servicio, así que en su lugar va el
+        // contador: informa lo mismo y no promete una pantalla que no existe.
+        Surface(
+            color = MaterialTheme.colorScheme.primaryContainer,
+            shape = RoundedCornerShape(50),
         ) {
             Text(
-                text = stringResource(R.string.templates_see_all),
+                text = stringResource(R.string.templates_count, count),
                 style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
             )
         }
     }

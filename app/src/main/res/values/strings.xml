@@ -49,10 +49,18 @@
     <string name="settings_help_email">Enviar Correo Electrónico</string>
     <string name="settings_help_email_subject">Soporte de Careerly</string>
 
+    <!-- Detalle de oferta y postulación -->
+    <string name="detail_description">Descripción</string>
+    <string name="detail_salary">Salario</string>
+    <string name="detail_salary_range">%1$d – %2$d %3$s</string>
+    <string name="detail_posted_at">Publicada</string>
+    <string name="detail_applied_at">Fecha de postulación</string>
+    <string name="detail_current_status">Actual</string>
+
     <!-- Plantillas -->
     <string name="templates_eyebrow">CREA DONDE QUIERAS</string>
     <string name="templates_title">Plantillas sin conexión</string>
-    <string name="templates_see_all">Ver todas</string>
+    <string name="templates_count">%1$d plantillas</string>
     <string name="templates_preview">Vista previa</string>
     <string name="templates_use">Usar esta plantilla</string>
     <string name="templates_premium">Premium</string>
@@ -188,7 +196,7 @@
     <string name="applications_title">Rastreador de Postulaciones</string>
     <string name="applications_eyebrow">TU BÚSQUEDA EN MOVIMIENTO</string>
     <string name="applications_count">Postulaciones %1$d</string>
-    <string name="applications_column_see_all">Ver todo</string>
+    <string name="applications_column_empty">Sin postulaciones acá</string>
     <string name="applications_applied_today">Hoy</string>
     <string name="applications_applied_yesterday">Ayer</string>
     <plurals name="applications_applied_days_ago">
@@ -220,7 +228,7 @@
     <string name="skills_gap_points_subtitle">Habilidades por Mejorar</string>
     <string name="skills_gap_row_number">%1$d.</string>
     <string name="skills_gap_gap_percent">-%1$d%% brecha</string>
-    <string name="skills_gap_courses_see_more">Ver más</string>
+    <string name="skills_gap_courses_count">%1$d cursos</string>
     <string name="skills_gap_course_duration">Duración: %1$s</string>
     <string name="skills_gap_course_open">Ver Curso</string>
     <string name="skills_gap_target">Comparado con: %1$s</string>
