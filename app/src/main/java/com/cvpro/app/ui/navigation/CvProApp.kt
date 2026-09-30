@@ -101,6 +101,7 @@ fun CvProApp(
                 CvProNavGraph(
                     navController = navController,
                     user = user,
+                    onSignOutClick = sessionViewModel::signOut,
                     modifier = Modifier.padding(innerPadding),
                 )
             }

@@ -45,6 +45,7 @@ import com.cvpro.app.ui.theme.CvProTheme
 /** Configuración con estado. */
 @Composable
 fun SettingsScreen(
+    onSignOutClick: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
@@ -53,6 +54,7 @@ fun SettingsScreen(
     SettingsContent(
         uiState = uiState,
         onThemeSelected = viewModel::onThemeSelected,
+        onSignOutClick = onSignOutClick,
         modifier = modifier,
     )
 }
@@ -69,6 +71,7 @@ fun SettingsContent(
     uiState: SettingsUiState,
     onThemeSelected: (ThemePreference) -> Unit,
     modifier: Modifier = Modifier,
+    onSignOutClick: () -> Unit = {},
 ) {
     val context = LocalContext.current
 
@@ -100,6 +103,12 @@ fun SettingsContent(
             subtitle = stringResource(R.string.settings_security_subtitle),
         ) {
             SettingsRow(label = stringResource(R.string.settings_security_sessions))
+            // El cierre de sesión vive acá y no en el menú lateral, que en el diseño de
+            // Samuel no lo tiene. Es la única forma de salir de la cuenta.
+            SettingsRow(
+                label = stringResource(R.string.home_sign_out),
+                onClick = onSignOutClick,
+            )
         }
 
         SettingsCard(
@@ -215,6 +224,7 @@ private fun SettingsRow(
     label: String,
     modifier: Modifier = Modifier,
     isDestructive: Boolean = false,
+    onClick: (() -> Unit)? = null,
 ) {
     val accent = if (isDestructive) {
         MaterialTheme.colorScheme.error
@@ -228,7 +238,9 @@ private fun SettingsRow(
         modifier = modifier
             .fillMaxWidth()
             .padding(top = 10.dp)
-            .clickable(enabled = false) { },
+            // Las filas sin acción todavía no llevan a ninguna parte: no responden al toque
+            // para no prometer una pantalla que no existe.
+            .clickable(enabled = onClick != null) { onClick?.invoke() },
     ) {
         Row(
             verticalAlignment = Alignment.CenterVertically,

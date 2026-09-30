@@ -1,6 +1,7 @@
 package com.cvpro.app.ui.screens.skillsgap
 
 import androidx.annotation.StringRes
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cvpro.app.R
@@ -44,6 +45,9 @@ class SkillsGapViewModel @Inject constructor(
                     _uiState.update { it.copy(analysis = analysis, isLoading = false) }
                 }
                 .onFailure { error ->
+                    // Se registra el error real: la pantalla solo muestra un mensaje
+                    // entendible, y sin esto no queda rastro de qué falló.
+                    Log.w(TAG, "No se pudo cargar el análisis de brecha", error)
                     val message = if (error is IOException) {
                         R.string.skills_gap_error_network
                     } else {
@@ -52,5 +56,8 @@ class SkillsGapViewModel @Inject constructor(
                     _uiState.update { it.copy(analysis = null, isLoading = false, errorMessage = message) }
                 }
         }
+    }
+    private companion object {
+        const val TAG = "SkillsGapViewModel"
     }
 }

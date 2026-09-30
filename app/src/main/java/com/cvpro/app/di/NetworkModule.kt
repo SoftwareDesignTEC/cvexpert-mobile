@@ -14,6 +14,7 @@ import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
 import com.cvpro.app.data.remote.api.ApplicationApi
 import com.cvpro.app.data.remote.api.ProfileApi
+import com.cvpro.app.data.remote.api.SkillsGapApi
 import com.cvpro.app.data.remote.api.TemplateApi
 import com.cvpro.app.data.remote.api.CvApi
 
@@ -85,6 +86,12 @@ object NetworkModule {
     @Singleton
     fun provideCvApi(retrofit: Retrofit): CvApi {
         return retrofit.create(CvApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSkillsGapApi(retrofit: Retrofit): SkillsGapApi {
+        return retrofit.create(SkillsGapApi::class.java)
     }
 
     /**

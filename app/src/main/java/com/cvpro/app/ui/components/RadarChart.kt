@@ -5,8 +5,10 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.Constraints
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -64,11 +66,10 @@ fun RadarChart(
     val textMeasurer = rememberTextMeasurer()
 
     Box(modifier = modifier) {
-        Canvas(
-            modifier = Modifier
-                .fillMaxWidth()
-                .aspectRatio(1f),
-        ) {
+        // fillMaxSize y no aspectRatio: con una relación fija el lienzo se hace tan alto
+        // como ancho, se sale de la altura que le dio quien lo usa, y la etiqueta de arriba
+        // termina encima del título de la tarjeta.
+        Canvas(modifier = Modifier.fillMaxSize()) {
             if (labels.isEmpty()) return@Canvas
 
             // Se deja margen para que las etiquetas no se salgan del dibujo.
@@ -135,10 +136,20 @@ private fun DrawScope.drawRadarLabels(
     textMeasurer: TextMeasurer,
     style: TextStyle,
 ) {
+    // Ancho máximo de una etiqueta: si un nombre es más largo, se corta con puntos
+    // suspensivos en vez de invadir la etiqueta de al lado.
+    val maxLabelWidth = (size.width * MAX_LABEL_WIDTH_RATIO).toInt()
+
     labels.forEachIndexed { index, label ->
         val angle = radarAngle(index, labels.size)
         val anchor = radarPoint(center, radius * 1.15f, index, labels.size)
-        val measured = textMeasurer.measure(label, style)
+        val measured = textMeasurer.measure(
+            text = label,
+            style = style,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+            constraints = Constraints(maxWidth = maxLabelWidth),
+        )
 
         // La etiqueta se alinea según dónde está su punta: las de la derecha arrancan en la
         // punta, las de la izquierda terminan en ella y las de arriba y abajo van centradas.
@@ -146,15 +157,23 @@ private fun DrawScope.drawRadarLabels(
         val horizontalFactor = 0.5f - 0.5f * cos(angle).toFloat()
         val verticalFactor = 0.5f - 0.5f * sin(angle).toFloat()
 
+        // Y se encierra dentro del lienzo: aunque el cálculo la deje fuera por el largo del
+        // texto, nunca se dibuja encima de lo que esté arriba o al lado de la tarjeta.
+        val maxX = (size.width - measured.size.width).coerceAtLeast(0f)
+        val maxY = (size.height - measured.size.height).coerceAtLeast(0f)
+
         drawText(
             textLayoutResult = measured,
             topLeft = Offset(
-                x = anchor.x - measured.size.width * horizontalFactor,
-                y = anchor.y - measured.size.height * verticalFactor,
+                x = (anchor.x - measured.size.width * horizontalFactor).coerceIn(0f, maxX),
+                y = (anchor.y - measured.size.height * verticalFactor).coerceIn(0f, maxY),
             ),
         )
     }
 }
+
+/** Cuánto del ancho del gráfico puede ocupar una etiqueta antes de cortarse. */
+private const val MAX_LABEL_WIDTH_RATIO = 0.3f
 
 /**
  * Posición de una punta.

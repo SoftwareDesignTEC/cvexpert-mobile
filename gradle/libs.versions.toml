@@ -52,6 +52,9 @@ androidx-compose-ui-tooling-preview = { group = "androidx.compose.ui", name = "u
 androidx-compose-material3 = { group = "androidx.compose.material3", name = "material3" }
 # Íconos básicos de Material (menú, perfil, notificaciones...). Material 3 ya no los incluye.
 androidx-compose-material-icons-core = { group = "androidx.compose.material", name = "material-icons-core" }
+# Set completo de íconos: el menú lateral del diseño usa carpeta, maletín, gráfico,
+# documento y kanban, que no vienen en el set básico. Pesa, pero era eso o dibujarlos.
+androidx-compose-material-icons-extended = { group = "androidx.compose.material", name = "material-icons-extended" }
 
 # Navigation Component para Compose: el grafo de navegación de la app.
 androidx-navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigation" }

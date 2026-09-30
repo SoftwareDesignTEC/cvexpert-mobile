@@ -28,7 +28,6 @@ abstract class RepositoryModule {
     @Singleton
     abstract fun bindAuthRepository(impl: GoogleAuthRepository): AuthRepository
 
-    // TODO: cambiar por la implementación contra el APIM cuando existan los mocks.
     @Binds
     @Singleton
     abstract fun bindJobOfferRepository(impl: ApiJobOfferRepository): JobOfferRepository
@@ -37,10 +36,9 @@ abstract class RepositoryModule {
     @Singleton
     abstract fun bindSettingsRepository(impl: DataStoreSettingsRepository): SettingsRepository
 
-    // TODO: cambiar por la implementación contra el APIM cuando existan los mocks.
     @Binds
     @Singleton
-    abstract fun bindSkillsGapRepository(impl: SampleSkillsGapRepository): SkillsGapRepository
+    abstract fun bindSkillsGapRepository(impl: ApiSkillsGapRepository): SkillsGapRepository
 
     @Binds
     @Singleton

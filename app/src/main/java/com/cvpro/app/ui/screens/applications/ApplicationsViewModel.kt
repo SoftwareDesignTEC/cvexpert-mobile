@@ -62,14 +62,24 @@ class ApplicationsViewModel @Inject constructor(
 
         viewModelScope.launch {
             try {
-                val updated = repository.updateApplicationStatus(
+                repository.updateApplicationStatus(
                     id = application.id,
                     status = newStatus,
                 )
+
+                // La tarjeta se mueve con el estado que pidió el usuario, sin usar lo que
+                // devuelve el servicio. Los mocks del APIM responden siempre lo mismo: con
+                // la postulación en su estado original y, a veces, con otro id. Si se
+                // tomara esa respuesta, la tarjeta volvería sola a su columna.
+                // TODO: cuando el servicio sea real, usar la postulación que devuelve.
                 _uiState.update { state ->
                     state.copy(
                         applications = state.applications.map { current ->
-                            if (current.id == updated.id) updated else current
+                            if (current.id == application.id) {
+                                current.copy(status = newStatus)
+                            } else {
+                                current
+                            }
                         },
                     )
                 }

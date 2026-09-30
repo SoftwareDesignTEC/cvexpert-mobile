@@ -65,10 +65,13 @@ fun CompatibilityRing(
             )
         }
 
+        // En una línea y sin ajuste: con 100% el texto no debe partirse dentro del anillo.
         Text(
             text = stringResource(R.string.jobs_match_percentage, safePercentage),
             style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.onSurface,
+            maxLines = 1,
+            softWrap = false,
         )
     }
 }

@@ -1,6 +1,8 @@
 package com.cvpro.app.ui.screens.jobs
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -196,9 +198,13 @@ private fun JobsFilters(
     onFilterChange: (JobsFilter) -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // Con desplazamiento horizontal: los cuatro filtros no entran en el ancho de un
+    // teléfono, y sin esto el último parte su texto en dos líneas.
     Row(
         horizontalArrangement = Arrangement.spacedBy(8.dp),
-        modifier = modifier.padding(horizontal = 12.dp, vertical = 4.dp),
+        modifier = modifier
+            .horizontalScroll(rememberScrollState())
+            .padding(horizontal = 12.dp, vertical = 4.dp),
     ) {
         JobsFilter.entries.forEach { filter ->
             FilterChip(
@@ -208,6 +214,8 @@ private fun JobsFilters(
                     Text(
                         text = stringResource(filter.labelRes),
                         style = MaterialTheme.typography.labelSmall,
+                        maxLines = 1,
+                        softWrap = false,
                     )
                 },
             )

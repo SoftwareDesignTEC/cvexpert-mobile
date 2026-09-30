@@ -26,6 +26,7 @@ import com.cvpro.app.ui.screens.templates.TemplatesScreen
 fun CvProNavGraph(
     navController: NavHostController,
     user: User,
+    onSignOutClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     NavHost(
@@ -58,7 +59,9 @@ fun CvProNavGraph(
         composable(CvProDestination.SKILLS_GAP.route) { SkillsGapScreen() }
         composable(CvProDestination.TEMPLATES.route) { TemplatesScreen() }
         composable(CvProDestination.APPLICATIONS.route) { ApplicationsScreen() }
-        composable(CvProDestination.SETTINGS.route) { SettingsScreen() }
+        composable(CvProDestination.SETTINGS.route) {
+            SettingsScreen(onSignOutClick = onSignOutClick)
+        }
     }
 }
 

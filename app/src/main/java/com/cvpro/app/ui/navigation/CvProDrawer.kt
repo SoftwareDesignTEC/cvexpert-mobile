@@ -27,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.cvpro.app.R
@@ -59,33 +60,63 @@ fun CvProDrawer(
             Spacer(modifier = Modifier.padding(top = 8.dp))
 
             CvProDestination.entries.forEach { destination ->
+                val isSelected = destination == currentDestination
                 NavigationDrawerItem(
                     label = { Text(stringResource(destination.titleRes)) },
-                    icon = { Icon(destination.icon, contentDescription = null) },
-                    selected = destination == currentDestination,
+                    icon = { DestinationIcon(destination = destination, isSelected = isSelected) },
+                    selected = isSelected,
                     onClick = { onDestinationClick(destination) },
                     modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding),
                 )
             }
 
-            HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
-
-            // El diseño no dibuja el cierre de sesión, pero tiene que estar en algún lado:
-            // es la única forma de salir de la cuenta.
-            NavigationDrawerItem(
-                label = { Text(stringResource(R.string.home_sign_out)) },
-                icon = { Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = null) },
-                selected = false,
-                onClick = onSignOutClick,
-                modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding),
-            )
+            // El cierre de sesión no va acá porque el diseño no lo dibuja: vive en
+            // Configuración, dentro del bloque de seguridad de la cuenta.
 
             // Nada de weight acá: la columna tiene scroll, así que su altura es infinita y
             // un hijo con weight se mediría contra esa altura y rompería en ejecución.
-            Spacer(modifier = Modifier.padding(top = 8.dp))
+            Spacer(modifier = Modifier.padding(top = 24.dp))
 
-            HelpCard(email = user.email)
+            HelpCard()
         }
+    }
+}
+
+/**
+ * Ícono de un destino del menú.
+ *
+ * El destino abierto lleva el ícono dentro de un cuadrito azul, como en el diseño; los
+ * demás van sueltos sobre el fondo del menú.
+ */
+@Composable
+private fun DestinationIcon(
+    destination: CvProDestination,
+    isSelected: Boolean,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .size(32.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(
+                if (isSelected) {
+                    MaterialTheme.colorScheme.primary
+                } else {
+                    Color.Transparent
+                },
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Icon(
+            imageVector = destination.icon,
+            contentDescription = null,
+            tint = if (isSelected) {
+                MaterialTheme.colorScheme.onPrimary
+            } else {
+                MaterialTheme.colorScheme.onSurfaceVariant
+            },
+            modifier = Modifier.size(20.dp),
+        )
     }
 }
 
@@ -131,17 +162,9 @@ private fun LogoTile(modifier: Modifier = Modifier) {
     }
 }
 
-/**
- * Centro de ayuda al pie del menú.
- *
- * Muestra el correo de la sesión, que en el diseño anterior estaba en el encabezado: así
- * sigue habiendo forma de saber con qué cuenta se entró.
- */
+/** Centro de ayuda al pie del menú. */
 @Composable
-private fun HelpCard(
-    email: String,
-    modifier: Modifier = Modifier,
-) {
+private fun HelpCard(modifier: Modifier = Modifier) {
     Surface(
         color = MaterialTheme.colorScheme.surfaceVariant,
         shape = RoundedCornerShape(12.dp),
@@ -176,7 +199,7 @@ private fun HelpCard(
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
-                    text = email,
+                    text = stringResource(R.string.nav_help_subtitle),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
