@@ -37,6 +37,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
 import com.cvpro.app.R
 import com.cvpro.app.domain.model.CourseRecommendation
 import com.cvpro.app.domain.model.SkillGapItem
@@ -377,8 +378,10 @@ private fun CourseCard(
         modifier = modifier.fillMaxWidth(),
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                // Cuadrito con la inicial de la plataforma, como los logos del diseño.
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Box(
                     modifier = Modifier
                         .size(32.dp)
@@ -386,12 +389,21 @@ private fun CourseCard(
                         .background(MaterialTheme.colorScheme.primaryContainer),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(
-                        text = course.platform.take(1).uppercase(),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
+                    if (course.logoUrl != null) {
+                        AsyncImage(
+                            model = course.logoUrl,
+                            contentDescription = "Logo de ${course.platform}",
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    } else {
+                        Text(
+                            text = course.platform.take(1).uppercase(),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
                 }
+
                 Text(
                     text = course.platform,
                     style = MaterialTheme.typography.labelLarge,
@@ -414,7 +426,8 @@ private fun CourseCard(
                 Text(
                     text = stringResource(
                         R.string.skills_gap_course_duration,
-                        course.duration ?: stringResource(R.string.skills_gap_course_no_duration),
+                        course.duration
+                            ?: stringResource(R.string.skills_gap_course_no_duration),
                     ),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -423,14 +436,20 @@ private fun CourseCard(
 
             Button(
                 onClick = {
-                    // Abre el curso en el navegador del teléfono.
-                    context.startActivity(Intent(Intent.ACTION_VIEW, course.url.toUri()))
+                    context.startActivity(
+                        Intent(
+                            Intent.ACTION_VIEW,
+                            course.url.toUri(),
+                        )
+                    )
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 10.dp),
             ) {
-                Text(stringResource(R.string.skills_gap_course_open))
+                Text(
+                    stringResource(R.string.skills_gap_course_open)
+                )
             }
         }
     }
@@ -481,6 +500,7 @@ private fun SkillsGapPreview(darkTheme: Boolean) {
                                 title = "Python para análisis de datos",
                                 platform = "DataCamp",
                                 url = "https://ejemplo.com",
+                                logoUrl = null,
                                 duration = "6 horas",
                             ),
                         ),

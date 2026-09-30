@@ -29,6 +29,7 @@ private fun CourseDto.toDomain(): CourseRecommendation {
         title = title,
         platform = platform,
         url = url,
+        logoUrl = logoUrl,
         duration = "$durationHours horas",
     )
 }

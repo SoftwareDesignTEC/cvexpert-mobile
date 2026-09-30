@@ -36,5 +36,6 @@ data class CourseRecommendation(
     val title: String,
     val platform: String,
     val url: String,
+    val logoUrl: String?,
     val duration: String?,
 )

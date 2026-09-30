@@ -12,5 +12,6 @@ data class CourseDto(
     val title: String,
     val url: String,
     val platform: String,
+    val logoUrl: String?,
     val durationHours: Int,
 )
