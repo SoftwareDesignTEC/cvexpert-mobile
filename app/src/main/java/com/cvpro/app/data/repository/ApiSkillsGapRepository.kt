@@ -7,11 +7,17 @@ import com.cvpro.app.domain.repository.SkillsGapRepository
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/** Análisis de brecha contra los mocks del APIM. */
 @Singleton
 class ApiSkillsGapRepository @Inject constructor(
     private val api: SkillsGapApi,
 ) : SkillsGapRepository {
 
-    override suspend fun getAnalysis(): SkillsGapAnalysis = api.getSkillsGap().toDomain()
+    override suspend fun getAnalysis(): SkillsGapAnalysis {
+        val response = api.getSkillsGap(
+            page = 1,
+            pageSize = 100,
+        )
+
+        return response.items.toDomain()
+    }
 }

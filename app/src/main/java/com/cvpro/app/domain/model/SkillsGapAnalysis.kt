@@ -21,12 +21,13 @@ data class SkillGapItem(
  * Campos iguales a SkillsGapAnalysis en docs/contract/models.ts.
  */
 data class SkillsGapAnalysis(
-    val targetJobTitle: String,
     val skills: List<SkillGapItem>,
     val recommendations: List<CourseRecommendation>,
 ) {
-    /** Habilidades con brecha, de la más grande a la más chica. */
-    val skillsToImprove: List<SkillGapItem> = skills.filter { it.gap > 0 }.sortedByDescending { it.gap }
+    val skillsToImprove: List<SkillGapItem> =
+        skills
+            .filter { it.gap > 0 }
+            .sortedByDescending { it.gap }
 }
 
 /** Curso sugerido para cerrar una brecha. */
@@ -35,6 +36,5 @@ data class CourseRecommendation(
     val title: String,
     val platform: String,
     val url: String,
-    val isPaid: Boolean,
     val duration: String?,
 )

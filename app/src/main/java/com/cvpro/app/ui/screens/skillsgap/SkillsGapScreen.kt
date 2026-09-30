@@ -128,6 +128,7 @@ private fun SkillsGapSections(
 }
 
 /** Antetítulo, título y la marca de actualización. */
+/** Antetítulo, título y la marca de actualización. */
 @Composable
 private fun SkillsGapHeader(modifier: Modifier = Modifier) {
     Row(
@@ -140,12 +141,14 @@ private fun SkillsGapHeader(modifier: Modifier = Modifier) {
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary,
             )
+
             Text(
                 text = stringResource(R.string.skills_gap_screen_title),
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.onBackground,
             )
         }
+
         // TODO: el análisis no trae createdAt en el dominio, así que la fecha es fija.
         Surface(
             color = MaterialTheme.colorScheme.surface,
@@ -155,11 +158,15 @@ private fun SkillsGapHeader(modifier: Modifier = Modifier) {
                 text = stringResource(R.string.skills_gap_updated),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                modifier = Modifier.padding(
+                    horizontal = 10.dp,
+                    vertical = 5.dp,
+                ),
             )
         }
     }
 }
+
 
 /** El radar con las dos series y su leyenda. */
 @Composable
@@ -411,19 +418,6 @@ private fun CourseCard(
                     ),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.weight(1f),
-                )
-                // El contrato no trae el nivel del curso, así que va si es pago o gratuito.
-                Text(
-                    text = stringResource(
-                        if (course.isPaid) {
-                            R.string.skills_gap_course_paid
-                        } else {
-                            R.string.skills_gap_course_free
-                        },
-                    ),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
 
@@ -472,7 +466,6 @@ private fun SkillsGapPreview(darkTheme: Boolean) {
             SkillsGapContent(
                 uiState = SkillsGapUiState(
                     analysis = SkillsGapAnalysis(
-                        targetJobTitle = "Data Analyst",
                         skills = listOf(
                             SkillGapItem("Python", 70, 88),
                             SkillGapItem("SQL", 55, 73),
@@ -488,7 +481,6 @@ private fun SkillsGapPreview(darkTheme: Boolean) {
                                 title = "Python para análisis de datos",
                                 platform = "DataCamp",
                                 url = "https://ejemplo.com",
-                                isPaid = true,
                                 duration = "6 horas",
                             ),
                         ),
