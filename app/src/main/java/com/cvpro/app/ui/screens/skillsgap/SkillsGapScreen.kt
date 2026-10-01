@@ -37,6 +37,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil.compose.AsyncImage
 import com.cvpro.app.R
 import com.cvpro.app.domain.model.CourseRecommendation
 import com.cvpro.app.domain.model.SkillGapItem
@@ -128,6 +129,7 @@ private fun SkillsGapSections(
 }
 
 /** Antetítulo, título y la marca de actualización. */
+/** Antetítulo, título y la marca de actualización. */
 @Composable
 private fun SkillsGapHeader(modifier: Modifier = Modifier) {
     Row(
@@ -140,12 +142,14 @@ private fun SkillsGapHeader(modifier: Modifier = Modifier) {
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary,
             )
+
             Text(
                 text = stringResource(R.string.skills_gap_screen_title),
                 style = MaterialTheme.typography.headlineMedium,
                 color = MaterialTheme.colorScheme.onBackground,
             )
         }
+
         // TODO: el análisis no trae createdAt en el dominio, así que la fecha es fija.
         Surface(
             color = MaterialTheme.colorScheme.surface,
@@ -155,11 +159,15 @@ private fun SkillsGapHeader(modifier: Modifier = Modifier) {
                 text = stringResource(R.string.skills_gap_updated),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                modifier = Modifier.padding(
+                    horizontal = 10.dp,
+                    vertical = 5.dp,
+                ),
             )
         }
     }
 }
+
 
 /** El radar con las dos series y su leyenda. */
 @Composable
@@ -370,8 +378,10 @@ private fun CourseCard(
         modifier = modifier.fillMaxWidth(),
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                // Cuadrito con la inicial de la plataforma, como los logos del diseño.
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
                 Box(
                     modifier = Modifier
                         .size(32.dp)
@@ -379,12 +389,21 @@ private fun CourseCard(
                         .background(MaterialTheme.colorScheme.primaryContainer),
                     contentAlignment = Alignment.Center,
                 ) {
-                    Text(
-                        text = course.platform.take(1).uppercase(),
-                        style = MaterialTheme.typography.labelLarge,
-                        color = MaterialTheme.colorScheme.primary,
-                    )
+                    if (course.logoUrl != null) {
+                        AsyncImage(
+                            model = course.logoUrl,
+                            contentDescription = "Logo de ${course.platform}",
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    } else {
+                        Text(
+                            text = course.platform.take(1).uppercase(),
+                            style = MaterialTheme.typography.labelLarge,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
                 }
+
                 Text(
                     text = course.platform,
                     style = MaterialTheme.typography.labelLarge,
@@ -407,20 +426,8 @@ private fun CourseCard(
                 Text(
                     text = stringResource(
                         R.string.skills_gap_course_duration,
-                        course.duration ?: stringResource(R.string.skills_gap_course_no_duration),
-                    ),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.weight(1f),
-                )
-                // El contrato no trae el nivel del curso, así que va si es pago o gratuito.
-                Text(
-                    text = stringResource(
-                        if (course.isPaid) {
-                            R.string.skills_gap_course_paid
-                        } else {
-                            R.string.skills_gap_course_free
-                        },
+                        course.duration
+                            ?: stringResource(R.string.skills_gap_course_no_duration),
                     ),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
@@ -429,14 +436,20 @@ private fun CourseCard(
 
             Button(
                 onClick = {
-                    // Abre el curso en el navegador del teléfono.
-                    context.startActivity(Intent(Intent.ACTION_VIEW, course.url.toUri()))
+                    context.startActivity(
+                        Intent(
+                            Intent.ACTION_VIEW,
+                            course.url.toUri(),
+                        )
+                    )
                 },
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 10.dp),
             ) {
-                Text(stringResource(R.string.skills_gap_course_open))
+                Text(
+                    stringResource(R.string.skills_gap_course_open)
+                )
             }
         }
     }
@@ -472,7 +485,6 @@ private fun SkillsGapPreview(darkTheme: Boolean) {
             SkillsGapContent(
                 uiState = SkillsGapUiState(
                     analysis = SkillsGapAnalysis(
-                        targetJobTitle = "Data Analyst",
                         skills = listOf(
                             SkillGapItem("Python", 70, 88),
                             SkillGapItem("SQL", 55, 73),
@@ -488,7 +500,7 @@ private fun SkillsGapPreview(darkTheme: Boolean) {
                                 title = "Python para análisis de datos",
                                 platform = "DataCamp",
                                 url = "https://ejemplo.com",
-                                isPaid = true,
+                                logoUrl = null,
                                 duration = "6 horas",
                             ),
                         ),
