@@ -1,5 +1,7 @@
 package com.cvpro.app.ui.screens.applications
 
+import androidx.compose.ui.layout.ContentScale
+import coil.compose.AsyncImage
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -202,19 +204,11 @@ private fun ApplicationCard(
         Column(modifier = Modifier.padding(10.dp)) {
             Row {
                 // Cuadrito con la inicial de la empresa, del color de la columna.
-                Box(
-                    modifier = Modifier
-                        .size(28.dp)
-                        .clip(RoundedCornerShape(6.dp))
-                        .background(MaterialTheme.colorScheme.surfaceVariant),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = application.company.take(1).uppercase(),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = accent,
-                    )
-                }
+                CompanyLogo(
+                    logoUrl = application.companyLogoUrl,
+                    company = application.company,
+                    accent = accent,
+                )
 
                 Spacer(modifier = Modifier.width(8.dp))
 
@@ -601,4 +595,43 @@ private fun ApplicationsPreview(darkTheme: Boolean) {
     }
 
 
+
+}
+
+@Composable
+private fun CompanyLogo(
+    logoUrl: String?,
+    company: String,
+    accent: Color,
+    modifier: Modifier = Modifier,
+) {
+    Box(
+        modifier = modifier
+            .size(36.dp)
+            .clip(RoundedCornerShape(8.dp))
+            .background(
+                MaterialTheme.colorScheme.surfaceVariant
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        if (!logoUrl.isNullOrBlank()) {
+            AsyncImage(
+                model = logoUrl,
+                contentDescription = stringResource(
+                    R.string.applications_logo_description,
+                    company,
+                ),
+                contentScale = ContentScale.Fit,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(4.dp),
+            )
+        } else {
+            Text(
+                text = company.take(1).uppercase(),
+                style = MaterialTheme.typography.labelMedium,
+                color = accent,
+            )
+        }
+    }
 }

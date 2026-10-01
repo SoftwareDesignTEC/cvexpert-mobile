@@ -30,7 +30,6 @@ fun CvDto.toDomain(): Cv {
             location = "",
             photoUrl = null,
             bio = null,
-            birthDate = null,
             types = emptyList(),
             modalities = emptyList(),
             sectors = emptyList(),

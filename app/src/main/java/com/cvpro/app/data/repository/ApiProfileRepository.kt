@@ -28,10 +28,10 @@ class ApiProfileRepository @Inject constructor(
     ): UserProfile {
 
         val request = UpdateProfileRequestDto(
-            name = name,
+            fullName = name,
             email = email,
             phone = phone,
-            location = location,
+            address = location,
         )
 
         return api.updateProfile(
