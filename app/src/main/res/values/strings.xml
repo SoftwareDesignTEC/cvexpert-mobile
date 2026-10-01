@@ -59,7 +59,10 @@
 
     <!-- Plantillas -->
     <string name="templates_eyebrow">CREA DONDE QUIERAS</string>
-    <string name="templates_title">Plantillas sin conexión</string>
+    <string name="templates_title">Plantillas</string>
+    <string name="templates_offline_section">Catálogo sin conexión</string>
+    <string name="templates_store_section">Tienda de plantillas</string>
+    <string name="templates_download">Descargar</string>
     <string name="templates_count">%1$d plantillas</string>
     <string name="templates_preview">Vista previa</string>
     <string name="templates_use">Usar esta plantilla</string>

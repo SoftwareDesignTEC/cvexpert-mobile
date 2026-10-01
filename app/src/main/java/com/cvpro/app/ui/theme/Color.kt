@@ -38,7 +38,7 @@ val Slate950 = Color(0xFF020617)
 
 // Fondo azulado del diseño: las tarjetas blancas se recortan sobre él. Sin esto, con el
 // fondo en blanco puro, las tarjetas de sección no se distinguen.
-val Blue50 = Color(0xFFEFF4FF)
+val Blue50 = Color(0xFFEEF2FF)
 val Blue100 = Color(0xFFDBEAFE)
 val Blue900 = Color(0xFF1E3A8A)
 

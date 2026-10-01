@@ -24,6 +24,7 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -40,6 +41,8 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cvpro.app.R
 import com.cvpro.app.domain.model.ThemePreference
+import com.cvpro.app.domain.repository.NotificationSettings
+import com.cvpro.app.domain.repository.NotificationType
 import com.cvpro.app.ui.theme.CvProTheme
 
 /** Configuración con estado. */
@@ -54,6 +57,7 @@ fun SettingsScreen(
     SettingsContent(
         uiState = uiState,
         onThemeSelected = viewModel::onThemeSelected,
+        onNotificationChange = viewModel::onNotificationChange,
         onSignOutClick = onSignOutClick,
         modifier = modifier,
     )
@@ -70,6 +74,7 @@ fun SettingsScreen(
 fun SettingsContent(
     uiState: SettingsUiState,
     onThemeSelected: (ThemePreference) -> Unit,
+    onNotificationChange: (NotificationType, Boolean) -> Unit,
     modifier: Modifier = Modifier,
     onSignOutClick: () -> Unit = {},
 ) {
@@ -111,13 +116,30 @@ fun SettingsContent(
             )
         }
 
+        // Los avisos son preferencias de encender y apagar, no accesos a otra pantalla, así
+        // que llevan interruptor en vez de flecha.
         SettingsCard(
             title = stringResource(R.string.settings_notifications_title),
             subtitle = stringResource(R.string.settings_notifications_subtitle),
         ) {
-            SettingsRow(label = stringResource(R.string.settings_notifications_applications))
-            SettingsRow(label = stringResource(R.string.settings_notifications_courses))
-            SettingsRow(label = stringResource(R.string.settings_notifications_jobs))
+            NotificationRow(
+                label = stringResource(R.string.settings_notifications_applications),
+                type = NotificationType.APPLICATION_STATUS,
+                settings = uiState.notifications,
+                onChange = onNotificationChange,
+            )
+            NotificationRow(
+                label = stringResource(R.string.settings_notifications_courses),
+                type = NotificationType.COURSE_RECOMMENDATION,
+                settings = uiState.notifications,
+                onChange = onNotificationChange,
+            )
+            NotificationRow(
+                label = stringResource(R.string.settings_notifications_jobs),
+                type = NotificationType.JOB_ALERTS,
+                settings = uiState.notifications,
+                onChange = onNotificationChange,
+            )
         }
 
         SettingsCard(
@@ -269,6 +291,56 @@ private fun SettingsRow(
     }
 }
 
+/**
+ * Una fila de aviso, con su interruptor.
+ *
+ * Toda la fila responde al toque, no solo el interruptor: es más cómodo en un teléfono y
+ * evita tener que apuntarle a un blanco chico.
+ */
+@Composable
+private fun NotificationRow(
+    label: String,
+    type: NotificationType,
+    settings: NotificationSettings,
+    onChange: (NotificationType, Boolean) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val isEnabled = settings.isEnabled(type)
+
+    Surface(
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        shape = RoundedCornerShape(8.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(top = 10.dp)
+            .clickable { onChange(type, !isEnabled) },
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(start = 10.dp, end = 10.dp, top = 4.dp, bottom = 4.dp),
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(28.dp)
+                    .clip(RoundedCornerShape(6.dp))
+                    .background(MaterialTheme.colorScheme.primary),
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 10.dp),
+            )
+            Switch(
+                checked = isEnabled,
+                onCheckedChange = { onChange(type, it) },
+            )
+        }
+    }
+}
+
 /** Preferencia que se muestra pero no se puede cambiar en esta fase. */
 @Composable
 private fun ReadOnlyPreference(
@@ -371,6 +443,7 @@ private fun SettingsPreviewLight() {
             SettingsContent(
                 uiState = SettingsUiState(ThemePreference.LIGHT),
                 onThemeSelected = {},
+                onNotificationChange = { _, _ -> },
             )
         }
     }
@@ -384,6 +457,7 @@ private fun SettingsPreviewDark() {
             SettingsContent(
                 uiState = SettingsUiState(ThemePreference.DARK),
                 onThemeSelected = {},
+                onNotificationChange = { _, _ -> },
             )
         }
     }
