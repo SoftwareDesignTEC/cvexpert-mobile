@@ -166,7 +166,7 @@
 
     <!-- Ofertas Laborales -->
     <string name="jobs_search_label">Buscar por puesto, empresa o lugar</string>
-    <string name="jobs_eyebrow">OPORTUNIDADES PARA TI</string>
+
     <string name="jobs_search_placeholder">Buscar ofertas, empresas o puestos</string>
     <string name="jobs_found_count">%1$d ofertas encontradas</string>
     <string name="jobs_filter_recommended">Recomendadas</string>

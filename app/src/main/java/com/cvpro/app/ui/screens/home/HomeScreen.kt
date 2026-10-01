@@ -52,6 +52,12 @@ import com.cvpro.app.ui.components.VersionLabel
 import com.cvpro.app.ui.theme.CvProTheme
 import com.cvpro.app.ui.theme.extraColors
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.Icon
+import androidx.compose.material3.TextButton
+
+
 /** Panel Principal: la pantalla de entrada después del login. */
 @Composable
 fun HomeScreen(
@@ -438,12 +444,25 @@ private fun SectionHeader(
                 .padding(start = 8.dp),
         )
         if (actionLabel != null) {
-            OutlinedButton(
+            TextButton(
                 onClick = onActionClick,
-                colors = outlinedOnCardColors(),
-                contentPadding = TIGHT_BUTTON_PADDING,
+                contentPadding = PaddingValues(
+                    horizontal = 6.dp,
+                    vertical = 4.dp,
+                ),
             ) {
-                Text(text = actionLabel, style = MaterialTheme.typography.labelSmall)
+                Text(
+                    text = actionLabel,
+                    style = MaterialTheme.typography.labelSmall,
+                    maxLines = 1,
+                    softWrap = false,
+                )
+
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                )
             }
         }
     }

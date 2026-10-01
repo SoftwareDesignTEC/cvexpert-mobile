@@ -32,6 +32,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.cvpro.app.R
 import com.cvpro.app.domain.model.User
+import androidx.compose.foundation.layout.widthIn
 
 /**
  * Menú lateral con los ocho destinos, según el diseño de Samuel.
@@ -48,7 +49,11 @@ fun CvProDrawer(
     onSignOutClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    ModalDrawerSheet(modifier = modifier) {
+    ModalDrawerSheet(
+        modifier = modifier
+            .fillMaxWidth(0.82f)
+            .widthIn(max = 320.dp),
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxHeight()

@@ -130,18 +130,6 @@ fun ProfileCard(
             .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Column {
-            Text(
-                text = stringResource(R.string.profile_eyebrow),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.primary,
-            )
-            Text(
-                text = stringResource(R.string.profile_section_personal),
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onBackground,
-            )
-        }
 
         // Ficha principal: foto, nombre, etiquetas y descripción.
         ProfileSurface {

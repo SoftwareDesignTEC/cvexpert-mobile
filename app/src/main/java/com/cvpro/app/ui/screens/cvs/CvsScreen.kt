@@ -99,7 +99,9 @@ fun CvsContent(
             else -> LazyVerticalGrid(
                 // Dos columnas: es lo que entra cómodo en un teléfono. En el diseño web son
                 // tres porque hay más ancho.
-                columns = GridCells.Fixed(2),
+                columns = GridCells.Adaptive(
+                    minSize = 180.dp,
+                ),
                 contentPadding = PaddingValues(12.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -124,32 +126,22 @@ private fun CvsHeader(
     onQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
-        Text(
-            text = stringResource(R.string.cvs_eyebrow),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.primary,
-        )
-        Text(
-            text = stringResource(R.string.destination_cvs),
-            style = MaterialTheme.typography.headlineMedium,
-            color = MaterialTheme.colorScheme.onBackground,
-        )
-        OutlinedTextField(
-            value = query,
-            onValueChange = onQueryChange,
-            placeholder = { Text(stringResource(R.string.cvs_search_placeholder)) },
-            singleLine = true,
-            shape = RoundedCornerShape(50),
-            colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
-                focusedContainerColor = MaterialTheme.colorScheme.surface,
-                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 12.dp),
-        )
-    }
+    OutlinedTextField(
+        value = query,
+        onValueChange = onQueryChange,
+        placeholder = {
+            Text(stringResource(R.string.cvs_search_placeholder))
+        },
+        singleLine = true,
+        shape = RoundedCornerShape(50),
+        colors = androidx.compose.material3.OutlinedTextFieldDefaults.colors(
+            focusedContainerColor = MaterialTheme.colorScheme.surface,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+        ),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+    )
 }
 
 /** Banda oscura con los dos caminos para crear un currículum. */

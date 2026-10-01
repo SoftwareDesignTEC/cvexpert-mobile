@@ -133,24 +133,11 @@ private fun TemplatesHeader(
     modifier: Modifier = Modifier,
 ) {
     Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.End,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 8.dp),
     ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = stringResource(R.string.templates_eyebrow),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.primary,
-            )
-            Text(
-                text = stringResource(R.string.templates_title),
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onBackground,
-            )
-        }
-        // El diseño web tiene un "Ver todas" porque allá se recorta el catálogo. Acá la
-        // pantalla ya trae todas las plantillas del servicio, así que en su lugar va el
-        // contador: informa lo mismo y no promete una pantalla que no existe.
         Surface(
             color = MaterialTheme.colorScheme.primaryContainer,
             shape = RoundedCornerShape(50),
@@ -159,7 +146,10 @@ private fun TemplatesHeader(
                 text = stringResource(R.string.templates_count, count),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                modifier = Modifier.padding(
+                    horizontal = 10.dp,
+                    vertical = 5.dp,
+                ),
             )
         }
     }

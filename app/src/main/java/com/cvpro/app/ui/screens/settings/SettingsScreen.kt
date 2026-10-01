@@ -59,6 +59,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+
 /** Configuración con estado. */
 @Composable
 fun SettingsScreen(
@@ -101,18 +103,6 @@ fun SettingsContent(
             .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Column {
-            Text(
-                text = stringResource(R.string.settings_eyebrow),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.primary,
-            )
-            Text(
-                text = stringResource(R.string.destination_settings),
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onBackground,
-            )
-        }
 
         // Seguridad. Ninguna opción aplica todavía: la sesión es de Google, así que no hay
         // contraseña ni correo propios que cambiar.
@@ -338,10 +328,11 @@ private fun SettingsRow(
                     .weight(1f)
                     .padding(start = 10.dp),
             )
-            Text(
-                text = "›",
-                style = MaterialTheme.typography.titleMedium,
-                color = accent,
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                tint = accent,
+                modifier = Modifier.size(24.dp),
             )
         }
     }

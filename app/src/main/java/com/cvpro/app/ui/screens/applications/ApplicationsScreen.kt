@@ -50,6 +50,20 @@ import com.cvpro.app.ui.components.JobApplicationDetailSheet
 import com.cvpro.app.ui.theme.CvProTheme
 import com.cvpro.app.ui.theme.extraColors
 
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
+import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.foundation.clickable
+
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.foundation.layout.heightIn
+
 /** Rastreador de postulaciones con estado. */
 @Composable
 fun ApplicationsScreen(
@@ -80,13 +94,16 @@ fun ApplicationsTracker(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // Postulación abierta en el detalle, o null si la hoja está cerrada.
-    var detailApplication by remember { mutableStateOf<JobApplication?>(null) }
+    var detailApplication by remember {
+        mutableStateOf<JobApplication?>(null)
+    }
 
     detailApplication?.let { application ->
         JobApplicationDetailSheet(
             application = application,
-            onDismiss = { detailApplication = null },
+            onDismiss = {
+                detailApplication = null
+            },
             onStatusChange = { newStatus ->
                 onStatusChange(application, newStatus)
                 detailApplication = null
@@ -94,37 +111,38 @@ fun ApplicationsTracker(
         )
     }
 
-    Column(modifier = modifier.fillMaxSize()) {
-        ApplicationsHeader(totalRecords = uiState.totalRecords)
+    Column(
+        modifier = modifier.fillMaxSize(),
+    ) {
+        ApplicationsSummary(
+            totalRecords = uiState.totalRecords,
+        )
 
         when {
-            uiState.isLoading -> Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center,
-            ) {
-                CircularProgressIndicator()
+            uiState.isLoading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    CircularProgressIndicator()
+                }
             }
 
-            uiState.error != null -> ApplicationsError(
-                message = uiState.error,
-                onRetry = onRetry,
-            )
+            uiState.error != null -> {
+                ApplicationsError(
+                    message = uiState.error,
+                    onRetry = onRetry,
+                )
+            }
 
-            else -> Row(
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier
-                    .fillMaxSize()
-                    .horizontalScroll(rememberScrollState())
-                    .padding(12.dp),
-            ) {
-                ApplicationStatus.entries.forEach { status ->
-                    StatusColumn(
-                        status = status,
-                        applications = uiState.applications.filter { it.status == status },
-                        onStatusChange = onStatusChange,
-                        onDetailsClick = { detailApplication = it },
-                    )
-                }
+            else -> {
+                ApplicationsList(
+                    applications = uiState.applications,
+                    onStatusChange = onStatusChange,
+                    onDetailsClick = {
+                        detailApplication = it
+                    },
+                )
             }
         }
     }
@@ -132,128 +150,36 @@ fun ApplicationsTracker(
 
 /** Antetítulo, título y el contador total. */
 @Composable
-private fun ApplicationsHeader(
+private fun ApplicationsSummary(
     totalRecords: Int,
     modifier: Modifier = Modifier,
 ) {
     Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier.padding(horizontal = 12.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.End,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 8.dp),
     ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = stringResource(R.string.applications_eyebrow),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.primary,
-            )
-            Text(
-                text = stringResource(R.string.applications_title),
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onBackground,
-            )
-        }
         Surface(
-            color = MaterialTheme.colorScheme.surface,
+            color = MaterialTheme.colorScheme.primaryContainer,
             shape = RoundedCornerShape(50),
         ) {
             Text(
-                text = stringResource(R.string.applications_count, totalRecords),
+                text = stringResource(
+                    R.string.applications_count,
+                    totalRecords,
+                ),
                 style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(
+                    horizontal = 12.dp,
+                    vertical = 6.dp,
+                ),
             )
         }
     }
 }
 
-/**
- * Una columna del tablero.
- *
- * Cada estado tiene su color, que pinta el borde superior, el punto del encabezado y el
- * botón del pie, como en el diseño.
- */
-@Composable
-private fun StatusColumn(
-    status: ApplicationStatus,
-    applications: List<JobApplication>,
-    onStatusChange: (JobApplication, ApplicationStatus) -> Unit,
-    onDetailsClick: (JobApplication) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    val accent = status.accentColor()
-
-    Surface(
-        color = MaterialTheme.colorScheme.surface,
-        shape = RoundedCornerShape(12.dp),
-        modifier = modifier.width(COLUMN_WIDTH),
-    ) {
-        Column {
-            // Franja de color en el borde de arriba.
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(4.dp)
-                    .background(accent),
-            )
-
-            Column(
-                modifier = Modifier
-                    .verticalScroll(rememberScrollState())
-                    .padding(10.dp),
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(8.dp)
-                            .clip(RoundedCornerShape(50))
-                            .background(accent),
-                    )
-                    Text(
-                        text = stringResource(status.labelRes()),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier
-                            .weight(1f)
-                            .padding(start = 8.dp),
-                    )
-                    Surface(
-                        color = MaterialTheme.colorScheme.surfaceVariant,
-                        shape = RoundedCornerShape(50),
-                    ) {
-                        Text(
-                            text = applications.size.toString(),
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(horizontal = 8.dp, vertical = 3.dp),
-                        )
-                    }
-                }
-
-                applications.forEach { application ->
-                    ApplicationCard(
-                        application = application,
-                        accent = accent,
-                        onStatusChange = { newStatus -> onStatusChange(application, newStatus) },
-                        onDetailsClick = { onDetailsClick(application) },
-                        modifier = Modifier.padding(top = 10.dp),
-                    )
-                }
-
-                // El diseño web tiene un "Ver todo" por columna porque allá se recorta la
-                // lista. Acá la columna ya trae todas las postulaciones de ese estado y se
-                // desplaza hacia abajo, así que el botón no tendría nada que abrir.
-                if (applications.isEmpty()) {
-                    Text(
-                        text = stringResource(R.string.applications_column_empty),
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(vertical = 16.dp),
-                    )
-                }
-            }
-        }
-    }
-}
 
 /** Tarjeta de una postulación dentro de su columna. */
 @Composable
@@ -370,11 +296,18 @@ private fun StatusMenu(
             onClick = { expanded = true },
             contentPadding = TIGHT_PADDING,
         ) {
-            Text(
-                text = "⋮",
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            IconButton(
+                onClick = {
+                    expanded = true
+                },
+            ) {
+                Icon(
+                    imageVector = Icons.Default.MoreVert,
+                    contentDescription = stringResource(
+                        R.string.applications_change_status
+                    ),
+                )
+            }
         }
 
         DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
@@ -458,8 +391,7 @@ private fun JobModality.labelRes(): Int = when (this) {
     JobModality.HYBRID -> R.string.modality_hybrid
 }
 
-/** Ancho de cada columna: entra una y se asoma la siguiente, que invita a desplazar. */
-private val COLUMN_WIDTH = 280.dp
+
 private val TIGHT_PADDING = androidx.compose.foundation.layout.PaddingValues(
     horizontal = 8.dp,
     vertical = 2.dp,
@@ -472,6 +404,155 @@ private fun ApplicationsPreviewLight() = ApplicationsPreview(darkTheme = false)
 @Preview(name = "Tablero · oscuro", widthDp = 390, heightDp = 900)
 @Composable
 private fun ApplicationsPreviewDark() = ApplicationsPreview(darkTheme = true)
+
+@Composable
+private fun ApplicationsList(
+    applications: List<JobApplication>,
+    onStatusChange: (JobApplication, ApplicationStatus) -> Unit,
+    onDetailsClick: (JobApplication) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val expandedStates = remember {
+        mutableStateMapOf<ApplicationStatus, Boolean>().apply {
+            ApplicationStatus.entries.forEach { status ->
+                this[status] = true
+            }
+        }
+    }
+
+    LazyColumn(
+        contentPadding = PaddingValues(
+            start = 12.dp,
+            end = 12.dp,
+            bottom = 16.dp,
+        ),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
+        modifier = modifier.fillMaxSize(),
+    ) {
+        ApplicationStatus.entries.forEach { status ->
+
+            val applicationsForStatus =
+                applications.filter { application ->
+                    application.status == status
+                }
+
+            val isExpanded = expandedStates[status] ?: true
+
+            item(
+                key = "header_${status.name}",
+            ) {
+                StatusHeader(
+                    status = status,
+                    count = applicationsForStatus.size,
+                    isExpanded = isExpanded,
+                    onClick = {
+                        expandedStates[status] = !isExpanded
+                    },
+                    modifier = Modifier.padding(
+                        top = 8.dp,
+                        bottom = 2.dp,
+                    ),
+                )
+            }
+
+            if (isExpanded) {
+                items(
+                    items = applicationsForStatus,
+                    key = { application ->
+                        application.id
+                    },
+                ) { application ->
+
+                    ApplicationCard(
+                        application = application,
+                        accent = status.accentColor(),
+                        onStatusChange = { newStatus ->
+                            onStatusChange(
+                                application,
+                                newStatus,
+                            )
+                        },
+                        onDetailsClick = {
+                            onDetailsClick(application)
+                        },
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun StatusHeader(
+    status: ApplicationStatus,
+    count: Int,
+    isExpanded: Boolean,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val accent = status.accentColor()
+
+    Surface(
+        color = MaterialTheme.colorScheme.surface,
+        shape = RoundedCornerShape(10.dp),
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = 48.dp)
+            .clickable(onClick = onClick),
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(
+                horizontal = 12.dp,
+                vertical = 10.dp,
+            ),
+        ) {
+            Box(
+                modifier = Modifier
+                    .size(10.dp)
+                    .clip(RoundedCornerShape(50))
+                    .background(accent),
+            )
+
+            Text(
+                text = stringResource(status.labelRes()),
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(start = 8.dp),
+            )
+
+            Surface(
+                color = MaterialTheme.colorScheme.surfaceVariant,
+                shape = RoundedCornerShape(50),
+            ) {
+                Text(
+                    text = count.toString(),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(
+                        horizontal = 10.dp,
+                        vertical = 4.dp,
+                    ),
+                )
+            }
+
+            Icon(
+                imageVector = if (isExpanded) {
+                    Icons.Default.ExpandLess
+                } else {
+                    Icons.Default.ExpandMore
+                },
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier
+                    .padding(start = 8.dp)
+                    .size(24.dp),
+            )
+        }
+    }
+}
 
 @Composable
 private fun ApplicationsPreview(darkTheme: Boolean) {
@@ -518,4 +599,6 @@ private fun ApplicationsPreview(darkTheme: Boolean) {
             )
         }
     }
+
+
 }

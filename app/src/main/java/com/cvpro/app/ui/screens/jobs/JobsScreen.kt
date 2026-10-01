@@ -148,19 +148,7 @@ private fun JobsHeader(
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
-        Text(
-            text = stringResource(R.string.jobs_eyebrow),
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.primary,
-        )
-
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text(
-                text = stringResource(R.string.destination_jobs),
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onBackground,
-                modifier = Modifier.weight(1f),
-            )
             Surface(
                 color = MaterialTheme.colorScheme.primaryContainer,
                 shape = RoundedCornerShape(50),

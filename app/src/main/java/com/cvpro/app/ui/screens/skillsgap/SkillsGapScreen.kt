@@ -126,7 +126,6 @@ private fun SkillsGapSections(
             .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        SkillsGapHeader()
         ComparisonCard(analysis = analysis)
         ImprovementPointsCard(skills = analysis.skillsToImprove)
         CoursesCard(courses = analysis.recommendations)
