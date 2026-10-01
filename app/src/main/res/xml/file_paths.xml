@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Carpetas que la app puede compartir con otras apps a través de FileProvider.
+     Solo la suya propia: ahí van los PDF en Android 9 y anteriores. -->
+<paths>
+    <external-files-path
+        name="documentos"
+        path="Documents/" />
+</paths>

@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -28,9 +29,15 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import android.content.Intent
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -39,6 +46,9 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cvpro.app.R
 import com.cvpro.app.domain.model.Cv
+import androidx.annotation.StringRes
+import com.cvpro.app.ui.components.ComingSoonSheet
+import com.cvpro.app.ui.components.CvDetailSheet
 import com.cvpro.app.ui.components.EmptyState
 import com.cvpro.app.ui.theme.CvProTheme
 
@@ -135,12 +145,27 @@ fun CvsScreen(
     viewModel: CvsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val generatedPdf by viewModel.generatedPdf.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    // Apenas el PDF está listo se abre con el visor que tenga el usuario, y se avisa al
+    // ViewModel para que no vuelva a abrirse cada vez que la pantalla se repinta.
+    LaunchedEffect(generatedPdf) {
+        val uri = generatedPdf ?: return@LaunchedEffect
+        val abrir = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(uri, "application/pdf")
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        runCatching { context.startActivity(abrir) }
+        viewModel.onPdfOpened()
+    }
 
     CvsContent(
         uiState = uiState,
         onQueryChange = viewModel::onQueryChange,
         onRetry = viewModel::retry,
         onDeleteClick = viewModel::deleteCv,
+        onDownloadCv = viewModel::onDownloadCv,
         onTemplatesClick = onTemplatesClick,
         modifier = modifier,
     )
@@ -158,14 +183,59 @@ fun CvsContent(
     onQueryChange: (String) -> Unit,
     onRetry: () -> Unit,
     onDeleteClick: (String) -> Unit,
+    onDownloadCv: (Cv) -> Unit,
     onTemplatesClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // Qué hoja está abierta, o null si ninguna.
+    var detailCv by remember { mutableStateOf<Cv?>(null) }
+    var comingSoon by remember { mutableStateOf<ComingSoon?>(null) }
+    // Currículum que el usuario pidió borrar, a la espera de que confirme.
+    var cvToDelete by remember { mutableStateOf<Cv?>(null) }
+
+    detailCv?.let { cv ->
+        CvDetailSheet(cv = cv, onDismiss = { detailCv = null })
+    }
+    comingSoon?.let { aviso ->
+        ComingSoonSheet(
+            title = stringResource(aviso.titleRes),
+            message = stringResource(aviso.messageRes),
+            onDismiss = { comingSoon = null },
+        )
+    }
+
+    cvToDelete?.let { cv ->
+        AlertDialog(
+            onDismissRequest = { cvToDelete = null },
+            title = { Text(stringResource(R.string.cvs_delete_title)) },
+            text = { Text(stringResource(R.string.cvs_delete_message, cv.title)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onDeleteClick(cv.id)
+                        cvToDelete = null
+                    },
+                ) {
+                    Text(
+                        text = stringResource(R.string.cvs_delete_confirm),
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { cvToDelete = null }) {
+                    Text(stringResource(R.string.cvs_delete_cancel))
+                }
+            },
+        )
+    }
+
     Column(modifier = modifier.fillMaxSize()) {
         CvsHeader(query = uiState.query, onQueryChange = onQueryChange)
 
         CreateCvBanner(
             onOfflineClick = onTemplatesClick,
+            onAiClick = { comingSoon = ComingSoon.AI },
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
         )
 
@@ -199,7 +269,9 @@ fun CvsContent(
                     CvCard(
                         cv = cv,
                         isDeleting = uiState.deletingId == cv.id,
-                        onDeleteClick = { onDeleteClick(cv.id) },
+                        onDeleteClick = { cvToDelete = cv },
+                        onCvClick = { detailCv = it },
+                        onDownloadClick = { onDownloadCv(cv) },
                     )
                 }
             }
@@ -236,6 +308,7 @@ private fun CvsHeader(
 @Composable
 private fun CreateCvBanner(
     onOfflineClick: () -> Unit,
+    onAiClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Surface(
@@ -259,8 +332,10 @@ private fun CreateCvBanner(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.padding(top = 12.dp),
             ) {
-                // TODO: sin acción. La generación con IA no entra en la Fase I.
-                Button(onClick = {}, modifier = Modifier.weight(1f)) {
+                Button(
+                    onClick = onAiClick,
+                    modifier = Modifier.weight(1f),
+                ) {
                     Text(stringResource(R.string.cvs_create_ai))
                 }
                 Button(
@@ -283,6 +358,8 @@ private fun CvCard(
     cv: Cv,
     isDeleting: Boolean,
     onDeleteClick: () -> Unit,
+    onCvClick: (Cv) -> Unit,
+    onDownloadClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Card(
@@ -320,9 +397,8 @@ private fun CvCard(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     modifier = Modifier.padding(top = 10.dp),
                 ) {
-                    // TODO: sin acción. Falta la pantalla de edición del currículum.
                     Button(
-                        onClick = {},
+                        onClick = { onCvClick(cv) },
                         contentPadding = TIGHT_BUTTON_PADDING,
                         modifier = Modifier.weight(1f),
                     ) {
@@ -332,9 +408,8 @@ private fun CvCard(
                             maxLines = 1,
                         )
                     }
-                    // TODO: sin acción. La exportación a PDF no entra en la Fase I.
                     Button(
-                        onClick = {},
+                        onClick = onDownloadClick,
                         contentPadding = TIGHT_BUTTON_PADDING,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.onSurface,
@@ -423,9 +498,18 @@ private fun CvsPreview(darkTheme: Boolean) {
                 onQueryChange = {},
                 onRetry = {},
                 onDeleteClick = {},
+                onDownloadCv = {},
                 onTemplatesClick = {},
             )
         }
     }
 
+}
+
+/** Los avisos de funciones que llegan en la Fase II. */
+private enum class ComingSoon(
+    @param:StringRes val titleRes: Int,
+    @param:StringRes val messageRes: Int,
+) {
+    AI(R.string.coming_soon_ai_title, R.string.coming_soon_ai_message),
 }

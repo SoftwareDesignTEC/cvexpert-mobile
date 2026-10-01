@@ -2,6 +2,7 @@ package com.cvpro.app.di
 
 import com.cvpro.app.BuildConfig
 import com.cvpro.app.data.remote.AuthInterceptor
+import com.cvpro.app.data.remote.LoggingInterceptor
 import com.cvpro.app.data.remote.api.JobApi
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
@@ -31,9 +32,13 @@ object NetworkModule {
      */
     @Provides
     @Singleton
-    fun provideOkHttpClient(authInterceptor: AuthInterceptor): OkHttpClient =
+    fun provideOkHttpClient(
+        authInterceptor: AuthInterceptor,
+        loggingInterceptor: LoggingInterceptor,
+    ): OkHttpClient =
         OkHttpClient.Builder()
             .addInterceptor(authInterceptor)
+            .addInterceptor(loggingInterceptor)
             .connectTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .readTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .build()

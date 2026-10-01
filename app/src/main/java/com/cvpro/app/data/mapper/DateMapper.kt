@@ -19,12 +19,14 @@ private val DISPLAY_DATE_FORMAT = DateTimeFormatter.ofPattern("dd/MM/yyyy")
  * Si el texto no viene en ISO se devuelve igual, sin reventar: es preferible mostrar una
  * fecha rara a que la pantalla se caiga por un dato mal formado del mock.
  */
-fun String.toDisplayDate(): String = try {
+fun String?.toDisplayDate(): String = try {
+    if (this == null) return ""
     Instant.parse(this)
         .atZone(ZoneId.systemDefault())
         .format(DISPLAY_DATE_FORMAT)
 } catch (exception: DateTimeParseException) {
-    this
+    // Texto que no es ISO: se muestra tal cual en vez de fallar.
+    this.orEmpty()
 }
 
 /**
@@ -34,7 +36,8 @@ fun String.toDisplayDate(): String = try {
  * devuelve el número y no el texto a propósito: el texto se arma en la pantalla, que es
  * donde están los strings traducibles.
  */
-fun String.daysSince(): Int? = try {
+fun String?.daysSince(): Int? = try {
+    if (this == null) return null
     val date = Instant.parse(this).atZone(ZoneId.systemDefault()).toLocalDate()
     ChronoUnit.DAYS.between(date, LocalDate.now()).toInt().coerceAtLeast(0)
 } catch (exception: DateTimeParseException) {

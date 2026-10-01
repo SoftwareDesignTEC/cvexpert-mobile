@@ -57,6 +57,26 @@
     <string name="detail_applied_at">Fecha de postulación</string>
     <string name="detail_current_status">Actual</string>
 
+    <!-- Detalle del currículum y avisos de Fase II -->
+    <string name="cv_detail_personal">Información personal</string>
+    <string name="cv_detail_experience">Experiencia laboral</string>
+    <string name="cv_detail_education">Educación</string>
+    <string name="cv_detail_skills">Habilidades</string>
+    <string name="cv_detail_languages">Idiomas</string>
+    <string name="cv_detail_period">%1$s — %2$s</string>
+    <string name="cv_detail_period_current">%1$s — Actual</string>
+    <string name="coming_soon_badge">Próximamente</string>
+    <string name="coming_soon_ai_title">Generación con IA</string>
+    <string name="coming_soon_ai_message">Vas a poder escribir tus experiencias en pocas palabras y la app las redacta por vos. Llega en la siguiente fase del proyecto.</string>
+    <string name="coming_soon_pdf_title">Exportar a PDF</string>
+    <string name="coming_soon_pdf_message">La descarga del currículum en PDF llega en la siguiente fase, junto con el editor.</string>
+    <string name="coming_soon_use_title">Usar esta plantilla</string>
+    <string name="coming_soon_use_message">Al elegir una plantilla se va a abrir el editor para llenar tu currículum. El editor llega en la siguiente fase.</string>
+    <string name="coming_soon_template_title">Descargar plantilla</string>
+    <string name="coming_soon_template_message">Las plantillas nuevas se van a poder descargar y usar sin conexión en la siguiente fase.</string>
+    <string name="coming_soon_preferences_title">Editar preferencias</string>
+    <string name="coming_soon_preferences_message">El servicio todavía no guarda sector, disponibilidad ni modalidad. Por ahora se pueden ver, y editarlas llega con el servicio completo.</string>
+
     <!-- Plantillas -->
     <string name="templates_eyebrow">CREA DONDE QUIERAS</string>
     <string name="templates_title">Plantillas</string>
@@ -78,6 +98,10 @@
     <string name="cvs_create_ai">Modo IA</string>
     <string name="cvs_create_offline">Offline / Plantilla</string>
     <string name="cvs_delete">Eliminar</string>
+    <string name="cvs_delete_title">¿Eliminar este currículum?</string>
+    <string name="cvs_delete_message">Se va a borrar \"%1$s\". Esta acción no se puede deshacer.</string>
+    <string name="cvs_delete_confirm">Eliminar</string>
+    <string name="cvs_delete_cancel">Cancelar</string>
     <string name="cvs_deleting">Eliminando…</string>
     <string name="cvs_empty_title">Sin currículums</string>
     <string name="cvs_empty_message">Creá tu primer currículum para empezar.</string>

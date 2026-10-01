@@ -7,34 +7,37 @@ import com.cvpro.app.domain.model.JobModality
 
 fun JobApplicationDto.toDomain(): JobApplication {
     return JobApplication(
-        id = id,
-        jobTitle = jobTitle,
-        company = company,
+        id = id.orEmpty(),
+        jobTitle = jobTitle.orEmpty(),
+        company = company.orEmpty(),
         companyLogoUrl = companyLogoUrl,
-        location = location,
+        location = location.orEmpty(),
         modality = modality.toJobModality(),
         status = status.toApplicationStatus(),
         // Se guarda tal cual llega, en ISO 8601: la tarjeta del tablero muestra cuántos días
         // pasaron, y para eso hace falta la fecha y no un texto ya formateado.
-        appliedAt = appliedAt,
+        appliedAt = appliedAt.orEmpty(),
     )
 }
 
-private fun String.toJobModality(): JobModality {
-    return when (lowercase()) {
+private fun String?.toJobModality(): JobModality {
+    return when (this?.lowercase()) {
         "remote" -> JobModality.REMOTE
         "on-site" -> JobModality.ON_SITE
         "hybrid" -> JobModality.HYBRID
-        else -> throw IllegalArgumentException("Modalidad desconocida: $this")
+        // Sin dato o valor que no conocemos: se asume presencial en vez de tumbar la
+        // pantalla entera por una postulación mal formada.
+        else -> JobModality.ON_SITE
     }
 }
 
-private fun String.toApplicationStatus(): ApplicationStatus {
-    return when (lowercase()) {
+private fun String?.toApplicationStatus(): ApplicationStatus {
+    return when (this?.lowercase()) {
         "applied" -> ApplicationStatus.APPLIED
         "in-progress" -> ApplicationStatus.IN_PROGRESS
         "interview" -> ApplicationStatus.INTERVIEW
         "rejected" -> ApplicationStatus.REJECTED
-        else -> throw IllegalArgumentException("Estado de postulación desconocido: $this")
+        // Sin dato o estado desconocido: cae en la primera columna del tablero.
+        else -> ApplicationStatus.APPLIED
     }
 }

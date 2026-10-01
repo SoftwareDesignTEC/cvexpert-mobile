@@ -9,55 +9,68 @@ import com.cvpro.app.domain.model.Cv
 import com.cvpro.app.domain.model.Education
 import com.cvpro.app.domain.model.Language
 import com.cvpro.app.domain.model.Skill
+import com.cvpro.app.domain.model.UserProfile
 import com.cvpro.app.domain.model.WorkExperience
 
 fun CvDto.toDomain(): Cv {
     return Cv(
-        id = id,
-        userId = userId,
-        title = title,
-        templateId = templateId,
+        id = id.orEmpty(),
+        userId = userId.orEmpty(),
+        title = title.orEmpty(),
+        templateId = templateId.orEmpty(),
         // El servicio manda ISO 8601; las tarjetas muestran la fecha ya legible.
         createdAt = createdAt.toDisplayDate(),
         updatedAt = updatedAt.toDisplayDate(),
-        personalInfo = personalInfo.toDomain(),
-        workExperiences = workExperiences.map { it.toDomain() },
-        education = education.map { it.toDomain() },
-        skills = skills.map { it.toDomain() },
-        languages = languages.map { it.toDomain() },
+        // Sin datos personales el CV se muestra igual, con los campos vacíos.
+        personalInfo = personalInfo?.toDomain() ?: UserProfile(
+            id = "",
+            name = "",
+            email = "",
+            phone = null,
+            location = "",
+            photoUrl = null,
+            bio = null,
+            types = emptyList(),
+            modalities = emptyList(),
+            sectors = emptyList(),
+        ),
+        workExperiences = workExperiences.orEmpty().map { it.toDomain() },
+        education = education.orEmpty().map { it.toDomain() },
+        skills = skills.orEmpty().map { it.toDomain() },
+        languages = languages.orEmpty().map { it.toDomain() },
     )
 }
 
 private fun WorkExperienceDto.toDomain() = WorkExperience(
-    id = id,
-    company = company,
-    position = position,
-    startDate = startDate,
+    id = id.orEmpty(),
+    company = company.orEmpty(),
+    position = position.orEmpty(),
+    startDate = startDate.orEmpty(),
     endDate = endDate,
-    current = current,
-    description = description,
-    type = type,
+    current = current ?: false,
+    description = description.orEmpty(),
+    type = type.orEmpty(),
 )
 
 private fun EducationDto.toDomain() = Education(
-    id = id,
-    institution = institution,
-    degree = degree,
-    field = field,
-    startDate = startDate,
+    id = id.orEmpty(),
+    institution = institution.orEmpty(),
+    degree = degree.orEmpty(),
+    field = field.orEmpty(),
+    startDate = startDate.orEmpty(),
     endDate = endDate,
-    current = current,
+    current = current ?: false,
 )
 
 private fun SkillDto.toDomain() = Skill(
-    id = id,
-    name = name,
-    level = level,
-    category = category,
+    id = id.orEmpty(),
+    name = name.orEmpty(),
+    level = level.orEmpty(),
+    category = category.orEmpty(),
 )
 
 private fun LanguageDto.toDomain() = Language(
-    id = id,
-    name = name,
-    level = level,
+    id = id.orEmpty(),
+    name = name.orEmpty(),
+    level = level.orEmpty(),
 )

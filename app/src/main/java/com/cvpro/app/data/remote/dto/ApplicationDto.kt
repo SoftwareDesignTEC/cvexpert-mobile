@@ -8,17 +8,17 @@ package com.cvpro.app.data.remote.dto
  * lo que utiliza internamente la aplicación.
  */
 data class JobApplicationDto(
-    val id: String,
-    val userId: String,
-    val jobOfferId: String,
-    val jobTitle: String,
-    val company: String,
+    val id: String? = null,
+    val userId: String? = null,
+    val jobOfferId: String? = null,
+    val jobTitle: String? = null,
+    val company: String? = null,
     val companyLogoUrl: String? = null,
-    val location: String,
-    val modality: String,
-    val status: String,
-    val appliedAt: String,
-    val updatedAt: String,
+    val location: String? = null,
+    val modality: String? = null,
+    val status: String? = null,
+    val appliedAt: String? = null,
+    val updatedAt: String? = null,
     val notes: String? = null,
 )
 
@@ -29,14 +29,14 @@ data class JobApplicationDto(
  * normalmente los genera el servidor.
  */
 data class CreateApplicationRequestDto(
-    val userId: String,
-    val jobOfferId: String,
-    val jobTitle: String,
-    val company: String,
+    val userId: String? = null,
+    val jobOfferId: String? = null,
+    val jobTitle: String? = null,
+    val company: String? = null,
     val companyLogoUrl: String? = null,
-    val location: String,
-    val modality: String,
-    val status: String,
+    val location: String? = null,
+    val modality: String? = null,
+    val status: String? = null,
     val notes: String? = null,
 )
 
@@ -45,5 +45,5 @@ data class CreateApplicationRequestDto(
  * el estado de una postulación.
  */
 data class UpdateApplicationStatusRequestDto(
-    val status: String,
+    val status: String? = null,
 )
