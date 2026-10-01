@@ -65,6 +65,36 @@
     <string name="cv_detail_languages">Idiomas</string>
     <string name="cv_detail_period">%1$s — %2$s</string>
     <string name="cv_detail_period_current">%1$s — Actual</string>
+
+    <!-- Editor de currículum -->
+    <string name="cv_editor_title">Editar currículum</string>
+    <string name="cv_editor_cv_title">Título del currículum</string>
+    <string name="cv_editor_name">Nombre completo</string>
+    <string name="cv_editor_email">Correo</string>
+    <string name="cv_editor_phone">Teléfono</string>
+    <string name="cv_editor_location">Ubicación</string>
+    <string name="cv_editor_bio">Resumen</string>
+    <string name="cv_editor_position">Puesto</string>
+    <string name="cv_editor_company">Empresa</string>
+    <string name="cv_editor_start">Desde (AAAA-MM-DD)</string>
+    <string name="cv_editor_end">Hasta (AAAA-MM-DD)</string>
+    <string name="cv_editor_current">Sigue vigente</string>
+    <string name="cv_editor_description">Descripción</string>
+    <string name="cv_editor_institution">Institución</string>
+    <string name="cv_editor_degree">Título obtenido</string>
+    <string name="cv_editor_field">Área de estudio</string>
+    <string name="cv_editor_skill_name">Habilidad</string>
+    <string name="cv_editor_level">Nivel</string>
+    <string name="cv_editor_category">Categoría</string>
+    <string name="cv_editor_language">Idioma</string>
+    <string name="cv_editor_add_experience">Agregar experiencia</string>
+    <string name="cv_editor_add_education">Agregar educación</string>
+    <string name="cv_editor_add_skill">Agregar habilidad</string>
+    <string name="cv_editor_add_language">Agregar idioma</string>
+    <string name="cv_editor_remove">Quitar</string>
+    <string name="cv_editor_save">Guardar</string>
+    <string name="cv_editor_saving">Guardando…</string>
+    <string name="cv_editor_cancel">Cancelar</string>
     <string name="coming_soon_badge">Próximamente</string>
     <string name="coming_soon_ai_title">Generación con IA</string>
     <string name="coming_soon_ai_message">Vas a poder escribir tus experiencias en pocas palabras y la app las redacta por vos. Llega en la siguiente fase del proyecto.</string>
@@ -87,6 +117,10 @@
     <string name="templates_preview">Vista previa</string>
     <string name="templates_use">Usar esta plantilla</string>
     <string name="templates_premium">Premium</string>
+    <string name="templates_show_all">Ver todas (%1$d más)</string>
+    <string name="templates_show_less">Ver menos</string>
+    <string name="templates_downloading">Descargando…</string>
+    <string name="templates_creating">Creando…</string>
     <string name="templates_empty_title">Sin plantillas</string>
     <string name="templates_empty_message">Todavía no hay plantillas disponibles.</string>
     <string name="templates_error_title">No se pudieron cargar las plantillas</string>

@@ -1,6 +1,6 @@
 package com.cvpro.app.ui.screens.templates
 
-import androidx.annotation.StringRes
+import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,6 +25,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,6 +34,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -42,8 +44,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.cvpro.app.R
 import com.cvpro.app.domain.model.CvTemplate
-import com.cvpro.app.ui.components.ComingSoonSheet
 import com.cvpro.app.ui.components.EmptyState
+import com.cvpro.app.ui.components.LocalSnackbarHostState
+import com.cvpro.app.ui.components.outlinedOnCardColors
 import com.cvpro.app.ui.theme.CvProTheme
 
 /** Plantillas sin conexión con estado. */
@@ -53,10 +56,35 @@ fun TemplatesScreen(
     viewModel: TemplatesViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val downloadedPreview by viewModel.downloadedPreview.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    // El Scaffold de la raíz comparte un único snackbar: la pantalla lo usa en vez de
+    // montar su propio Scaffold, que duplicaría el fondo y los insets.
+    val snackbarHostState = LocalSnackbarHostState.current
+
+    // Apenas la vista previa está guardada se abre con el visor de imágenes del teléfono.
+    LaunchedEffect(downloadedPreview) {
+        val uri = downloadedPreview ?: return@LaunchedEffect
+        val abrir = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(uri, "image/*")
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        runCatching { context.startActivity(abrir) }
+        viewModel.onPreviewOpened()
+    }
+
+    // El resultado de usar o descargar una plantilla se avisa abajo y se limpia solo.
+    LaunchedEffect(uiState.message) {
+        val mensaje = uiState.message ?: return@LaunchedEffect
+        snackbarHostState.showSnackbar(mensaje)
+        viewModel.onMessageShown()
+    }
 
     TemplatesContent(
         uiState = uiState,
         onRetry = viewModel::retry,
+        onUseTemplate = viewModel::onUseTemplate,
+        onDownloadTemplate = viewModel::onDownloadTemplate,
         modifier = modifier,
     )
 }
@@ -71,19 +99,13 @@ fun TemplatesScreen(
 fun TemplatesContent(
     uiState: TemplatesUiState,
     onRetry: () -> Unit,
+    onUseTemplate: (CvTemplate) -> Unit,
+    onDownloadTemplate: (CvTemplate) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // Qué aviso mostrar: usar una plantilla o descargarla. Los dos necesitan el editor o
-    // el servicio de la Fase II, pero conviene que cada botón diga lo suyo.
-    var aviso by remember { mutableStateOf<TemplateNotice?>(null) }
-
-    aviso?.let { actual ->
-        ComingSoonSheet(
-            title = stringResource(actual.titleRes),
-            message = stringResource(actual.messageRes),
-            onDismiss = { aviso = null },
-        )
-    }
+    // Cada sección arranca mostrando solo las primeras y se despliega con "Ver todas".
+    var offlineExpanded by remember { mutableStateOf(false) }
+    var storeExpanded by remember { mutableStateOf(false) }
 
     Column(modifier = modifier.fillMaxSize()) {
         TemplatesHeader(count = uiState.templates.size)
@@ -121,12 +143,25 @@ fun TemplatesContent(
                                 count = offline.size,
                             )
                         }
-                        items(items = offline, key = { it.id }) { template ->
+                        items(
+                            items = offline.shown(offlineExpanded),
+                            key = { it.id },
+                        ) { template ->
                             TemplateCard(
                                 template = template,
                                 isInStore = false,
-                                onActionClick = { aviso = TemplateNotice.USE },
+                                isBusy = uiState.busyTemplateId == template.id,
+                                onActionClick = { onUseTemplate(template) },
                             )
+                        }
+                        if (offline.size > PREVIEW_COUNT) {
+                            item {
+                                ExpandButton(
+                                    isExpanded = offlineExpanded,
+                                    hiddenCount = offline.size - PREVIEW_COUNT,
+                                    onClick = { offlineExpanded = !offlineExpanded },
+                                )
+                            }
                         }
                     }
 
@@ -137,12 +172,25 @@ fun TemplatesContent(
                                 count = store.size,
                             )
                         }
-                        items(items = store, key = { it.id }) { template ->
+                        items(
+                            items = store.shown(storeExpanded),
+                            key = { it.id },
+                        ) { template ->
                             TemplateCard(
                                 template = template,
                                 isInStore = true,
-                                onActionClick = { aviso = TemplateNotice.DOWNLOAD },
+                                isBusy = uiState.busyTemplateId == template.id,
+                                onActionClick = { onDownloadTemplate(template) },
                             )
+                        }
+                        if (store.size > PREVIEW_COUNT) {
+                            item {
+                                ExpandButton(
+                                    isExpanded = storeExpanded,
+                                    hiddenCount = store.size - PREVIEW_COUNT,
+                                    onClick = { storeExpanded = !storeExpanded },
+                                )
+                            }
                         }
                     }
                 }
@@ -234,6 +282,7 @@ private fun SectionTitle(
 private fun TemplateCard(
     template: CvTemplate,
     isInStore: Boolean,
+    isBusy: Boolean,
     onActionClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -283,6 +332,9 @@ private fun TemplateCard(
 
                 Button(
                     onClick = onActionClick,
+                    // Mientras la plantilla está trabajando el botón queda apagado, para no
+                    // disparar dos descargas o dos currículums con un doble toque.
+                    enabled = !isBusy,
                     colors = if (isInStore) {
                         ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.onSurface,
@@ -297,7 +349,12 @@ private fun TemplateCard(
                 ) {
                     Text(
                         text = stringResource(
-                            if (isInStore) R.string.templates_download else R.string.templates_use,
+                            when {
+                                isBusy && isInStore -> R.string.templates_downloading
+                                isBusy -> R.string.templates_creating
+                                isInStore -> R.string.templates_download
+                                else -> R.string.templates_use
+                            },
                         ),
                         style = MaterialTheme.typography.labelMedium,
                     )
@@ -413,16 +470,45 @@ private fun TemplatesPreview(darkTheme: Boolean) {
                     ),
                 ),
                 onRetry = {},
+                onUseTemplate = {},
+                onDownloadTemplate = {},
             )
         }
     }
 }
 
-/** Los dos avisos de la pantalla de plantillas. */
-private enum class TemplateNotice(
-    @param:StringRes val titleRes: Int,
-    @param:StringRes val messageRes: Int,
+/**
+ * Botón para ver el resto de una sección recortada.
+ *
+ * Dice cuántas faltan en vez de un "Ver todas" a secas, igual que en Análisis de Brecha:
+ * así se sabe si vale la pena abrirlo antes de tocarlo.
+ */
+@Composable
+private fun ExpandButton(
+    isExpanded: Boolean,
+    hiddenCount: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
-    USE(R.string.coming_soon_use_title, R.string.coming_soon_use_message),
-    DOWNLOAD(R.string.coming_soon_template_title, R.string.coming_soon_template_message),
+    OutlinedButton(
+        onClick = onClick,
+        colors = outlinedOnCardColors(),
+        modifier = modifier.fillMaxWidth(),
+    ) {
+        Text(
+            text = if (isExpanded) {
+                stringResource(R.string.templates_show_less)
+            } else {
+                stringResource(R.string.templates_show_all, hiddenCount)
+            },
+            style = MaterialTheme.typography.labelMedium,
+        )
+    }
 }
+
+/** Las primeras PREVIEW_COUNT, o todas si la sección está desplegada. */
+private fun List<CvTemplate>.shown(isExpanded: Boolean): List<CvTemplate> =
+    if (isExpanded) this else take(PREVIEW_COUNT)
+
+/** Cuántas plantillas se ven en cada sección antes de tocar "Ver todas". */
+private const val PREVIEW_COUNT = 3
