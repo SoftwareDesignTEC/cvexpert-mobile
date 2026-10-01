@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -85,13 +86,40 @@ fun TemplatesContent(
                 message = stringResource(R.string.templates_empty_message),
             )
 
-            else -> LazyColumn(
-                contentPadding = PaddingValues(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-                modifier = Modifier.fillMaxSize(),
-            ) {
-                items(items = uiState.templates, key = { it.id }) { template ->
-                    TemplateCard(template = template)
+            else -> {
+                // El contrato marca con availableOffline las plantillas que ya vienen con
+                // la app. Las demás son de la tienda: hay que descargarlas para usarlas.
+                val offline = uiState.templates.filter { it.availableOffline }
+                val store = uiState.templates.filterNot { it.availableOffline }
+
+                LazyColumn(
+                    contentPadding = PaddingValues(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.fillMaxSize(),
+                ) {
+                    if (offline.isNotEmpty()) {
+                        item {
+                            SectionTitle(
+                                text = stringResource(R.string.templates_offline_section),
+                                count = offline.size,
+                            )
+                        }
+                        items(items = offline, key = { it.id }) { template ->
+                            TemplateCard(template = template, isInStore = false)
+                        }
+                    }
+
+                    if (store.isNotEmpty()) {
+                        item {
+                            SectionTitle(
+                                text = stringResource(R.string.templates_store_section),
+                                count = store.size,
+                            )
+                        }
+                        items(items = store, key = { it.id }) { template ->
+                            TemplateCard(template = template, isInStore = true)
+                        }
+                    }
                 }
             }
         }
@@ -144,8 +172,53 @@ private fun TemplatesHeader(
  * define previewUrl para las plantillas.
  */
 @Composable
+private fun SectionTitle(
+    text: String,
+    count: Int,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        modifier = modifier.fillMaxWidth(),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(width = 4.dp, height = 18.dp)
+                .clip(RoundedCornerShape(2.dp))
+                .background(MaterialTheme.colorScheme.primary),
+        )
+        Text(
+            text = text,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 8.dp),
+        )
+        Surface(
+            color = MaterialTheme.colorScheme.primaryContainer,
+            shape = RoundedCornerShape(50),
+        ) {
+            Text(
+                text = count.toString(),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+            )
+        }
+    }
+}
+
+/**
+ * Tarjeta de una plantilla.
+ *
+ * @param isInStore true si hay que descargarla antes de usarla; false si ya viene con la
+ * app y se puede usar sin conexión.
+ */
+@Composable
 private fun TemplateCard(
     template: CvTemplate,
+    isInStore: Boolean,
     modifier: Modifier = Modifier,
 ) {
     Surface(
@@ -192,15 +265,26 @@ private fun TemplateCard(
                     modifier = Modifier.padding(top = 2.dp),
                 )
 
-                // TODO: sin acción. Falta la pantalla de edición del currículum.
+                // TODO: sin acción. Falta la pantalla de edición del currículum, y la
+                // descarga de plantillas nuevas necesita el servicio de la Fase II.
                 Button(
                     onClick = {},
+                    colors = if (isInStore) {
+                        ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.onSurface,
+                            contentColor = MaterialTheme.colorScheme.surface,
+                        )
+                    } else {
+                        ButtonDefaults.buttonColors()
+                    },
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 12.dp),
                 ) {
                     Text(
-                        text = stringResource(R.string.templates_use),
+                        text = stringResource(
+                            if (isInStore) R.string.templates_download else R.string.templates_use,
+                        ),
                         style = MaterialTheme.typography.labelMedium,
                     )
                 }
@@ -310,7 +394,7 @@ private fun TemplatesPreview(darkTheme: Boolean) {
                             previewUrl = "",
                             category = "General",
                             isPremium = true,
-                            availableOffline = true,
+                            availableOffline = false,
                         ),
                     ),
                 ),
