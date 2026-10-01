@@ -1,5 +1,6 @@
 package com.cvpro.app.ui.screens.templates
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -25,6 +26,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -38,6 +42,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.cvpro.app.R
 import com.cvpro.app.domain.model.CvTemplate
+import com.cvpro.app.ui.components.ComingSoonSheet
 import com.cvpro.app.ui.components.EmptyState
 import com.cvpro.app.ui.theme.CvProTheme
 
@@ -68,6 +73,18 @@ fun TemplatesContent(
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    // Qué aviso mostrar: usar una plantilla o descargarla. Los dos necesitan el editor o
+    // el servicio de la Fase II, pero conviene que cada botón diga lo suyo.
+    var aviso by remember { mutableStateOf<TemplateNotice?>(null) }
+
+    aviso?.let { actual ->
+        ComingSoonSheet(
+            title = stringResource(actual.titleRes),
+            message = stringResource(actual.messageRes),
+            onDismiss = { aviso = null },
+        )
+    }
+
     Column(modifier = modifier.fillMaxSize()) {
         TemplatesHeader(count = uiState.templates.size)
 
@@ -105,7 +122,11 @@ fun TemplatesContent(
                             )
                         }
                         items(items = offline, key = { it.id }) { template ->
-                            TemplateCard(template = template, isInStore = false)
+                            TemplateCard(
+                                template = template,
+                                isInStore = false,
+                                onActionClick = { aviso = TemplateNotice.USE },
+                            )
                         }
                     }
 
@@ -117,7 +138,11 @@ fun TemplatesContent(
                             )
                         }
                         items(items = store, key = { it.id }) { template ->
-                            TemplateCard(template = template, isInStore = true)
+                            TemplateCard(
+                                template = template,
+                                isInStore = true,
+                                onActionClick = { aviso = TemplateNotice.DOWNLOAD },
+                            )
                         }
                     }
                 }
@@ -209,6 +234,7 @@ private fun SectionTitle(
 private fun TemplateCard(
     template: CvTemplate,
     isInStore: Boolean,
+    onActionClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Surface(
@@ -255,10 +281,8 @@ private fun TemplateCard(
                     modifier = Modifier.padding(top = 2.dp),
                 )
 
-                // TODO: sin acción. Falta la pantalla de edición del currículum, y la
-                // descarga de plantillas nuevas necesita el servicio de la Fase II.
                 Button(
-                    onClick = {},
+                    onClick = onActionClick,
                     colors = if (isInStore) {
                         ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.onSurface,
@@ -392,4 +416,13 @@ private fun TemplatesPreview(darkTheme: Boolean) {
             )
         }
     }
+}
+
+/** Los dos avisos de la pantalla de plantillas. */
+private enum class TemplateNotice(
+    @param:StringRes val titleRes: Int,
+    @param:StringRes val messageRes: Int,
+) {
+    USE(R.string.coming_soon_use_title, R.string.coming_soon_use_message),
+    DOWNLOAD(R.string.coming_soon_template_title, R.string.coming_soon_template_message),
 }

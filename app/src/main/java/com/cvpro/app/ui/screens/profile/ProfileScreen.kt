@@ -43,6 +43,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cvpro.app.R
 import com.cvpro.app.ui.components.outlinedOnCardColors
+import com.cvpro.app.ui.components.ComingSoonSheet
 import com.cvpro.app.ui.components.FormTextField
 import com.cvpro.app.ui.components.LocalSnackbarHostState
 import com.cvpro.app.ui.components.PrimaryButton
@@ -122,6 +123,15 @@ fun ProfileCard(
     modifier: Modifier = Modifier,
 ) {
     val profile = uiState.profile
+    var showPreferencesNote by remember { mutableStateOf(false) }
+
+    if (showPreferencesNote) {
+        ComingSoonSheet(
+            title = stringResource(R.string.coming_soon_preferences_title),
+            message = stringResource(R.string.coming_soon_preferences_message),
+            onDismiss = { showPreferencesNote = false },
+        )
+    }
 
     Column(
         modifier = modifier
@@ -283,10 +293,8 @@ fun ProfileCard(
                 label = stringResource(R.string.profile_pref_modality),
                 value = modalityLabels.joinToString(", "),
             )
-            // TODO: sin acción. El endpoint de perfil solo acepta nombre, correo, teléfono y
-            // residencia: todavía no se pueden guardar sectores, disponibilidad ni modalidad.
             OutlinedButton(
-                onClick = {},
+                onClick = { showPreferencesNote = true },
                 colors = outlinedOnCardColors(),
                 modifier = Modifier
                     .fillMaxWidth()

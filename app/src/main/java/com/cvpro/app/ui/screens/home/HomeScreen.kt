@@ -29,6 +29,9 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -46,6 +49,9 @@ import com.cvpro.app.ui.components.outlinedOnCardColors
 import com.cvpro.app.domain.model.Cv
 import com.cvpro.app.domain.model.JobOffer
 import com.cvpro.app.domain.model.SkillsGapAnalysis
+import androidx.annotation.StringRes
+import com.cvpro.app.ui.components.ComingSoonSheet
+import com.cvpro.app.ui.components.CvDetailSheet
 import com.cvpro.app.ui.components.RadarChart
 import com.cvpro.app.ui.components.RadarSeries
 import com.cvpro.app.ui.components.VersionLabel
@@ -101,6 +107,18 @@ fun HomeContent(
     onCvsClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    var detailCv by remember { mutableStateOf<Cv?>(null) }
+    var comingSoon by remember { mutableStateOf<HomeComingSoon?>(null) }
+
+    detailCv?.let { cv -> CvDetailSheet(cv = cv, onDismiss = { detailCv = null }) }
+    comingSoon?.let { aviso ->
+        ComingSoonSheet(
+            title = stringResource(aviso.titleRes),
+            message = stringResource(aviso.messageRes),
+            onDismiss = { comingSoon = null },
+        )
+    }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -108,9 +126,17 @@ fun HomeContent(
             .padding(horizontal = 12.dp, vertical = 12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        RecentCvsSection(cvs = uiState.recentCvs, onSeeAllClick = onCvsClick)
+        RecentCvsSection(
+            cvs = uiState.recentCvs,
+            onSeeAllClick = onCvsClick,
+            onCvClick = { detailCv = it },
+            onDownloadClick = { comingSoon = HomeComingSoon.PDF },
+        )
 
-        CreateCvSection(onOfflineClick = onTemplatesClick)
+        CreateCvSection(
+            onOfflineClick = onTemplatesClick,
+            onAiClick = { comingSoon = HomeComingSoon.AI },
+        )
 
         SkillsSection(analysis = uiState.skillsGap, onSeeAreasClick = onSkillsGapClick)
 
@@ -132,6 +158,8 @@ fun HomeContent(
 private fun RecentCvsSection(
     cvs: List<Cv>,
     onSeeAllClick: () -> Unit,
+    onCvClick: (Cv) -> Unit,
+    onDownloadClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     SectionCard(modifier = modifier) {
@@ -148,7 +176,13 @@ private fun RecentCvsSection(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
                 contentPadding = PaddingValues(top = 12.dp),
             ) {
-                items(items = cvs, key = { it.id }) { cv -> RecentCvCard(cv = cv) }
+                items(items = cvs, key = { it.id }) { cv ->
+                    RecentCvCard(
+                        cv = cv,
+                        onCvClick = { onCvClick(cv) },
+                        onDownloadClick = onDownloadClick,
+                    )
+                }
             }
         }
     }
@@ -157,6 +191,8 @@ private fun RecentCvsSection(
 @Composable
 private fun RecentCvCard(
     cv: Cv,
+    onCvClick: () -> Unit,
+    onDownloadClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Card(
@@ -201,9 +237,8 @@ private fun RecentCvCard(
                     horizontalArrangement = Arrangement.spacedBy(6.dp),
                     modifier = Modifier.padding(top = 10.dp),
                 ) {
-                    // TODO: sin acción. Falta la pantalla de edición del currículum.
                     Button(
-                        onClick = {},
+                        onClick = onCvClick,
                         contentPadding = TIGHT_BUTTON_PADDING,
                         modifier = Modifier.weight(1f),
                     ) {
@@ -213,9 +248,8 @@ private fun RecentCvCard(
                             maxLines = 1,
                         )
                     }
-                    // TODO: sin acción. La exportación a PDF no entra en la Fase I.
                     Button(
-                        onClick = {},
+                        onClick = onDownloadClick,
                         contentPadding = TIGHT_BUTTON_PADDING,
                         colors = ButtonDefaults.buttonColors(
                             containerColor = MaterialTheme.colorScheme.onSurface,
@@ -241,6 +275,7 @@ private fun RecentCvCard(
 @Composable
 private fun CreateCvSection(
     onOfflineClick: () -> Unit,
+    onAiClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Surface(
@@ -265,8 +300,7 @@ private fun CreateCvSection(
                     color = MaterialTheme.colorScheme.primary,
                 )
             }
-            // TODO: sin acción. La generación con IA no entra en la Fase I.
-            Button(onClick = {}, contentPadding = TIGHT_BUTTON_PADDING) {
+            Button(onClick = onAiClick, contentPadding = TIGHT_BUTTON_PADDING) {
                 Text(stringResource(R.string.home_create_cv_ai))
             }
             OutlinedButton(
@@ -560,4 +594,13 @@ private fun HomePreview(darkTheme: Boolean) {
             )
         }
     }
+}
+
+/** Los avisos de funciones que llegan en la Fase II. */
+private enum class HomeComingSoon(
+    @param:StringRes val titleRes: Int,
+    @param:StringRes val messageRes: Int,
+) {
+    AI(R.string.coming_soon_ai_title, R.string.coming_soon_ai_message),
+    PDF(R.string.coming_soon_pdf_title, R.string.coming_soon_pdf_message),
 }

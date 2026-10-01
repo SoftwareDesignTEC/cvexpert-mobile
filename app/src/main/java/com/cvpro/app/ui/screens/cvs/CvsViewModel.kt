@@ -2,6 +2,8 @@ package com.cvpro.app.ui.screens.cvs
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import android.net.Uri
+import com.cvpro.app.data.pdf.CvPdfGenerator
 import com.cvpro.app.domain.model.Cv
 import com.cvpro.app.domain.repository.CvRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,6 +20,7 @@ data class CvsUiState(
     val cvs: List<Cv> = emptyList(),
     val query: String = "",
     val isLoading: Boolean = false,
+    val isGeneratingPdf: Boolean = false,
     val error: String? = null,
     val deletingId: String? = null,
 )
@@ -25,7 +28,37 @@ data class CvsUiState(
 @HiltViewModel
 class CvsViewModel @Inject constructor(
     private val repository: CvRepository,
+    private val pdfGenerator: CvPdfGenerator,
 ) : ViewModel() {
+
+    // Dónde quedó el último PDF generado. La pantalla lo abre y después lo limpia.
+    private val _generatedPdf = MutableStateFlow<Uri?>(null)
+    val generatedPdf: StateFlow<Uri?> = _generatedPdf.asStateFlow()
+
+    /**
+     * Arma el PDF del currículum y lo guarda en Descargas.
+     *
+     * El dibujo y la escritura del archivo corren fuera del hilo principal, dentro del
+     * generador, para no trabar la pantalla mientras tanto.
+     */
+    fun onDownloadCv(cv: Cv) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isGeneratingPdf = true, error = null) }
+            try {
+                _generatedPdf.value = pdfGenerator.generate(cv)
+                _uiState.update { it.copy(isGeneratingPdf = false) }
+            } catch (exception: Exception) {
+                _uiState.update {
+                    it.copy(isGeneratingPdf = false, error = exception.message)
+                }
+            }
+        }
+    }
+
+    /** La pantalla avisa que ya abrió el archivo, para no volver a abrirlo al repintarse. */
+    fun onPdfOpened() {
+        _generatedPdf.value = null
+    }
 
     private val _uiState = MutableStateFlow(CvsUiState())
     val uiState: StateFlow<CvsUiState> = _uiState.asStateFlow()

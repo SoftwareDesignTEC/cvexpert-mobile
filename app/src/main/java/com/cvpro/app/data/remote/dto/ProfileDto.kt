@@ -1,17 +1,17 @@
 package com.cvpro.app.data.remote.dto
 
 data class UserProfileDto(
-    val id: String,
-    val name: String,
-    val email: String,
+    val id: String? = null,
+    val name: String? = null,
+    val email: String? = null,
     val phone: String?,
-    val location: String,
+    val location: String? = null,
     val photoUrl: String?,
     val bio: String?,
     val birthDate: String?,
-    val types: List<String>,
-    val modalities: List<String>,
-    val sectors: List<String>,
+    val types: List<String>? = null,
+    val modalities: List<String>? = null,
+    val sectors: List<String>? = null,
 )
 
 data class UpdateProfileRequestDto(

@@ -1,23 +1,23 @@
 package com.cvpro.app.data.remote.dto
 
 data class JobOfferDto(
-    val id: String,
-    val title: String,
-    val company: String,
+    val id: String? = null,
+    val title: String? = null,
+    val company: String? = null,
     val companyLogoUrl: String?,
-    val location: String,
-    val modality: String,
-    val type: String,
-    val sector: String,
-    val description: String,
-    val requirements: List<String>,
+    val location: String? = null,
+    val modality: String? = null,
+    val type: String? = null,
+    val sector: String? = null,
+    val description: String? = null,
+    val requirements: List<String>? = null,
     val salary: SalaryDto?,
     val matchScore: Int?,
-    val postedAt: String,
+    val postedAt: String? = null,
 )
 
 data class SalaryDto(
-    val min: Double,
-    val max: Double,
-    val currency: String,
+    val min: Double? = null,
+    val max: Double? = null,
+    val currency: String? = null,
 )

@@ -28,5 +28,19 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Permite entregarle el PDF generado al visor que tenga el usuario, sin exponer
+             la ruta real del archivo. Solo hace falta en Android 9 y anteriores: desde
+             Android 10 el archivo va a Descargas con MediaStore. -->
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.fileprovider"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/file_paths" />
+        </provider>
+
     </application>
 </manifest>
