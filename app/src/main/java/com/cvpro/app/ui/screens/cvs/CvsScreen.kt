@@ -1,5 +1,8 @@
 package com.cvpro.app.ui.screens.cvs
 
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.ui.graphics.Color
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -39,6 +42,91 @@ import com.cvpro.app.domain.model.Cv
 import com.cvpro.app.ui.components.EmptyState
 import com.cvpro.app.ui.theme.CvProTheme
 
+
+@Composable
+private fun CvPreview(
+    cv: Cv,
+    modifier: Modifier = Modifier,
+) {
+    Surface(
+        color = Color.White,
+        shape = RoundedCornerShape(
+            topStart = 8.dp,
+            topEnd = 8.dp,
+        ),
+        modifier = modifier,
+    ) {
+        Column(
+            modifier = Modifier.padding(10.dp),
+        ) {
+            Text(
+                text = cv.personalInfo.name,
+                style = MaterialTheme.typography.labelLarge,
+                color = Color(0xFF1F2937),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+
+            Text(
+                text = cv.personalInfo.email,
+                style = MaterialTheme.typography.labelSmall,
+                color = Color(0xFF6B7280),
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+
+            cv.personalInfo.location
+                .takeIf { it.isNotBlank() }
+                ?.let { location ->
+                    Text(
+                        text = location,
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Color(0xFF6B7280),
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            HorizontalDivider(
+                color = Color(0xFFE5E7EB),
+            )
+
+            cv.workExperiences.firstOrNull()?.let { experience ->
+                Text(
+                    text = experience.position,
+                    style = MaterialTheme.typography.labelMedium,
+                    color = Color(0xFF1F2937),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 6.dp),
+                )
+
+                Text(
+                    text = experience.company,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color(0xFF6B7280),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+
+            if (cv.skills.isNotEmpty()) {
+                Text(
+                    text = cv.skills
+                        .take(3)
+                        .joinToString(" · ") { it.name },
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color(0xFF1565F5),
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 6.dp),
+                )
+            }
+        }
+    }
+}
 /** Mis Currículums: la lista de CV guardados, con buscador. */
 @Composable
 fun CvsScreen(
@@ -204,19 +292,12 @@ private fun CvCard(
         Column {
             // El modelo del CV no trae imagen de vista previa: por ahora va el recuadro gris
             // del diseño.
-            Box(
+            CvPreview(
+                cv = cv,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(120.dp)
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = stringResource(R.string.home_cv_preview),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+                    .height(140.dp),
+            )
 
             Column(modifier = Modifier.padding(10.dp)) {
                 Text(
@@ -346,4 +427,5 @@ private fun CvsPreview(darkTheme: Boolean) {
             )
         }
     }
+
 }

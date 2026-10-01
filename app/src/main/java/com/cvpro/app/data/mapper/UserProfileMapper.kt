@@ -7,13 +7,12 @@ import com.cvpro.app.domain.model.UserProfile
 fun UserProfileDto.toDomain(): UserProfile {
     return UserProfile(
         id = id,
-        name = name,
+        name = fullName,
         email = email,
         phone = phone,
-        location = location,
+        location = address,
         photoUrl = photoUrl,
         bio = bio,
-        birthDate = birthDate,
         types = types,
         modalities = modalities.map { it.toJobModality() },
         sectors = sectors,
@@ -25,6 +24,8 @@ private fun String.toJobModality(): JobModality {
         "remote" -> JobModality.REMOTE
         "on-site" -> JobModality.ON_SITE
         "hybrid" -> JobModality.HYBRID
-        else -> throw IllegalArgumentException("Modalidad desconocida: $this")
+        else -> throw IllegalArgumentException(
+            "Modalidad desconocida: $this"
+        )
     }
 }

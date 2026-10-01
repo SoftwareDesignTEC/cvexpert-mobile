@@ -32,8 +32,23 @@ object FormValidation {
     @StringRes
     fun phoneOptional(value: String): Int? {
         if (value.isBlank()) return null
+
         val digits = value.filter { it.isDigit() }
-        return if (digits.length == PHONE_DIGITS) null else R.string.validation_phone
+
+        val localDigits = if (
+            digits.length == 11 &&
+            digits.startsWith("506")
+        ) {
+            digits.drop(3)
+        } else {
+            digits
+        }
+
+        return if (localDigits.length == PHONE_DIGITS) {
+            null
+        } else {
+            R.string.validation_phone
+        }
     }
 
     /** Largo mínimo, para campos como el nombre. */

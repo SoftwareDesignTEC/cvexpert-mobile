@@ -1,11 +1,14 @@
 package com.cvpro.app.ui.navigation
 
+import androidx.compose.foundation.Image
+import androidx.compose.ui.res.painterResource
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -151,18 +154,22 @@ private fun DrawerHeader(modifier: Modifier = Modifier) {
 
 /** Cuadrito azul con la inicial de la marca. */
 @Composable
-private fun LogoTile(modifier: Modifier = Modifier) {
+private fun LogoTile(
+    modifier: Modifier = Modifier,
+) {
     Box(
         modifier = modifier
-            .size(36.dp)
-            .clip(RoundedCornerShape(8.dp))
-            .background(MaterialTheme.colorScheme.primary),
+            .size(42.dp),
         contentAlignment = Alignment.Center,
     ) {
-        Text(
-            text = stringResource(R.string.app_name).take(1),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onPrimary,
+        Image(
+            painter = painterResource(
+                R.drawable.logo_pequeno
+            ),
+            contentDescription = stringResource(
+                R.string.app_name
+            ),
+            modifier = Modifier.fillMaxSize(),
         )
     }
 }

@@ -8,7 +8,6 @@ data class UserProfile(
     val location: String,
     val photoUrl: String?,
     val bio: String?,
-    val birthDate: String?,
     val types: List<String>,
     val modalities: List<JobModality>,
     val sectors: List<String>,
