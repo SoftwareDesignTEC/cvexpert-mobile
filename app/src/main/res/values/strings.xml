@@ -268,4 +268,31 @@
     <string name="profile_load_error">No se pudo cargar el perfil.</string>
     <string name="profile_save_success">Perfil guardado correctamente.</string>
     <string name="profile_save_error">No se pudo guardar el perfil.</string>
+
+
+    <!-- Configuración remota -->
+    <string name="settings_sessions_title">Sesiones activas</string>
+    <string name="settings_sessions_empty">No hay sesiones activas.</string>
+    <string name="settings_session_current">Actual</string>
+    <string name="settings_session_last_active">Última actividad: %1$s</string>
+
+    <string name="settings_data_exporting">Preparando tus datos…</string>
+    <string name="settings_export_success">Datos guardados correctamente.</string>
+    <string name="settings_export_error">No se pudieron guardar los datos.</string>
+
+    <string name="settings_document_version">Versión %1$s</string>
+    <string name="settings_document_effective">Vigente desde %1$s</string>
+
+    <string name="settings_loading">Cargando…</string>
+    <string name="settings_load_error">No se pudo cargar la información.</string>
+    <string name="settings_close">Cerrar</string>
+
+    <string name="settings_delete_account_title">¿Eliminar cuenta?</string>
+
+    <string name="settings_delete_account_message">
+    Esta acción eliminará permanentemente tu cuenta y tus datos. Esta operación no se puede deshacer.
+</string>
+
+    <string name="settings_delete_account_confirm">Eliminar</string>
+    <string name="settings_cancel">Cancelar</string>
 </resources>

@@ -17,6 +17,7 @@ import com.cvpro.app.data.remote.api.ProfileApi
 import com.cvpro.app.data.remote.api.SkillsGapApi
 import com.cvpro.app.data.remote.api.TemplateApi
 import com.cvpro.app.data.remote.api.CvApi
+import com.cvpro.app.data.remote.api.SettingsApi
 
 @Module
 @InstallIn(SingletonComponent::class)
@@ -92,6 +93,12 @@ object NetworkModule {
     @Singleton
     fun provideSkillsGapApi(retrofit: Retrofit): SkillsGapApi {
         return retrofit.create(SkillsGapApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideSettingsApi(retrofit: Retrofit, ): SettingsApi {
+        return retrofit.create(SettingsApi::class.java)
     }
 
     /**

@@ -13,6 +13,7 @@ import com.cvpro.app.domain.repository.ApplicationRepository
 import com.cvpro.app.domain.repository.ProfileRepository
 import com.cvpro.app.domain.repository.TemplateRepository
 import com.cvpro.app.domain.repository.CvRepository
+import com.cvpro.app.domain.repository.SettingsContentRepository
 
 /**
  * Le dice a Hilt qué implementación entregar cuando alguien pide una interfaz del dominio.
@@ -57,4 +58,10 @@ abstract class RepositoryModule {
     abstract fun bindCvRepository(
         impl: ApiCvRepository,
     ): CvRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindSettingsContentRepository(
+        impl: ApiSettingsContentRepository,
+    ): SettingsContentRepository
 }
