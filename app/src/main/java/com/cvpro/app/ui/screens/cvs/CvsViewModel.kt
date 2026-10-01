@@ -23,6 +23,7 @@ data class CvsUiState(
     val isGeneratingPdf: Boolean = false,
     val error: String? = null,
     val deletingId: String? = null,
+    val isSaving: Boolean = false,
 )
 
 @HiltViewModel
@@ -116,6 +117,45 @@ class CvsViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    /**
+     * Guarda el currículum editado contra el servicio.
+     *
+     * La lista se actualiza con lo que devuelve el PUT, no con el borrador: si el servicio
+     * cambia algo al guardar, la pantalla muestra lo que realmente quedó almacenado.
+     */
+    fun saveCv(cv: Cv) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isSaving = true, error = null) }
+
+            try {
+                val saved = repository.updateCv(cv)
+
+                _uiState.update { state ->
+                    state.copy(
+                        cvs = state.cvs.map { if (it.id == saved.id) saved else it },
+                        isSaving = false,
+                    )
+                }
+                _savedCv.value = saved
+            } catch (exception: Exception) {
+                _uiState.update {
+                    it.copy(
+                        isSaving = false,
+                        error = exception.message ?: "Error al guardar el CV",
+                    )
+                }
+            }
+        }
+    }
+
+    /** Avisa que el guardado terminó bien, para que la pantalla cierre el editor. */
+    private val _savedCv = MutableStateFlow<Cv?>(null)
+    val savedCv: StateFlow<Cv?> = _savedCv.asStateFlow()
+
+    fun onSaveHandled() {
+        _savedCv.value = null
     }
 
     private fun loadCvs() {

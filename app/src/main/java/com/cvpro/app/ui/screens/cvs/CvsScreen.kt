@@ -48,7 +48,7 @@ import com.cvpro.app.R
 import com.cvpro.app.domain.model.Cv
 import androidx.annotation.StringRes
 import com.cvpro.app.ui.components.ComingSoonSheet
-import com.cvpro.app.ui.components.CvDetailSheet
+import com.cvpro.app.ui.components.CvEditorSheet
 import com.cvpro.app.ui.components.EmptyState
 import com.cvpro.app.ui.theme.CvProTheme
 
@@ -146,6 +146,7 @@ fun CvsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val generatedPdf by viewModel.generatedPdf.collectAsStateWithLifecycle()
+    val savedCv by viewModel.savedCv.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     // Apenas el PDF está listo se abre con el visor que tenga el usuario, y se avisa al
@@ -162,10 +163,13 @@ fun CvsScreen(
 
     CvsContent(
         uiState = uiState,
+        savedCv = savedCv,
         onQueryChange = viewModel::onQueryChange,
         onRetry = viewModel::retry,
         onDeleteClick = viewModel::deleteCv,
         onDownloadCv = viewModel::onDownloadCv,
+        onSaveCv = viewModel::saveCv,
+        onSaveHandled = viewModel::onSaveHandled,
         onTemplatesClick = onTemplatesClick,
         modifier = modifier,
     )
@@ -180,21 +184,37 @@ fun CvsScreen(
 @Composable
 fun CvsContent(
     uiState: CvsUiState,
+    savedCv: Cv?,
     onQueryChange: (String) -> Unit,
     onRetry: () -> Unit,
     onDeleteClick: (String) -> Unit,
     onDownloadCv: (Cv) -> Unit,
+    onSaveCv: (Cv) -> Unit,
+    onSaveHandled: () -> Unit,
     onTemplatesClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    // Qué hoja está abierta, o null si ninguna.
-    var detailCv by remember { mutableStateOf<Cv?>(null) }
+    // Currículum abierto en el editor, o null si no hay ninguno.
+    var editingCv by remember { mutableStateOf<Cv?>(null) }
     var comingSoon by remember { mutableStateOf<ComingSoon?>(null) }
     // Currículum que el usuario pidió borrar, a la espera de que confirme.
     var cvToDelete by remember { mutableStateOf<Cv?>(null) }
 
-    detailCv?.let { cv ->
-        CvDetailSheet(cv = cv, onDismiss = { detailCv = null })
+    editingCv?.let { cv ->
+        CvEditorSheet(
+            cv = cv,
+            isSaving = uiState.isSaving,
+            onSave = onSaveCv,
+            onDismiss = { editingCv = null },
+        )
+    }
+
+    // Cuando el servicio confirma el guardado, se cierra el editor solo.
+    LaunchedEffect(savedCv) {
+        if (savedCv != null) {
+            editingCv = null
+            onSaveHandled()
+        }
     }
     comingSoon?.let { aviso ->
         ComingSoonSheet(
@@ -270,7 +290,7 @@ fun CvsContent(
                         cv = cv,
                         isDeleting = uiState.deletingId == cv.id,
                         onDeleteClick = { cvToDelete = cv },
-                        onCvClick = { detailCv = it },
+                        onCvClick = { editingCv = it },
                         onDownloadClick = { onDownloadCv(cv) },
                     )
                 }
@@ -495,10 +515,13 @@ private fun CvsPreview(darkTheme: Boolean) {
         Surface(color = MaterialTheme.colorScheme.background) {
             CvsContent(
                 uiState = CvsUiState(),
+                savedCv = null,
                 onQueryChange = {},
                 onRetry = {},
                 onDeleteClick = {},
                 onDownloadCv = {},
+                onSaveCv = {},
+                onSaveHandled = {},
                 onTemplatesClick = {},
             )
         }
