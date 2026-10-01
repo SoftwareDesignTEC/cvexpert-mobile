@@ -42,6 +42,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.cvpro.app.R
+import com.cvpro.app.ui.components.outlinedOnCardColors
 import com.cvpro.app.domain.model.Cv
 import com.cvpro.app.domain.model.JobOffer
 import com.cvpro.app.domain.model.SkillsGapAnalysis
@@ -264,10 +265,8 @@ private fun CreateCvSection(
             }
             OutlinedButton(
                 onClick = onOfflineClick,
+                colors = outlinedOnCardColors(),
                 contentPadding = TIGHT_BUTTON_PADDING,
-                colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                ),
             ) {
                 Text(stringResource(R.string.home_create_cv_offline))
             }
@@ -315,9 +314,7 @@ private fun SkillsSection(
 
         OutlinedButton(
             onClick = onSeeAreasClick,
-            colors = ButtonDefaults.outlinedButtonColors(
-                containerColor = MaterialTheme.colorScheme.surface,
-            ),
+            colors = outlinedOnCardColors(),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 12.dp),
@@ -443,10 +440,8 @@ private fun SectionHeader(
         if (actionLabel != null) {
             OutlinedButton(
                 onClick = onActionClick,
+                colors = outlinedOnCardColors(),
                 contentPadding = TIGHT_BUTTON_PADDING,
-                colors = ButtonDefaults.outlinedButtonColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                ),
             ) {
                 Text(text = actionLabel, style = MaterialTheme.typography.labelSmall)
             }

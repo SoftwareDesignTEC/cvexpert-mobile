@@ -231,6 +231,8 @@
     <string name="skills_gap_points_subtitle">Habilidades por Mejorar</string>
     <string name="skills_gap_row_number">%1$d.</string>
     <string name="skills_gap_gap_percent">-%1$d%% brecha</string>
+    <string name="skills_gap_show_all">Ver todos (%1$d más)</string>
+    <string name="skills_gap_show_less">Ver menos</string>
     <string name="skills_gap_courses_count">%1$d cursos</string>
     <string name="skills_gap_course_duration">Duración: %1$s</string>
     <string name="skills_gap_course_open">Ver Curso</string>

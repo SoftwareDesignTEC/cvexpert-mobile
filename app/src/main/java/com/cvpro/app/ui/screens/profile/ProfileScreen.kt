@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cvpro.app.R
+import com.cvpro.app.ui.components.outlinedOnCardColors
 import com.cvpro.app.ui.components.FormTextField
 import com.cvpro.app.ui.components.LocalSnackbarHostState
 import com.cvpro.app.ui.components.PrimaryButton
@@ -230,6 +231,7 @@ fun ProfileCard(
 
                 OutlinedButton(
                     onClick = onSkillsGapClick,
+                    colors = outlinedOnCardColors(),
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(top = 12.dp),
@@ -260,6 +262,7 @@ fun ProfileCard(
             )
             OutlinedButton(
                 onClick = onEditClick,
+                colors = outlinedOnCardColors(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 12.dp),
@@ -296,6 +299,7 @@ fun ProfileCard(
             // residencia: todavía no se pueden guardar sectores, disponibilidad ni modalidad.
             OutlinedButton(
                 onClick = {},
+                colors = outlinedOnCardColors(),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 12.dp),
@@ -476,6 +480,7 @@ fun ProfileForm(
         )
         OutlinedButton(
             onClick = onCancelClick,
+            colors = outlinedOnCardColors(),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(top = 8.dp),
