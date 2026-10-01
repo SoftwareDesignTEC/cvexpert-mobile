@@ -3,6 +3,8 @@ package com.cvpro.app.ui.components
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -58,3 +60,16 @@ fun SecondaryButton(
         Text(text = text)
     }
 }
+
+/**
+ * Colores de los botones sin relleno.
+ *
+ * El texto va siempre en el azul de la marca. Se define acá y no en cada pantalla para
+ * que todos los "Ver todos", "Ver detalles" y demás se vean iguales, y para cambiarlos
+ * en un solo lugar si la paleta cambia.
+ */
+@Composable
+fun outlinedOnCardColors(): ButtonColors = ButtonDefaults.outlinedButtonColors(
+    containerColor = MaterialTheme.colorScheme.surface,
+    contentColor = MaterialTheme.colorScheme.primary,
+)

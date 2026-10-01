@@ -2,6 +2,7 @@ package com.cvpro.app.ui.screens.skillsgap
 
 import android.content.Intent
 import androidx.core.net.toUri
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -21,11 +22,15 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -39,6 +44,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil.compose.AsyncImage
 import com.cvpro.app.R
+import com.cvpro.app.ui.components.outlinedOnCardColors
 import com.cvpro.app.domain.model.CourseRecommendation
 import com.cvpro.app.domain.model.SkillGapItem
 import com.cvpro.app.domain.model.SkillsGapAnalysis
@@ -276,12 +282,58 @@ private fun ImprovementPointsCard(
                 modifier = Modifier.padding(top = 12.dp),
             )
         } else {
-            skills.forEachIndexed { index, skill ->
+            // Se muestran las tres de mayor brecha; el resto queda detrás del botón.
+            var showAll by remember { mutableStateOf(false) }
+            val visible = if (showAll) skills else skills.take(PREVIEW_COUNT)
+
+            visible.forEachIndexed { index, skill ->
                 ImprovementRow(position = index + 1, skill = skill)
+            }
+
+            if (skills.size > PREVIEW_COUNT) {
+                ExpandButton(
+                    isExpanded = showAll,
+                    hiddenCount = skills.size - PREVIEW_COUNT,
+                    onClick = { showAll = !showAll },
+                )
             }
         }
     }
 }
+
+/**
+ * Botón para ver el resto de una lista recortada.
+ *
+ * Dice cuántos faltan en vez de un "Ver todos" a secas: así se sabe si vale la pena
+ * abrirlo antes de tocarlo.
+ */
+@Composable
+private fun ExpandButton(
+    isExpanded: Boolean,
+    hiddenCount: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    OutlinedButton(
+        onClick = onClick,
+        colors = outlinedOnCardColors(),
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(top = 10.dp),
+    ) {
+        Text(
+            text = if (isExpanded) {
+                stringResource(R.string.skills_gap_show_less)
+            } else {
+                stringResource(R.string.skills_gap_show_all, hiddenCount)
+            },
+            style = MaterialTheme.typography.labelMedium,
+        )
+    }
+}
+
+/** Cuántos elementos se ven antes de tocar "Ver todos". */
+private const val PREVIEW_COUNT = 3
 
 @Composable
 private fun ImprovementRow(
@@ -297,17 +349,19 @@ private fun ImprovementRow(
             .padding(top = 8.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            // Barrita azul del diseño, pegada al borde izquierdo de la fila.
+            // Barrita de color pegada al borde izquierdo de la fila.
             Box(
                 modifier = Modifier
                     .width(4.dp)
                     .height(40.dp)
-                    .background(MaterialTheme.colorScheme.primary),
+                    // Rojo y no azul: estas son las habilidades que están por debajo de lo
+                    // que pide el mercado, o sea lo que hay que atender.
+                    .background(MaterialTheme.colorScheme.error),
             )
             Text(
                 text = stringResource(R.string.skills_gap_row_number, position),
                 style = MaterialTheme.typography.labelLarge,
-                color = MaterialTheme.colorScheme.primary,
+                color = MaterialTheme.colorScheme.error,
                 modifier = Modifier.padding(start = 10.dp),
             )
             Text(
@@ -359,8 +413,20 @@ private fun CoursesCard(
             }
         }
 
-        courses.forEach { course ->
-            CourseCard(course = course, modifier = Modifier.padding(top = 10.dp))
+        // Mismo recorte que los puntos a mejorar: tres y el resto detrás del botón.
+        var showAll by remember { mutableStateOf(false) }
+        val visible = if (showAll) courses else courses.take(PREVIEW_COUNT)
+
+        visible.forEach { course ->
+            CourseCard(course = course, modifier = Modifier.padding(top = 12.dp))
+        }
+
+        if (courses.size > PREVIEW_COUNT) {
+            ExpandButton(
+                isExpanded = showAll,
+                hiddenCount = courses.size - PREVIEW_COUNT,
+                onClick = { showAll = !showAll },
+            )
         }
     }
 }
@@ -372,9 +438,15 @@ private fun CourseCard(
 ) {
     val context = LocalContext.current
 
+    // Fondo y borde propios: la tarjeta de la sección también es blanca, así que sin esto
+    // los cursos quedaban pegados entre sí, sin separación visible.
     Surface(
-        color = MaterialTheme.colorScheme.surface,
-        shape = RoundedCornerShape(10.dp),
+        color = MaterialTheme.colorScheme.surfaceVariant,
+        shape = RoundedCornerShape(12.dp),
+        border = BorderStroke(
+            width = 1.dp,
+            color = MaterialTheme.colorScheme.outlineVariant,
+        ),
         modifier = modifier.fillMaxWidth(),
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
