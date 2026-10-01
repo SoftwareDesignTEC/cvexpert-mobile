@@ -14,14 +14,19 @@ interface SettingsRepository {
     /** Qué avisos quiere recibir el usuario. */
     val notifications: Flow<NotificationSettings>
 
-    suspend fun setNotification(type: NotificationType, enabled: Boolean)
+    suspend fun setNotification(
+        type: NotificationType,
+        enabled: Boolean,
+    )
+
+    /** Indica si el usuario ya vio completa la animación inicial. */
+    val hasSeenSplash: Flow<Boolean>
+
+    suspend fun markSplashSeen()
 }
 
 /**
  * Los tres avisos que ofrece la app, según el diseño de Configuración.
- *
- * Por ahora solo se guarda la preferencia: la app todavía no envía notificaciones, eso
- * llega con el backend de la Fase II.
  */
 enum class NotificationType {
     APPLICATION_STATUS,
@@ -35,7 +40,6 @@ data class NotificationSettings(
     val courseRecommendation: Boolean = true,
     val jobAlerts: Boolean = true,
 ) {
-    /** Si un aviso concreto está encendido. */
     fun isEnabled(type: NotificationType): Boolean = when (type) {
         NotificationType.APPLICATION_STATUS -> applicationStatus
         NotificationType.COURSE_RECOMMENDATION -> courseRecommendation

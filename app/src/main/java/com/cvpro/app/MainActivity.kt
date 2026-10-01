@@ -17,6 +17,12 @@ import com.cvpro.app.ui.theme.CvProTheme
 import com.cvpro.app.ui.theme.ThemeViewModel
 import dagger.hilt.android.AndroidEntryPoint
 
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import com.cvpro.app.ui.screens.splash.SplashScreen
+import com.cvpro.app.ui.screens.splash.SplashViewModel
+
 /**
  * Única Activity de la app: toda la UI es Compose y la navegación será
  * interna con Navigation Component (T2).
@@ -33,6 +39,9 @@ class MainActivity : ComponentActivity() {
         setContent {
             // El tema guardado manda sobre el ajuste del sistema (Configuración de la app).
             val themeViewModel: ThemeViewModel = hiltViewModel()
+            val splashViewModel: SplashViewModel = hiltViewModel()
+            val hasSeenSplash by splashViewModel.hasSeenSplash
+                .collectAsStateWithLifecycle()
             val themePreference by themeViewModel.themePreference.collectAsStateWithLifecycle()
 
             CvProTheme(darkTheme = themePreference.isDark(isSystemInDarkTheme())) {
@@ -40,8 +49,22 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background,
                 ) {
-                    // Raíz de la app: decide entre login y pantalla principal según la sesión.
-                    CvProApp()
+                    var showSplash by remember {
+                        mutableStateOf(true)
+                    }
+
+                    if (showSplash) {
+                        SplashScreen(
+                            canSkip = hasSeenSplash,
+                            onFinished = {
+                                splashViewModel.markSplashSeen()
+                                showSplash = false
+                            },
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    } else {
+                        CvProApp()
+                    }
                 }
             }
         }

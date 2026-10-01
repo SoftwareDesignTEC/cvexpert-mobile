@@ -4,7 +4,7 @@
     <!-- TODO: confirmar nombre comercial definitivo. -->
     <!-- PROVISIONAL: nombre del diseño de Samuel, todavía sin confirmar por el equipo.
          Es el que se ve en el lanzador de Android y en el logo de la barra superior. -->
-    <string name="app_name">Careerly</string>
+    <string name="app_name">CVExpert</string>
     <string name="home_tagline">Tu currículum profesional, sin experiencia previa.</string>
     <string name="version_label">Versión %1$s (build %2$d)</string>
 
@@ -39,7 +39,7 @@
     <string name="settings_data_privacy">Políticas de Privacidad</string>
     <string name="settings_data_terms">Términos y Condiciones</string>
     <string name="settings_system_title">Preferencias del Sistema</string>
-    <string name="settings_system_subtitle">Personaliza Careerly para trabajar a tu manera.</string>
+    <string name="settings_system_subtitle">Personaliza CVExpert para trabajar a tu manera.</string>
     <string name="settings_system_language">Idioma</string>
     <string name="settings_system_language_value">Español</string>
     <string name="settings_system_timezone">Zona Horaria</string>
@@ -47,7 +47,7 @@
     <string name="settings_help_title">¿Necesitas ayuda?</string>
     <string name="settings_help_subtitle">Contacta a nuestro equipo de soporte técnico.</string>
     <string name="settings_help_email">Enviar Correo Electrónico</string>
-    <string name="settings_help_email_subject">Soporte de Careerly</string>
+    <string name="settings_help_email_subject">Soporte de CVExpert</string>
 
     <!-- Detalle de oferta y postulación -->
     <string name="detail_description">Descripción</string>

@@ -45,6 +45,20 @@ import com.cvpro.app.domain.repository.NotificationSettings
 import com.cvpro.app.domain.repository.NotificationType
 import com.cvpro.app.ui.theme.CvProTheme
 
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material.icons.filled.Devices
+import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.filled.School
+import androidx.compose.material.icons.filled.Security
+import androidx.compose.material.icons.filled.Work
+import androidx.compose.material3.Icon
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.vector.ImageVector
+
 /** Configuración con estado. */
 @Composable
 fun SettingsScreen(
@@ -107,11 +121,14 @@ fun SettingsContent(
             title = stringResource(R.string.settings_security_title),
             subtitle = stringResource(R.string.settings_security_subtitle),
         ) {
-            SettingsRow(label = stringResource(R.string.settings_security_sessions))
+            SettingsRow(
+                label = stringResource(R.string.settings_security_sessions),
+                icon = Icons.Default.Devices,)
             // El cierre de sesión vive acá y no en el menú lateral, que en el diseño de
             // Samuel no lo tiene. Es la única forma de salir de la cuenta.
             SettingsRow(
                 label = stringResource(R.string.home_sign_out),
+                icon = Icons.Default.ExitToApp,
                 onClick = onSignOutClick,
             )
         }
@@ -124,18 +141,23 @@ fun SettingsContent(
         ) {
             NotificationRow(
                 label = stringResource(R.string.settings_notifications_applications),
+                icon = Icons.Default.Notifications,
                 type = NotificationType.APPLICATION_STATUS,
                 settings = uiState.notifications,
                 onChange = onNotificationChange,
             )
+
             NotificationRow(
                 label = stringResource(R.string.settings_notifications_courses),
+                icon = Icons.Default.School,
                 type = NotificationType.COURSE_RECOMMENDATION,
                 settings = uiState.notifications,
                 onChange = onNotificationChange,
             )
+
             NotificationRow(
                 label = stringResource(R.string.settings_notifications_jobs),
+                icon = Icons.Default.Work,
                 type = NotificationType.JOB_ALERTS,
                 settings = uiState.notifications,
                 onChange = onNotificationChange,
@@ -146,13 +168,17 @@ fun SettingsContent(
             title = stringResource(R.string.settings_data_title),
             subtitle = stringResource(R.string.settings_data_subtitle),
         ) {
-            SettingsRow(label = stringResource(R.string.settings_data_download))
+            SettingsRow(label = stringResource(R.string.settings_data_download),
+                icon = Icons.Default.Download,)
             SettingsRow(
                 label = stringResource(R.string.settings_data_delete),
                 isDestructive = true,
+                icon = Icons.Default.Delete,
             )
-            SettingsRow(label = stringResource(R.string.settings_data_privacy))
-            SettingsRow(label = stringResource(R.string.settings_data_terms))
+            SettingsRow(label = stringResource(R.string.settings_data_privacy),
+                icon = Icons.Default.Security,)
+            SettingsRow(label = stringResource(R.string.settings_data_terms),
+                icon = Icons.Default.Description,)
         }
 
         // Preferencias del sistema. El tema sí funciona y se guarda en el dispositivo.
@@ -191,14 +217,19 @@ fun SettingsContent(
             )
         }
 
+        val emailSubject = stringResource(R.string.settings_help_email_subject)
         HelpCard(
             onEmailClick = {
-                val email = Intent(Intent.ACTION_SENDTO, "mailto:".toUri()).apply {
+                val email = Intent(
+                    Intent.ACTION_SENDTO,
+                    "mailto:".toUri()
+                ).apply {
                     putExtra(
                         Intent.EXTRA_SUBJECT,
-                        context.getString(R.string.settings_help_email_subject),
+                        emailSubject,
                     )
                 }
+
                 context.startActivity(email)
             },
         )
@@ -244,6 +275,7 @@ private fun SettingsCard(
 @Composable
 private fun SettingsRow(
     label: String,
+    icon: ImageVector,
     modifier: Modifier = Modifier,
     isDestructive: Boolean = false,
     onClick: (() -> Unit)? = null,
@@ -270,10 +302,34 @@ private fun SettingsRow(
         ) {
             Box(
                 modifier = Modifier
-                    .size(28.dp)
-                    .clip(RoundedCornerShape(6.dp))
-                    .background(accent),
-            )
+                    .size(32.dp)
+                    .clip(RoundedCornerShape(7.dp))
+                    .background(
+                        brush = if (isDestructive) {
+                            Brush.linearGradient(
+                                listOf(
+                                    MaterialTheme.colorScheme.error,
+                                    MaterialTheme.colorScheme.error,
+                                )
+                            )
+                        } else {
+                            Brush.linearGradient(
+                                colors = listOf(
+                                    Color(0xFF4DA3FF),
+                                    Color(0xFF1565F5),
+                                )
+                            )
+                        }
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(18.dp),
+                )
+            }
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodyMedium,
@@ -300,6 +356,7 @@ private fun SettingsRow(
 @Composable
 private fun NotificationRow(
     label: String,
+    icon: ImageVector,
     type: NotificationType,
     settings: NotificationSettings,
     onChange: (NotificationType, Boolean) -> Unit,
@@ -321,10 +378,25 @@ private fun NotificationRow(
         ) {
             Box(
                 modifier = Modifier
-                    .size(28.dp)
-                    .clip(RoundedCornerShape(6.dp))
-                    .background(MaterialTheme.colorScheme.primary),
-            )
+                    .size(32.dp)
+                    .clip(RoundedCornerShape(7.dp))
+                    .background(
+                        brush = Brush.linearGradient(
+                            colors = listOf(
+                                Color(0xFF4DA3FF),
+                                Color(0xFF1565F5),
+                            )
+                        )
+                    ),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = icon,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(18.dp),
+                )
+            }
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodyMedium,

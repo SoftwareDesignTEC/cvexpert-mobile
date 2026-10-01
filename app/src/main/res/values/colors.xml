@@ -11,7 +11,7 @@
     <color name="brand_blue">#2563EB</color>
     <color name="brand_sky">#38BDF8</color>
 
-    <color name="ic_launcher_background">@color/brand_blue</color>
+    <color name="ic_launcher_background">#FFFFFF</color>
     <color name="ic_launcher_sheet">#FFFFFF</color>
     <color name="ic_launcher_fold">@color/brand_sky</color>
 </resources>
