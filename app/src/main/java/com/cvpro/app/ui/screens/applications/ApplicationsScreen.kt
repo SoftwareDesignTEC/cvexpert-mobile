@@ -1,7 +1,8 @@
 package com.cvpro.app.ui.screens.applications
 
 import androidx.compose.ui.layout.ContentScale
-import coil.compose.AsyncImage
+import com.cvpro.app.ui.components.RemoteImage
+import com.cvpro.app.ui.components.outlinedOnCardColors
 import androidx.compose.foundation.background
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
@@ -24,6 +25,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -414,6 +416,17 @@ private fun ApplicationsList(
         }
     }
 
+    // Aparte de plegar la columna entera, cada una arranca mostrando solo las primeras.
+    // Con muchas postulaciones, las cuatro columnas juntas hacían un scroll larguísimo en
+    // el que no se encontraba nada.
+    val showAllStates = remember {
+        mutableStateMapOf<ApplicationStatus, Boolean>().apply {
+            ApplicationStatus.entries.forEach { status ->
+                this[status] = false
+            }
+        }
+    }
+
     LazyColumn(
         contentPadding = PaddingValues(
             start = 12.dp,
@@ -449,9 +462,17 @@ private fun ApplicationsList(
                 )
             }
 
+            val showAll = showAllStates[status] ?: false
+
+            val visibleApplications = if (showAll) {
+                applicationsForStatus
+            } else {
+                applicationsForStatus.take(PREVIEW_COUNT)
+            }
+
             if (isExpanded) {
                 items(
-                    items = applicationsForStatus,
+                    items = visibleApplications,
                     key = { application ->
                         application.id
                     },
@@ -471,10 +492,56 @@ private fun ApplicationsList(
                         },
                     )
                 }
+
+                if (applicationsForStatus.size > PREVIEW_COUNT) {
+                    item(
+                        key = "more_${status.name}",
+                    ) {
+                        ExpandColumnButton(
+                            isExpanded = showAll,
+                            hiddenCount = applicationsForStatus.size - PREVIEW_COUNT,
+                            onClick = {
+                                showAllStates[status] = !showAll
+                            },
+                        )
+                    }
+                }
             }
         }
     }
 }
+
+/**
+ * Botón para ver el resto de una columna recortada.
+ *
+ * Dice cuántas faltan, igual que en Análisis de Brecha y en Plantillas, para que las tres
+ * pantallas se comporten igual.
+ */
+@Composable
+private fun ExpandColumnButton(
+    isExpanded: Boolean,
+    hiddenCount: Int,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    OutlinedButton(
+        onClick = onClick,
+        colors = outlinedOnCardColors(),
+        modifier = modifier.fillMaxWidth(),
+    ) {
+        Text(
+            text = if (isExpanded) {
+                stringResource(R.string.applications_show_less)
+            } else {
+                stringResource(R.string.applications_show_all, hiddenCount)
+            },
+            style = MaterialTheme.typography.labelMedium,
+        )
+    }
+}
+
+/** Cuántas postulaciones se ven por columna antes de tocar "Ver todas". */
+private const val PREVIEW_COUNT = 3
 
 @Composable
 private fun StatusHeader(
@@ -614,24 +681,23 @@ private fun CompanyLogo(
             ),
         contentAlignment = Alignment.Center,
     ) {
-        if (!logoUrl.isNullOrBlank()) {
-            AsyncImage(
-                model = logoUrl,
-                contentDescription = stringResource(
-                    R.string.applications_logo_description,
-                    company,
-                ),
-                contentScale = ContentScale.Fit,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(4.dp),
-            )
-        } else {
-            Text(
-                text = company.take(1).uppercase(),
-                style = MaterialTheme.typography.labelMedium,
-                color = accent,
-            )
-        }
+        RemoteImage(
+            url = logoUrl,
+            contentDescription = stringResource(
+                R.string.applications_logo_description,
+                company,
+            ),
+            contentScale = ContentScale.Fit,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(4.dp),
+            fallback = {
+                Text(
+                    text = company.take(1).uppercase(),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = accent,
+                )
+            },
+        )
     }
 }

@@ -23,6 +23,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -41,7 +42,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage
+import com.cvpro.app.ui.components.RemoteImage
+import com.cvpro.app.ui.components.outlinedOnCardColors
 import com.cvpro.app.R
 import com.cvpro.app.domain.model.JobModality
 import com.cvpro.app.domain.model.JobOffer
@@ -130,8 +132,15 @@ fun JobsContent(
 
                 if (uiState.hasMore) {
                     item {
-                        // Al llegar acá se pide la página siguiente: es el scroll infinito.
-                        LaunchLoadMore(onLoadMore = onLoadMore)
+                        // Antes la página siguiente se pedía sola al llegar al pie y la
+                        // lista no terminaba nunca. Ahora la pide el usuario: ve cuántas
+                        // le faltan y decide si quiere seguir.
+                        LoadMoreButton(
+                            isLoading = uiState.isLoadingMore,
+                            remaining = (uiState.totalRecords - uiState.offers.size)
+                                .coerceAtLeast(0),
+                            onClick = onLoadMore,
+                        )
                     }
                 }
             }
@@ -327,21 +336,32 @@ private fun JobsError(
     }
 }
 
-/** Pie de la lista: muestra el cargando de la página siguiente y la dispara. */
+/**
+ * Pie de la lista: pide la página siguiente cuando el usuario lo toca.
+ *
+ * Dice cuántas ofertas faltan, así se sabe si vale la pena seguir antes de tocarlo.
+ */
 @Composable
-private fun LaunchLoadMore(
-    onLoadMore: () -> Unit,
+private fun LoadMoreButton(
+    isLoading: Boolean,
+    remaining: Int,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    androidx.compose.runtime.LaunchedEffect(Unit) { onLoadMore() }
-
-    Box(
-        modifier = modifier
-            .fillMaxWidth()
-            .padding(16.dp),
-        contentAlignment = Alignment.Center,
+    OutlinedButton(
+        onClick = onClick,
+        enabled = !isLoading,
+        colors = outlinedOnCardColors(),
+        modifier = modifier.fillMaxWidth(),
     ) {
-        CircularProgressIndicator()
+        Text(
+            text = if (isLoading) {
+                stringResource(R.string.jobs_loading_more)
+            } else {
+                stringResource(R.string.jobs_load_more, remaining)
+            },
+            style = MaterialTheme.typography.labelMedium,
+        )
     }
 }
 
@@ -359,22 +379,21 @@ private fun CompanyLogo(
             .background(MaterialTheme.colorScheme.primaryContainer),
         contentAlignment = Alignment.Center,
     ) {
-        if (logoUrl != null) {
-            AsyncImage(
-                model = logoUrl,
-                contentDescription = stringResource(R.string.applications_logo_description, company),
-                contentScale = ContentScale.Fit,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(4.dp),
-            )
-        } else {
-            Text(
-                text = company.take(1).uppercase(),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary,
-            )
-        }
+        RemoteImage(
+            url = logoUrl,
+            contentDescription = stringResource(R.string.applications_logo_description, company),
+            contentScale = ContentScale.Fit,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(4.dp),
+            fallback = {
+                Text(
+                    text = company.take(1).uppercase(),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            },
+        )
     }
 }
 

@@ -42,7 +42,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage
+import com.cvpro.app.ui.components.RemoteImage
 import com.cvpro.app.R
 import com.cvpro.app.ui.components.outlinedOnCardColors
 import com.cvpro.app.domain.model.CourseRecommendation
@@ -460,19 +460,18 @@ private fun CourseCard(
                         .background(MaterialTheme.colorScheme.primaryContainer),
                     contentAlignment = Alignment.Center,
                 ) {
-                    if (course.logoUrl != null) {
-                        AsyncImage(
-                            model = course.logoUrl,
-                            contentDescription = "Logo de ${course.platform}",
-                            modifier = Modifier.fillMaxSize(),
-                        )
-                    } else {
-                        Text(
-                            text = course.platform.take(1).uppercase(),
-                            style = MaterialTheme.typography.labelLarge,
-                            color = MaterialTheme.colorScheme.primary,
-                        )
-                    }
+                    RemoteImage(
+                        url = course.logoUrl,
+                        contentDescription = "Logo de ${course.platform}",
+                        modifier = Modifier.fillMaxSize(),
+                        fallback = {
+                            Text(
+                                text = course.platform.take(1).uppercase(),
+                                style = MaterialTheme.typography.labelLarge,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        },
+                    )
                 }
 
                 Text(

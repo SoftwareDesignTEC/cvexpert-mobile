@@ -230,6 +230,8 @@
     <string name="jobs_filter_recommended">Recomendadas</string>
     <string name="jobs_filter_remote">Remoto</string>
     <string name="jobs_filter_hybrid">Híbrido</string>
+    <string name="jobs_load_more">Cargar más (%1$d restantes)</string>
+    <string name="jobs_loading_more">Cargando…</string>
     <string name="jobs_filter_recent">Últimos 7 días</string>
     <string name="jobs_match_percentage">%1$d%%</string>
     <string name="jobs_match_label">Compatibilidad</string>
@@ -266,6 +268,8 @@
     </plurals>
     <string name="applications_applied_at">Postulado el %1$s</string>
     <string name="applications_see_all">Ver Todo</string>
+    <string name="applications_show_all">Ver todas (%1$d más)</string>
+    <string name="applications_show_less">Ver menos</string>
     <string name="applications_action_status">Estado</string>
     <string name="applications_action_details">Detalles</string>
     <string name="applications_change_status">Cambiar estado</string>

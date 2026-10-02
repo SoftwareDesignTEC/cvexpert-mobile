@@ -72,6 +72,9 @@ retrofit-gson = { group = "com.squareup.retrofit2", name = "converter-gson", ver
 
 #Imagenes
 coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
+# Decodificador de SVG para Coil. Los logos de empresa del APIM son .svg y Coil no los lee
+# de fabrica: sin esto la imagen falla en silencio y queda la inicial de respaldo.
+coil-svg = { group = "io.coil-kt", name = "coil-svg", version.ref = "coil" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
