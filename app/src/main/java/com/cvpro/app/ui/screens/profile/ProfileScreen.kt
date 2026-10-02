@@ -25,7 +25,7 @@ import com.cvpro.app.ui.components.RadarChart
 import com.cvpro.app.ui.components.RadarSeries
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
-import coil.compose.AsyncImage
+import com.cvpro.app.ui.components.RemoteImage
 import com.cvpro.app.domain.model.JobModality
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -378,20 +378,19 @@ private fun ProfileAvatar(
             .background(MaterialTheme.colorScheme.primaryContainer),
         contentAlignment = Alignment.Center,
     ) {
-        if (photoUrl != null) {
-            AsyncImage(
-                model = photoUrl,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier.fillMaxSize(),
-            )
-        } else {
-            Text(
-                text = name.take(1).uppercase(),
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.primary,
-            )
-        }
+        RemoteImage(
+            url = photoUrl,
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize(),
+            fallback = {
+                Text(
+                    text = name.take(1).uppercase(),
+                    style = MaterialTheme.typography.headlineSmall,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            },
+        )
     }
 }
 

@@ -41,7 +41,10 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Description
+import androidx.compose.material3.Icon
+import com.cvpro.app.ui.components.RemoteImage
 import com.cvpro.app.R
 import com.cvpro.app.domain.model.CvTemplate
 import com.cvpro.app.ui.components.EmptyState
@@ -377,11 +380,26 @@ private fun TemplatePreview(
             .clip(RoundedCornerShape(8.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant),
     ) {
-        AsyncImage(
-            model = previewUrl,
+        RemoteImage(
+            url = previewUrl,
             contentDescription = null,
             contentScale = ContentScale.Crop,
             modifier = Modifier.fillMaxSize(),
+            fallback = {
+                // Mismo criterio que la web: un ícono de documento centrado sobre el
+                // recuadro, en vez del rectángulo vacío que quedaba antes.
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Description,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(28.dp),
+                    )
+                }
+            },
         )
 
         Surface(

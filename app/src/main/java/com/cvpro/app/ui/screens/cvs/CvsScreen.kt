@@ -13,9 +13,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.grid.GridCells
-import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -274,14 +273,12 @@ fun CvsContent(
                 message = stringResource(R.string.cvs_empty_message),
             )
 
-            else -> LazyVerticalGrid(
-                // Dos columnas: es lo que entra cómodo en un teléfono. En el diseño web son
-                // tres porque hay más ancho.
-                columns = GridCells.Adaptive(
-                    minSize = 180.dp,
-                ),
+            else -> LazyColumn(
+                // Una sola columna, con la tarjeta a todo el ancho. En dos columnas la
+                // vista previa quedaba tan angosta que no se leía nada, y los botones de
+                // Ver/Editar y Descargar se apretaban. En la web son varias columnas
+                // porque hay ancho de sobra; en el teléfono no.
                 contentPadding = PaddingValues(12.dp),
-                horizontalArrangement = Arrangement.spacedBy(12.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.fillMaxSize(),
             ) {
@@ -393,7 +390,7 @@ private fun CvCard(
                 cv = cv,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(140.dp),
+                    .height(170.dp),
             )
 
             Column(modifier = Modifier.padding(10.dp)) {

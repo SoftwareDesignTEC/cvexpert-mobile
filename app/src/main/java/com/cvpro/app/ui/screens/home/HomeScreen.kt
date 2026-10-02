@@ -45,7 +45,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import coil.compose.AsyncImage
+import com.cvpro.app.ui.components.RemoteImage
 import com.cvpro.app.R
 import com.cvpro.app.ui.components.outlinedOnCardColors
 import com.cvpro.app.domain.model.Cv
@@ -567,22 +567,21 @@ private fun CompanyLogo(
             .background(MaterialTheme.colorScheme.primaryContainer),
         contentAlignment = Alignment.Center,
     ) {
-        if (logoUrl != null) {
-            AsyncImage(
-                model = logoUrl,
-                contentDescription = stringResource(R.string.applications_logo_description, company),
-                contentScale = ContentScale.Fit,
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(4.dp),
-            )
-        } else {
-            Text(
-                text = company.take(1).uppercase(),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary,
-            )
-        }
+        RemoteImage(
+            url = logoUrl,
+            contentDescription = stringResource(R.string.applications_logo_description, company),
+            contentScale = ContentScale.Fit,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(4.dp),
+            fallback = {
+                Text(
+                    text = company.take(1).uppercase(),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+            },
+        )
     }
 }
 

@@ -162,4 +162,5 @@ dependencies {
     ksp(libs.hilt.compiler)
 
     implementation(libs.coil.compose)
+    implementation(libs.coil.svg)
 }
