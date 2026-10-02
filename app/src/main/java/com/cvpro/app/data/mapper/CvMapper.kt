@@ -25,6 +25,7 @@ fun CvDto.toDomain(): Cv {
         // El servicio manda ISO 8601; las tarjetas muestran la fecha ya legible.
         createdAt = createdAt.toDisplayDate(),
         updatedAt = updatedAt.toDisplayDate(),
+        previewUrl = previewUrl,
         // Sin datos personales el CV se muestra igual, con los campos vacíos.
         personalInfo = personalInfo?.toDomain() ?: UserProfile(
             id = "",

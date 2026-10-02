@@ -219,21 +219,31 @@ private fun RecentCvCard(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
     ) {
         Column {
-            // El modelo del CV no trae imagen de vista previa: por ahora va el recuadro gris
-            // del diseño.
-            Box(
+            // Imagen del currículum armado que manda el servicio. Si no llega o no carga,
+            // queda el recuadro con el rótulo, que es lo que había antes.
+            RemoteImage(
+                url = cv.previewUrl,
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(110.dp)
-                    .background(MaterialTheme.colorScheme.surfaceVariant),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = stringResource(R.string.home_cv_preview),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+                    .height(110.dp),
+                fallback = {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(110.dp)
+                            .background(MaterialTheme.colorScheme.surfaceVariant),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = stringResource(R.string.home_cv_preview),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                },
+            )
 
             Column(modifier = Modifier.padding(10.dp)) {
                 Text(
