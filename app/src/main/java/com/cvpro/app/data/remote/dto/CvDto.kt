@@ -1,10 +1,21 @@
 package com.cvpro.app.data.remote.dto
 
+import com.google.gson.annotations.SerializedName
+
 data class CvDto(
     val id: String? = null,
     val userId: String? = null,
     val title: String? = null,
     val templateId: String? = null,
+
+    // El servicio manda la misma imagen con cuatro nombres distintos. Se toma el primero
+    // que venga, así da igual con cuál se quede cuando limpien el mock.
+    @SerializedName(
+        value = "previewUrl",
+        alternate = ["templatePreviewUrl", "thumbnailUrl", "imageUrl"],
+    )
+    val previewUrl: String? = null,
+
     val createdAt: String? = null,
     val updatedAt: String? = null,
     val personalInfo: UserProfileDto? = null,

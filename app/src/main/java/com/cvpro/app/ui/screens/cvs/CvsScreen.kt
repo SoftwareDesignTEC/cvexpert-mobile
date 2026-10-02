@@ -36,6 +36,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -49,11 +50,33 @@ import androidx.annotation.StringRes
 import com.cvpro.app.ui.components.ComingSoonSheet
 import com.cvpro.app.ui.components.CvEditorSheet
 import com.cvpro.app.ui.components.EmptyState
+import com.cvpro.app.ui.components.RemoteImage
 import com.cvpro.app.ui.theme.CvProTheme
 
 
+/**
+ * Vista previa de la tarjeta.
+ *
+ * Si el servicio manda la imagen del currículum armado, se muestra esa. Si no llega o no
+ * carga, se dibuja a mano con los datos del CV, que es lo que se hacía antes.
+ */
 @Composable
 private fun CvPreview(
+    cv: Cv,
+    modifier: Modifier = Modifier,
+) {
+    RemoteImage(
+        url = cv.previewUrl,
+        contentDescription = null,
+        contentScale = ContentScale.Crop,
+        modifier = modifier,
+        fallback = { DrawnCvPreview(cv = cv, modifier = modifier) },
+    )
+}
+
+/** Vista previa dibujada con los datos del CV, para cuando no hay imagen. */
+@Composable
+private fun DrawnCvPreview(
     cv: Cv,
     modifier: Modifier = Modifier,
 ) {

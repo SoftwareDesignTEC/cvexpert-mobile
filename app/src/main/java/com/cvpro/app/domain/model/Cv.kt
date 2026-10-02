@@ -7,6 +7,12 @@ data class Cv(
     val templateId: String,
     val createdAt: String,
     val updatedAt: String,
+    // OJO: previewUrl NO está en el contrato de la web (docs/contract/models.ts). Lo manda
+    // el APIM y es la imagen del currículum ya armado, que es lo que dibuja la tarjeta.
+    // Va como opcional para no romper la paridad: si el servicio deja de mandarla, la
+    // tarjeta vuelve sola a la vista previa dibujada a mano.
+    // TODO: pedirle a Pérez que lo agregue al contrato, o a Cabrera que lo saque.
+    val previewUrl: String?,
     val personalInfo: UserProfile,
     val workExperiences: List<WorkExperience>,
     val education: List<Education>,
