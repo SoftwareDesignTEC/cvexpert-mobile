@@ -50,6 +50,7 @@ fun CvProDrawer(
     currentDestination: CvProDestination,
     onDestinationClick: (CvProDestination) -> Unit,
     onSignOutClick: () -> Unit,
+    onHelpClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     ModalDrawerSheet(
@@ -85,7 +86,7 @@ fun CvProDrawer(
             // un hijo con weight se mediría contra esa altura y rompería en ejecución.
             Spacer(modifier = Modifier.padding(top = 24.dp))
 
-            HelpCard()
+            HelpCard(onClick = onHelpClick)
         }
     }
 }
@@ -174,10 +175,19 @@ private fun LogoTile(
     }
 }
 
-/** Centro de ayuda al pie del menú. */
+/**
+ * Centro de ayuda al pie del menú.
+ *
+ * Al tocarlo abre el correo ya dirigido a soporte. Antes era solo un rótulo: se veía como
+ * algo tocable pero no respondía.
+ */
 @Composable
-private fun HelpCard(modifier: Modifier = Modifier) {
+private fun HelpCard(
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
     Surface(
+        onClick = onClick,
         color = MaterialTheme.colorScheme.surfaceVariant,
         shape = RoundedCornerShape(12.dp),
         modifier = modifier

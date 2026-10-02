@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.cvpro.app.domain.model.Cv
 import com.cvpro.app.domain.model.JobOffer
 import com.cvpro.app.domain.model.SkillsGapAnalysis
+import android.net.Uri
+import com.cvpro.app.data.pdf.CvPdfGenerator
 import com.cvpro.app.domain.repository.CvRepository
 import com.cvpro.app.domain.repository.JobOfferRepository
 import com.cvpro.app.domain.repository.SkillsGapRepository
@@ -28,6 +30,7 @@ data class HomeUiState(
     val skillsGap: SkillsGapAnalysis? = null,
     val recommendedOffers: List<JobOffer> = emptyList(),
     val isLoading: Boolean = false,
+    val isGeneratingPdf: Boolean = false,
 )
 
 @HiltViewModel
@@ -35,14 +38,41 @@ class HomeViewModel @Inject constructor(
     private val cvRepository: CvRepository,
     private val skillsGapRepository: SkillsGapRepository,
     private val jobOfferRepository: JobOfferRepository,
+    private val pdfGenerator: CvPdfGenerator,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
 
+    // Dónde quedó el último PDF generado. La pantalla lo abre y después lo limpia.
+    private val _generatedPdf = MutableStateFlow<Uri?>(null)
+    val generatedPdf: StateFlow<Uri?> = _generatedPdf.asStateFlow()
+
     init { load() }
 
     fun retry() = load()
+
+    /**
+     * Arma el PDF del currículum y lo guarda en Descargas.
+     *
+     * Es el mismo generador que usa Mis Currículums: el botón se llama igual en las dos
+     * pantallas, así que tiene que hacer lo mismo en las dos.
+     */
+    fun onDownloadCv(cv: Cv) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isGeneratingPdf = true) }
+            try {
+                _generatedPdf.value = pdfGenerator.generate(cv)
+            } finally {
+                _uiState.update { it.copy(isGeneratingPdf = false) }
+            }
+        }
+    }
+
+    /** La pantalla avisa que ya abrió el archivo, para no volver a abrirlo al repintarse. */
+    fun onPdfOpened() {
+        _generatedPdf.value = null
+    }
 
     /**
      * Pide las tres secciones a la vez.

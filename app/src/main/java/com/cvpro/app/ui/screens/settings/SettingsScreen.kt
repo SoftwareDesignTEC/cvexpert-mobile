@@ -65,6 +65,7 @@ import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cvpro.app.R
+import com.cvpro.app.domain.model.HelpContact
 import com.cvpro.app.domain.model.ActiveSession
 import com.cvpro.app.domain.model.LegalDocument
 import com.cvpro.app.domain.model.ThemePreference
@@ -400,10 +401,19 @@ fun SettingsContent(
 
         // Ayuda
         HelpCard(
-            onEmailClick = {
+            contacts = uiState.helpContacts,
+            onEmailClick = { address ->
+                // Con dirección, el correo se abre ya dirigido a ese canal; sin ella, se
+                // abre vacío y el usuario elige a quién escribirle.
+                val destino = if (address.isNullOrBlank()) {
+                    "mailto:"
+                } else {
+                    "mailto:$address"
+                }
+
                 val email = Intent(
                     Intent.ACTION_SENDTO,
-                    "mailto:".toUri(),
+                    destino.toUri(),
                 ).apply {
                     putExtra(
                         Intent.EXTRA_SUBJECT,
@@ -411,7 +421,9 @@ fun SettingsContent(
                     )
                 }
 
-                context.startActivity(email)
+                // Si el teléfono no tiene app de correo, startActivity lanza excepción y
+                // tumbaría la app. Mejor que el botón no haga nada a que se cierre.
+                runCatching { context.startActivity(email) }
             },
         )
 
@@ -1129,7 +1141,8 @@ private fun ReadOnlyPreference(
  */
 @Composable
 private fun HelpCard(
-    onEmailClick: () -> Unit,
+    contacts: List<HelpContact>,
+    onEmailClick: (String?) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Surface(
@@ -1161,17 +1174,46 @@ private fun HelpCard(
                     MaterialTheme.colorScheme.surface,
             )
 
-            Button(
-                onClick = onEmailClick,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 12.dp),
-            ) {
-                Text(
-                    text = stringResource(
-                        R.string.settings_help_email
+            // Con los canales del servicio se muestra un botón por cada uno, con su
+            // etiqueta. Si el servicio no respondió queda el botón de antes, que abre el
+            // correo sin destinatario: así la tarjeta nunca se queda sin salida.
+            if (contacts.isEmpty()) {
+                Button(
+                    onClick = { onEmailClick(null) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 12.dp),
+                ) {
+                    Text(
+                        text = stringResource(
+                            R.string.settings_help_email
+                        )
                     )
-                )
+                }
+            } else {
+                contacts.forEach { contact ->
+                    Button(
+                        onClick = { onEmailClick(contact.email) },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(top = 12.dp),
+                    ) {
+                        Column(
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(
+                                text = contact.label,
+                                style =
+                                    MaterialTheme.typography.labelLarge,
+                            )
+                            Text(
+                                text = contact.email,
+                                style =
+                                    MaterialTheme.typography.labelSmall,
+                            )
+                        }
+                    }
+                }
             }
         }
     }

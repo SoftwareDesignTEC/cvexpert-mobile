@@ -28,6 +28,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -58,6 +60,7 @@ import com.cvpro.app.ui.components.VersionLabel
 import com.cvpro.app.ui.theme.CvProTheme
 import com.cvpro.app.ui.theme.extraColors
 
+import android.content.Intent
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon
@@ -77,6 +80,20 @@ fun HomeScreen(
     viewModel: HomeViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val generatedPdf by viewModel.generatedPdf.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+
+    // Apenas el PDF está listo se abre con el visor que tenga el usuario, y se avisa al
+    // ViewModel para que no vuelva a abrirse cada vez que la pantalla se repinta.
+    LaunchedEffect(generatedPdf) {
+        val uri = generatedPdf ?: return@LaunchedEffect
+        val abrir = Intent(Intent.ACTION_VIEW).apply {
+            setDataAndType(uri, "application/pdf")
+            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        }
+        runCatching { context.startActivity(abrir) }
+        viewModel.onPdfOpened()
+    }
 
     HomeContent(
         uiState = uiState,
@@ -86,6 +103,7 @@ fun HomeScreen(
         onSkillsGapClick = onSkillsGapClick,
         onJobsClick = onJobsClick,
         onCvsClick = onCvsClick,
+        onDownloadCv = viewModel::onDownloadCv,
         modifier = modifier,
     )
 }
@@ -105,6 +123,7 @@ fun HomeContent(
     onSkillsGapClick: () -> Unit,
     onJobsClick: () -> Unit,
     onCvsClick: () -> Unit,
+    onDownloadCv: (Cv) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var detailCv by remember { mutableStateOf<Cv?>(null) }
@@ -130,7 +149,7 @@ fun HomeContent(
             cvs = uiState.recentCvs,
             onSeeAllClick = onCvsClick,
             onCvClick = { detailCv = it },
-            onDownloadClick = { comingSoon = HomeComingSoon.PDF },
+            onDownloadClick = onDownloadCv,
         )
 
         CreateCvSection(
@@ -159,7 +178,7 @@ private fun RecentCvsSection(
     cvs: List<Cv>,
     onSeeAllClick: () -> Unit,
     onCvClick: (Cv) -> Unit,
-    onDownloadClick: () -> Unit,
+    onDownloadClick: (Cv) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     SectionCard(modifier = modifier) {
@@ -180,7 +199,7 @@ private fun RecentCvsSection(
                     RecentCvCard(
                         cv = cv,
                         onCvClick = { onCvClick(cv) },
-                        onDownloadClick = onDownloadClick,
+                        onDownloadClick = { onDownloadClick(cv) },
                     )
                 }
             }
@@ -591,6 +610,7 @@ private fun HomePreview(darkTheme: Boolean) {
                 onSkillsGapClick = {},
                 onJobsClick = {},
                 onCvsClick = {},
+                onDownloadCv = {},
             )
         }
     }
@@ -602,5 +622,4 @@ private enum class HomeComingSoon(
     @param:StringRes val messageRes: Int,
 ) {
     AI(R.string.coming_soon_ai_title, R.string.coming_soon_ai_message),
-    PDF(R.string.coming_soon_pdf_title, R.string.coming_soon_pdf_message),
 }

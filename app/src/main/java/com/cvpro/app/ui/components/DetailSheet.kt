@@ -69,12 +69,14 @@ fun JobOfferDetailSheet(
                 DetailChip(text = offer.location)
                 DetailChip(text = stringResource(offer.modality.labelRes()))
             }
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                modifier = Modifier.padding(top = 6.dp),
-            ) {
-                DetailChip(text = offer.sector)
-                DetailChip(text = offer.type)
+            if (offer.sector.isNotBlank() || offer.type.isNotBlank()) {
+                Row(
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    modifier = Modifier.padding(top = 6.dp),
+                ) {
+                    DetailChip(text = offer.sector)
+                    DetailChip(text = offer.type)
+                }
             }
 
             offer.matchScore?.let { score ->
@@ -249,6 +251,11 @@ private fun DetailChip(
     text: String,
     modifier: Modifier = Modifier,
 ) {
+    // Sin texto no se dibuja nada. Cuando el servicio no manda sector o jornada, la etiqueta
+    // quedaba como un círculo azul vacío al pie del detalle, que no significa nada para el
+    // usuario. Mejor que falte la etiqueta a que aparezca una vacía.
+    if (text.isBlank()) return
+
     Surface(
         color = MaterialTheme.colorScheme.primaryContainer,
         shape = RoundedCornerShape(50),

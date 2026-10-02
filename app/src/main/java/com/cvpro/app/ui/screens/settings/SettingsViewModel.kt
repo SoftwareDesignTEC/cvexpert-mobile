@@ -15,6 +15,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 import com.cvpro.app.domain.model.ActiveSession
+import com.cvpro.app.domain.model.HelpContact
 import com.cvpro.app.domain.model.LegalDocument
 import com.cvpro.app.domain.repository.AuthRepository
 import com.cvpro.app.domain.repository.SettingsContentRepository
@@ -36,6 +37,8 @@ data class SettingsUiState(
     val exportContent: String? = null,
     val isExporting: Boolean = false,
 
+    val helpContacts: List<HelpContact> = emptyList(),
+
     val error: String? = null,
 )
 
@@ -49,6 +52,8 @@ private data class RemoteSettingsState(
 
     val exportContent: String? = null,
     val isExporting: Boolean = false,
+
+    val helpContacts: List<HelpContact> = emptyList(),
 
     val error: String? = null,
 )
@@ -86,6 +91,8 @@ class SettingsViewModel @Inject constructor(
             exportContent = remote.exportContent,
             isExporting = remote.isExporting,
 
+            helpContacts = remote.helpContacts,
+
             error = remote.error,
         )
     }
@@ -94,6 +101,25 @@ class SettingsViewModel @Inject constructor(
             started = SharingStarted.WhileSubscribed(STOP_TIMEOUT_MS),
             initialValue = SettingsUiState(),
         )
+
+    init {
+        loadHelpContacts()
+    }
+
+    /**
+     * Pide los canales de contacto del centro de ayuda.
+     *
+     * Si falla no se muestra un error: la tarjeta de ayuda cae de vuelta al botón genérico
+     * que abre el correo sin destinatario, que es lo que hacía antes.
+     */
+    private fun loadHelpContacts() {
+        viewModelScope.launch {
+            runCatching { settingsContentRepository.getHelpContacts() }
+                .onSuccess { contacts ->
+                    remoteState.update { it.copy(helpContacts = contacts) }
+                }
+        }
+    }
 
     /** Enciende o apaga un aviso. Se guarda en el dispositivo y sobrevive al cierre. */
     fun onNotificationChange(type: NotificationType, enabled: Boolean) {
