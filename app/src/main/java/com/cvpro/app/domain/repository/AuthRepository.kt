@@ -20,10 +20,33 @@ interface AuthRepository {
      * Token de Google de la sesión abierta, o null si no hay sesión.
      *
      * El APIM valida este token en cada llamada, así que la capa de red lo adjunta a cada
-     * petición. Ojo: los tokens de Google vencen a la hora; pasado ese tiempo el servicio
-     * responde 401 hasta que se vuelva a iniciar sesión.
+     * petición. Los tokens de Google vencen a la hora: cuando eso pasa, la capa de red
+     * llama a [onUnauthorized] y la sesión se cierra sola.
      */
     val idToken: StateFlow<String?>
+
+    /**
+     * true cuando la sesión se cerró porque el token venció, no porque el usuario quisiera.
+     *
+     * La pantalla de login lo usa para explicar por qué volvió ahí. Se apaga con
+     * [onExpiryNoticeShown] una vez mostrado.
+     */
+    val sessionExpired: StateFlow<Boolean>
+
+    /**
+     * Cierra la sesión porque el token dejó de servir.
+     *
+     * Es distinto de [signOut]: acá el usuario no pidió salir, así que **no** se limpia la
+     * credencial guardada. Así, al volver a tocar el botón, Google puede devolver la misma
+     * cuenta sin pedirle que la elija otra vez.
+     *
+     * No es suspend a propósito: lo llama un interceptor de OkHttp, que corre fuera de una
+     * corrutina.
+     */
+    fun onUnauthorized()
+
+    /** La pantalla de login avisa que ya mostró el aviso de sesión vencida. */
+    fun onExpiryNoticeShown()
 
     /**
      * Abre el selector de cuentas de Google.
