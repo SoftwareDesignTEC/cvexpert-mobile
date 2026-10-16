@@ -35,7 +35,8 @@ fun configValue(name: String): String =
  * RELEASE_KEYSTORE_BASE64, y en local es el archivo que cada quien tenga.
  */
 val keystorePath = configValue("RELEASE_KEYSTORE_PATH").ifBlank { "release-key.jks" }
-val keystoreFile = rootProject.file("../../$keystorePath")
+// Relativo a la raíz del repositorio, que es también la raíz del proyecto Gradle.
+val keystoreFile = rootProject.file(keystorePath)
 val keystorePassword = configValue("RELEASE_KEYSTORE_PASSWORD")
 val keystoreAlias = configValue("RELEASE_KEY_ALIAS")
 val keystoreKeyPassword = configValue("RELEASE_KEY_PASSWORD")

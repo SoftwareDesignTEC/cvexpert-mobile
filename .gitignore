@@ -5,6 +5,10 @@ google-services.json
 *.keystore
 keystore.properties
 secrets.properties
+*.pem
+*.key
+.env
+.env.*
 
 # --- Build ---
 .gradle/
@@ -19,5 +23,9 @@ captures/
 
 # --- IDE ---
 .idea/
+.vscode/
 *.iml
 .DS_Store
+
+# --- Logs ---
+*.log
