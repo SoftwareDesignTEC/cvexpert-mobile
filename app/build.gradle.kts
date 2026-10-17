@@ -20,9 +20,11 @@ val localProperties = Properties().apply {
     if (file.exists()) file.inputStream().use { load(it) }
 }
 
+// trim(): un espacio o salto de línea pegado de más en una variable de GitHub rompía el
+// build, porque el valor se copia tal cual dentro de BuildConfig.java.
 fun configValue(name: String): String =
-    localProperties.getProperty(name)?.takeIf { it.isNotBlank() }
-        ?: System.getenv(name).orEmpty()
+    (localProperties.getProperty(name)?.takeIf { it.isNotBlank() }
+        ?: System.getenv(name).orEmpty()).trim()
 
 /**
  * Datos de firma del APK de release.
