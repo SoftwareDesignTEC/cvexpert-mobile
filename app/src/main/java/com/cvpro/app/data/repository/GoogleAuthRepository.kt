@@ -52,6 +52,9 @@ class GoogleAuthRepository @Inject constructor(
     private val _idToken = MutableStateFlow<String?>(null)
     override val idToken: StateFlow<String?> = _idToken.asStateFlow()
 
+    private val _sessionExpired = MutableStateFlow(false)
+    override val sessionExpired: StateFlow<Boolean> = _sessionExpired.asStateFlow()
+
     override suspend fun signIn(activityContext: Context): SignInResult {
         // Viene de local.properties (local) o de un secret de GitHub Actions (CI), vía BuildConfig.
         val webClientId = BuildConfig.GOOGLE_WEB_CLIENT_ID
@@ -83,6 +86,8 @@ class GoogleAuthRepository @Inject constructor(
                 )
                 _idToken.value = googleCredential.idToken
                 _currentUser.value = user
+                // Entrar de nuevo borra el aviso: la sesión vencida ya quedó atrás.
+                _sessionExpired.value = false
                 SignInResult.Success(user)
             } else {
                 SignInResult.Failure(IllegalStateException("Unexpected credential type: ${credential.type}"))
@@ -100,6 +105,27 @@ class GoogleAuthRepository @Inject constructor(
         }
     }
 
+    /**
+     * El token venció o el APIM lo rechazó.
+     *
+     * Solo se borra la sesión en memoria. A diferencia de [signOut], no se toca el estado
+     * de la credencial: el usuario no pidió salir, y limpiarlo lo obligaría a elegir la
+     * cuenta otra vez para algo que no hizo.
+     */
+    override fun onUnauthorized() {
+        // Si ya no había sesión, no hay nada que avisar: evita que varias llamadas que
+        // fallan a la vez enciendan el aviso después de que el usuario ya volvió a entrar.
+        if (_currentUser.value == null && _idToken.value == null) return
+
+        _currentUser.value = null
+        _idToken.value = null
+        _sessionExpired.value = true
+    }
+
+    override fun onExpiryNoticeShown() {
+        _sessionExpired.value = false
+    }
+
     override suspend fun signOut() {
         try {
             // Avisa a los proveedores de credenciales que se cerró la sesión, para que la
@@ -110,6 +136,8 @@ class GoogleAuthRepository @Inject constructor(
         }
         _currentUser.value = null
         _idToken.value = null
+        // Salida voluntaria: no corresponde el aviso de sesión vencida.
+        _sessionExpired.value = false
     }
 
     private companion object {

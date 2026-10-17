@@ -13,6 +13,7 @@
     <string name="login_retry">Reintentar</string>
     <string name="login_error_no_account">No encontramos una cuenta de Google en este teléfono. Agrega una desde Ajustes e inténtalo de nuevo.</string>
     <string name="login_error_configuration">El inicio de sesión no está configurado en esta versión de la app.</string>
+    <string name="login_session_expired">Tu sesión expiró. Iniciá sesión de nuevo.</string>
     <string name="login_error_generic">No se pudo iniciar sesión. Revisa tu conexión e inténtalo de nuevo.</string>
 
     <!-- Panel Principal -->

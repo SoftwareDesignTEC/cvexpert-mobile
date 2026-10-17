@@ -36,6 +36,15 @@ class LoginViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
 
+    init {
+        // Si se llegó acá porque el token venció, se explica el motivo en vez de mostrar
+        // la pantalla como si el usuario hubiera cerrado sesión por su cuenta.
+        if (authRepository.sessionExpired.value) {
+            _uiState.update { it.copy(errorMessage = R.string.login_session_expired) }
+            authRepository.onExpiryNoticeShown()
+        }
+    }
+
     /**
      * Inicia el login. Si ya hay uno en curso no hace nada: evita abrir dos selectores
      * cuando el usuario toca el botón dos veces seguidas.
