@@ -1,9 +1,5 @@
 package com.cvpro.app.data.auth
 
-import android.util.Log
-import org.json.JSONObject
-import java.util.Base64
-
 /**
  * Lee cuándo vence un token de Google.
  *
@@ -28,19 +24,8 @@ object JwtExpiry {
      * formato inesperado.
      */
     fun expiresAtMillis(idToken: String): Long? {
-        return try {
-            val payload = idToken.split('.').getOrNull(1) ?: return null
-
-            // Base64 de URL y sin relleno, que es como viaja dentro de un JWT.
-            val json = String(Base64.getUrlDecoder().decode(payload))
-
-            val seconds = JSONObject(json).optLong(EXPIRY_CLAIM, 0L)
-            if (seconds <= 0L) null else seconds * 1_000L
-        } catch (exception: Exception) {
-            // Un token con formato raro no debería tumbar la app.
-            Log.w(TAG, "No se pudo leer el vencimiento del token", exception)
-            null
-        }
+        val seconds = IdTokenClaims.payload(idToken)?.optLong(EXPIRY_CLAIM, 0L) ?: return null
+        return if (seconds <= 0L) null else seconds * 1_000L
     }
 
     /**
@@ -63,6 +48,4 @@ object JwtExpiry {
 
     /** Margen de seguridad: 30 segundos. */
     private const val DEFAULT_MARGIN_MILLIS = 30_000L
-
-    private const val TAG = "JwtExpiry"
 }
