@@ -1,5 +1,7 @@
 package com.cvpro.app.data.remote.dto
 
+import com.google.gson.JsonElement
+
 /**
  * Perfil tal como llega desde la API.
  *
@@ -21,6 +23,11 @@ data class UserProfileDto(
     val types: List<String>? = null,
     val modalities: List<String>? = null,
     val sectors: List<String>? = null,
+    // Campos nuevos del servicio de Usuarios de la Fase II. Las fechas llegan en epoch
+    // milisegundos UTC (en los mocks de la Fase I no vienen). Todavía no se muestran.
+    val role: String? = null,
+    val createdAt: JsonElement? = null,
+    val updatedAt: JsonElement? = null,
 )
 
 data class UpdateProfileRequestDto(

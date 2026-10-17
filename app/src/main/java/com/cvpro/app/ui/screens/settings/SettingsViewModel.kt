@@ -139,7 +139,7 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun loadSessions() {
-        val userId = authRepository.currentUser.value?.email ?: return
+        val userId = authRepository.currentUser.value?.id ?: return
 
         viewModelScope.launch {
 
@@ -234,7 +234,7 @@ class SettingsViewModel @Inject constructor(
     }
 
     fun requestDataExport() {
-        val userId = authRepository.currentUser.value?.email ?: return
+        val userId = authRepository.currentUser.value?.id ?: return
 
         viewModelScope.launch {
 

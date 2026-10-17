@@ -67,8 +67,8 @@ class ProfileViewModel @Inject constructor(
     val messages: Flow<Int> = _messages.receiveAsFlow()
 
     /*
-     * En esta fase usamos el correo de Google como identificador
-     * para /profiles/{id}.
+     * Id para /profiles/{id}: el sub de la cuenta de Google, como en la web y en el
+     * servicio de Usuarios (ver User.id).
      */
     private var profileId: String? = null
 
@@ -76,7 +76,7 @@ class ProfileViewModel @Inject constructor(
         val user = authRepository.currentUser.value
 
         if (user != null) {
-            profileId = user.email
+            profileId = user.id
 
             // Se muestran inmediatamente los datos que ya conocemos por Google.
             _uiState.update {
@@ -86,7 +86,7 @@ class ProfileViewModel @Inject constructor(
                 )
             }
 
-            loadProfile(user.email)
+            loadProfile(user.id)
         }
 
         loadSkillsGap()

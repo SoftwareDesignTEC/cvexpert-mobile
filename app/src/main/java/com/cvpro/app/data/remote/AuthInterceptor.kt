@@ -25,6 +25,9 @@ import javax.inject.Singleton
  *
  * En los dos casos la app vuelve sola al login con un aviso, en vez de dejar siete
  * pantallas mostrando errores sueltos que no explican nada.
+ *
+ * También identifica al cliente con `X-Client: android`, para que el servicio de Usuarios
+ * muestre "App Android" en la lista de sesiones.
  */
 @Singleton
 class AuthInterceptor @Inject constructor(
@@ -32,15 +35,20 @@ class AuthInterceptor @Inject constructor(
 ) : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
+        val request = chain.request()
+            .newBuilder()
+            .header(CLIENT_HEADER, CLIENT_ANDROID)
+            .build()
+
         val token = authRepository.idToken.value
-            ?: return chain.proceed(chain.request())
+            ?: return chain.proceed(request)
 
         if (JwtExpiry.isExpired(token)) {
             authRepository.onUnauthorized()
-            return chain.proceed(chain.request())
+            return chain.proceed(request)
         }
 
-        val authorized = chain.request()
+        val authorized = request
             .newBuilder()
             .addHeader(AUTHORIZATION_HEADER, "$BEARER_PREFIX$token")
             .build()
@@ -63,5 +71,8 @@ class AuthInterceptor @Inject constructor(
         const val BEARER_PREFIX = "Bearer "
 
         const val HTTP_UNAUTHORIZED = 401
+
+        const val CLIENT_HEADER = "X-Client"
+        const val CLIENT_ANDROID = "android"
     }
 }

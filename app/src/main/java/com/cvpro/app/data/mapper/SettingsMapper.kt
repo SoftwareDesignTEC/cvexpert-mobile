@@ -11,7 +11,7 @@ fun ActiveSessionDto.toDomain(): ActiveSession =
         deviceName = deviceName,
         platform = platform,
         client = client,
-        lastActiveAt = lastActiveAt,
+        lastActiveAt = lastActiveAt.toEpochMillis(),
         current = current,
     )
 
@@ -20,6 +20,6 @@ fun LegalDocumentDto.toDomain(): LegalDocument =
         id = id,
         title = title,
         version = version,
-        effectiveDate = effectiveDate,
+        effectiveDate = effectiveDate.toEpochMillis(),
         content = content,
     )

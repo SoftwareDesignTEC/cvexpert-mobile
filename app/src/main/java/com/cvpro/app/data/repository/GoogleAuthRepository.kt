@@ -15,6 +15,7 @@ import com.cvpro.app.domain.model.User
 import com.cvpro.app.domain.repository.AuthRepository
 import com.cvpro.app.domain.repository.SignInResult
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.cvpro.app.data.auth.IdTokenClaims
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -79,6 +80,7 @@ class GoogleAuthRepository @Inject constructor(
             ) {
                 val googleCredential = GoogleIdTokenCredential.createFrom(credential.data)
                 val user = User(
+                    id = IdTokenClaims.subject(googleCredential.idToken) ?: googleCredential.id,
                     // En este tipo de credencial, id es el correo de la cuenta.
                     name = googleCredential.displayName ?: googleCredential.id,
                     email = googleCredential.id,
