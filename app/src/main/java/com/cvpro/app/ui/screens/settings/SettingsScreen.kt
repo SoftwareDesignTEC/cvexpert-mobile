@@ -65,6 +65,8 @@ import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cvpro.app.R
+import com.cvpro.app.ui.components.toLocalDate
+import com.cvpro.app.ui.components.toLocalDateTime
 import com.cvpro.app.domain.model.HelpContact
 import com.cvpro.app.domain.model.ActiveSession
 import com.cvpro.app.domain.model.LegalDocument
@@ -813,7 +815,7 @@ private fun SessionItem(
         Text(
             text = stringResource(
                 R.string.settings_session_last_active,
-                session.lastActiveAt,
+                session.lastActiveAt.toLocalDateTime(),
             ),
             style =
                 MaterialTheme.typography.labelSmall,
@@ -898,7 +900,7 @@ private fun LegalDocumentDialog(
                             text = stringResource(
                                 R.string
                                     .settings_document_effective,
-                                document.effectiveDate,
+                                document.effectiveDate.toLocalDate(),
                             ),
                             style =
                                 MaterialTheme.typography

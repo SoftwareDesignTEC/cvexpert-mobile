@@ -1,5 +1,6 @@
 package com.cvpro.app.data.mapper
 
+import com.google.gson.JsonElement
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -27,6 +28,28 @@ fun String?.toDisplayDate(): String = try {
 } catch (exception: DateTimeParseException) {
     // Texto que no es ISO: se muestra tal cual en vez de fallar.
     this.orEmpty()
+}
+
+/**
+ * Pasa una fecha del servicio a epoch en milisegundos UTC, o null si no se puede leer.
+ *
+ * Acepta los dos formatos que hay hoy: un número en epoch milisegundos (servicios de la
+ * Fase II) y un texto ISO 8601 como "2026-09-20T15:00:00Z" (mocks de la Fase I).
+ */
+fun JsonElement?.toEpochMillis(): Long? {
+    if (this == null || !isJsonPrimitive) return null
+    val value = asJsonPrimitive
+    return try {
+        when {
+            value.isNumber -> value.asLong
+            value.isString -> value.asString.let { it.toLongOrNull() ?: Instant.parse(it).toEpochMilli() }
+            else -> null
+        }
+    } catch (exception: DateTimeParseException) {
+        null
+    } catch (exception: NumberFormatException) {
+        null
+    }
 }
 
 /**
