@@ -1,0 +1,391 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Textos en inglés. Android los usa cuando el teléfono está en inglés; en cualquier otro
+  idioma usa los de values/ (español). Cada clave de values/strings.xml tiene que estar
+  acá también, aunque sea solo formato, para que ninguna pantalla quede a medias.
+  En inglés los apóstrofos van escapados (\'), si no, el build falla.
+-->
+<resources>
+    <string name="app_name">CVExpert</string>
+    <string name="home_tagline">Your professional résumé, no prior experience needed.</string>
+    <string name="version_label">Version %1$s (build %2$d)</string>
+
+    <!-- Login con Google -->
+    <string name="login_button">Continue with Google</string>
+    <string name="login_retry">Try again</string>
+    <string name="login_error_no_account">We couldn\'t find a Google account on this phone. Add one in Settings and try again.</string>
+    <string name="login_error_configuration">Sign-in is not set up in this version of the app.</string>
+    <string name="login_session_expired">Your session expired. Please sign in again.</string>
+    <string name="login_error_generic">Sign-in failed. Check your connection and try again.</string>
+
+    <!-- Panel Principal -->
+    <string name="home_greeting">Hi, %1$s</string>
+    <string name="home_subtitle">From here you can manage your résumés, your applications and the job offers that fit you.</string>
+    <string name="home_shortcut_templates">Create a résumé offline</string>
+    <string name="home_shortcut_skills_gap">See areas to improve</string>
+    <string name="home_sign_out">Sign out</string>
+
+    <!-- Configuración -->
+    <string name="settings_eyebrow">YOUR ACCOUNT</string>
+    <string name="settings_security_title">Account Security</string>
+    <string name="settings_security_subtitle">Manage access and protect your information.</string>
+    <string name="settings_security_sessions">Active Sessions</string>
+    <string name="settings_notifications_title">Notifications</string>
+    <string name="settings_notifications_subtitle">Choose which updates you want to receive.</string>
+    <string name="settings_notifications_applications">Application Status</string>
+    <string name="settings_notifications_courses">Course Recommendations</string>
+    <string name="settings_notifications_jobs">Job Alerts</string>
+    <string name="settings_data_title">Data</string>
+    <string name="settings_data_subtitle">Control your data and legal documents.</string>
+    <string name="settings_data_download">Download my data</string>
+    <string name="settings_data_delete">Delete Account</string>
+    <string name="settings_data_privacy">Privacy Policy</string>
+    <string name="settings_data_terms">Terms and Conditions</string>
+    <string name="settings_system_title">System Preferences</string>
+    <string name="settings_system_subtitle">Set up CVExpert to work your way.</string>
+    <string name="settings_system_language">Language</string>
+    <string name="settings_system_language_value">English</string>
+    <string name="settings_system_timezone">Time Zone</string>
+    <string name="settings_system_timezone_value">Costa Rica (GMT-6)</string>
+    <string name="settings_help_title">Need help?</string>
+    <string name="settings_help_subtitle">Contact our technical support team.</string>
+    <string name="settings_help_email">Send Email</string>
+    <string name="settings_help_email_subject">CVExpert Support</string>
+
+    <!-- Detalle de oferta y postulación -->
+    <string name="detail_description">Description</string>
+    <string name="detail_salary">Salary</string>
+    <string name="detail_salary_range">%1$d – %2$d %3$s</string>
+    <string name="detail_posted_at">Posted</string>
+    <string name="detail_applied_at">Application date</string>
+    <string name="detail_current_status">Current</string>
+
+    <!-- Detalle del currículum y avisos de Fase II -->
+    <string name="cv_detail_personal">Personal information</string>
+    <string name="cv_detail_experience">Work experience</string>
+    <string name="cv_detail_education">Education</string>
+    <string name="cv_detail_skills">Skills</string>
+    <string name="cv_detail_languages">Languages</string>
+    <string name="cv_detail_period">%1$s — %2$s</string>
+    <string name="cv_detail_period_current">%1$s — Present</string>
+
+    <!-- Editor de currículum -->
+    <string name="cv_editor_title">Edit résumé</string>
+    <string name="cv_editor_cv_title">Résumé title</string>
+    <string name="cv_editor_name">Full name</string>
+    <string name="cv_editor_email">Email</string>
+    <string name="cv_editor_phone">Phone</string>
+    <string name="cv_editor_location">Location</string>
+    <string name="cv_editor_bio">Summary</string>
+    <string name="cv_editor_position">Position</string>
+    <string name="cv_editor_company">Company</string>
+    <string name="cv_editor_start">From (YYYY-MM-DD)</string>
+    <string name="cv_editor_end">To (YYYY-MM-DD)</string>
+    <string name="cv_editor_current">Still ongoing</string>
+    <string name="cv_editor_description">Description</string>
+    <string name="cv_editor_institution">Institution</string>
+    <string name="cv_editor_degree">Degree</string>
+    <string name="cv_editor_field">Field of study</string>
+    <string name="cv_editor_skill_name">Skill</string>
+    <string name="cv_editor_level">Level</string>
+    <string name="cv_editor_category">Category</string>
+    <string name="cv_editor_language">Language</string>
+    <string name="cv_editor_add_experience">Add experience</string>
+    <string name="cv_editor_add_education">Add education</string>
+    <string name="cv_editor_add_skill">Add skill</string>
+    <string name="cv_editor_add_language">Add language</string>
+    <string name="cv_editor_remove">Remove</string>
+    <string name="cv_editor_save">Save</string>
+    <string name="cv_editor_saving">Saving…</string>
+    <string name="cv_editor_cancel">Cancel</string>
+    <string name="coming_soon_badge">Coming soon</string>
+    <string name="coming_soon_ai_title">AI generation</string>
+    <string name="coming_soon_ai_message">You\'ll be able to describe your experience in a few words and the app will write it for you. Coming in the next phase of the project.</string>
+    <string name="coming_soon_pdf_title">Export to PDF</string>
+    <string name="coming_soon_pdf_message">Downloading your résumé as a PDF comes in the next phase, together with the editor.</string>
+    <string name="coming_soon_use_title">Use this template</string>
+    <string name="coming_soon_use_message">Choosing a template will open the editor to fill in your résumé. The editor comes in the next phase.</string>
+    <string name="coming_soon_template_title">Download template</string>
+    <string name="coming_soon_template_message">New templates will be available to download and use offline in the next phase.</string>
+    <string name="coming_soon_preferences_title">Edit preferences</string>
+    <string name="coming_soon_preferences_message">The service doesn\'t save sector, availability or work mode yet. For now you can see them; editing comes with the full service.</string>
+
+    <!-- Plantillas -->
+    <string name="templates_eyebrow">CREATE ANYWHERE</string>
+    <string name="templates_title">Templates</string>
+    <string name="templates_offline_section">Offline catalog</string>
+    <string name="templates_store_section">Template store</string>
+    <string name="templates_download">Download</string>
+    <string name="templates_count">%1$d templates</string>
+    <string name="templates_preview">Preview</string>
+    <string name="templates_use">Use this template</string>
+    <string name="templates_premium">Premium</string>
+    <string name="templates_show_all">See all (%1$d more)</string>
+    <string name="templates_show_less">See less</string>
+    <string name="templates_downloading">Downloading…</string>
+    <string name="templates_creating">Creating…</string>
+    <string name="templates_empty_title">No templates</string>
+    <string name="templates_empty_message">There are no templates available yet.</string>
+    <string name="templates_error_title">Templates couldn\'t be loaded</string>
+
+    <!-- Mis Currículums -->
+    <string name="cvs_eyebrow">YOUR PROFESSIONAL SPACE</string>
+    <string name="cvs_search_placeholder">Search résumés</string>
+    <string name="cvs_create_subtitle">Choose how you want to start your next opportunity.</string>
+    <string name="cvs_create_ai">AI mode</string>
+    <string name="cvs_create_offline">Offline / Template</string>
+    <string name="cvs_delete">Delete</string>
+    <string name="cvs_delete_title">Delete this résumé?</string>
+    <string name="cvs_delete_message">\"%1$s\" will be deleted. This can\'t be undone.</string>
+    <string name="cvs_delete_confirm">Delete</string>
+    <string name="cvs_delete_cancel">Cancel</string>
+    <string name="cvs_deleting">Deleting…</string>
+    <string name="cvs_empty_title">No résumés</string>
+    <string name="cvs_empty_message">Create your first résumé to get started.</string>
+    <string name="cvs_error_title">Résumés couldn\'t be loaded</string>
+
+    <!-- Panel Principal: secciones del diseño de Samuel -->
+    <string name="home_recent_cvs_title">Recent Résumés</string>
+    <string name="home_recent_cvs_see_all">See all</string>
+    <string name="home_recent_cvs_empty">You don\'t have any saved résumés yet.</string>
+    <string name="home_cv_preview">Preview</string>
+    <string name="home_cv_updated_at">Modified %1$s</string>
+    <string name="home_cv_edit">View/Edit</string>
+    <string name="home_cv_download">Download</string>
+    <string name="home_create_cv_title">Create New Résumé</string>
+    <string name="home_create_cv_subtitle">Start from scratch or use a template</string>
+    <string name="home_create_cv_ai">AI</string>
+    <string name="home_create_cv_offline">Offline</string>
+    <string name="home_skills_title">Skills Analysis</string>
+    <string name="home_skills_subtitle">How well you match job market offers</string>
+    <string name="home_skills_empty">No analysis available yet.</string>
+    <string name="home_offers_title">Recommended Job Offers</string>
+    <string name="home_offers_see_all">See all Job Offers</string>
+    <string name="home_offers_empty">No recommended offers right now.</string>
+    <string name="home_offer_title_company">%1$s · %2$s</string>
+    <string name="home_offer_match">%1$d%% match</string>
+
+    <!-- Navegación: nombres de los destinos del menú -->
+    <string name="destination_dashboard">Dashboard</string>
+    <string name="destination_cvs">My Résumés</string>
+    <string name="destination_profile">My Profile</string>
+    <string name="destination_jobs">Job Offers</string>
+    <string name="destination_skills_gap">Skills Gap Analysis</string>
+    <string name="destination_templates">Templates / Offline</string>
+    <string name="destination_applications">Applications (Kanban)</string>
+    <string name="destination_settings">Settings</string>
+
+    <!-- Navegación: descripciones para lectores de pantalla -->
+    <string name="nav_open_menu">Open menu</string>
+    <string name="nav_notifications">Notifications</string>
+    <string name="nav_status_online">Online</string>
+    <string name="nav_status_offline">Offline</string>
+    <string name="nav_theme_to_dark">Switch to dark mode</string>
+    <string name="nav_theme_to_light">Switch to light mode</string>
+    <string name="nav_profile">My profile</string>
+    <string name="nav_tagline">Your career, clearer</string>
+    <string name="nav_help_title">Help center</string>
+    <string name="nav_help_subtitle">We\'re here to help</string>
+
+    <!-- Validación de formularios -->
+    <string name="validation_required">This field is required.</string>
+    <string name="validation_email">Enter a valid email, for example name@email.com.</string>
+    <string name="validation_phone">The phone number must have 8 digits.</string>
+    <string name="validation_min_length">Enter at least 3 characters.</string>
+
+    <!-- Estados de las pantallas -->
+    <string name="state_loading">Loading…</string>
+    <string name="state_error_title">Something went wrong</string>
+    <string name="state_retry">Try again</string>
+
+    <!-- Mi Perfil -->
+    <string name="profile_section_personal">Personal Information</string>
+    <string name="profile_eyebrow">PROFESSIONAL PROFILE</string>
+    <string name="profile_edit">Edit Profile</string>
+    <string name="profile_edit_cancel">Cancel</string>
+    <string name="profile_no_bio">You haven\'t written your professional summary yet.</string>
+    <string name="profile_not_set">Not set</string>
+    <string name="profile_contact_title">Contact Details</string>
+    <string name="profile_contact_phone">Phone number</string>
+    <string name="profile_contact_email">Email</string>
+    <string name="profile_contact_residence">Residence</string>
+    <string name="profile_edit_contact">Edit Contact</string>
+    <string name="profile_preferences_title">Preferences</string>
+    <string name="profile_pref_sector">Sector of interest</string>
+    <string name="profile_pref_availability">Availability</string>
+    <string name="profile_pref_modality">Work mode</string>
+    <string name="profile_edit_preferences">Edit Preferences</string>
+    <string name="profile_pending_notice">Review your details and save the changes.</string>
+    <string name="profile_field_name">Full name</string>
+    <string name="profile_field_email">Email</string>
+    <string name="profile_field_phone">Phone</string>
+    <string name="profile_field_phone_helper">Optional. 8 digits.</string>
+    <string name="profile_field_location">Residence</string>
+    <string name="profile_save">Save changes</string>
+    <string name="profile_saved_pending">Details validated. The service still needs to be connected to save them.</string>
+    <string name="profile_form_invalid">Check the fields marked in red.</string>
+
+    <!-- Ofertas Laborales -->
+    <string name="jobs_search_label">Search by position, company or place</string>
+
+    <string name="jobs_search_placeholder">Search offers, companies or positions</string>
+    <string name="jobs_found_count">%1$d offers found</string>
+    <string name="jobs_filter_recommended">Recommended</string>
+    <string name="jobs_filter_remote">Remote</string>
+    <string name="jobs_filter_hybrid">Hybrid</string>
+    <string name="jobs_load_more">Load more (%1$d left)</string>
+    <string name="jobs_loading_more">Loading…</string>
+    <string name="jobs_filter_recent">Last 7 days</string>
+    <string name="jobs_match_percentage">%1$d%%</string>
+    <string name="jobs_match_label">Match</string>
+    <string name="jobs_requirements_title">Main requirements</string>
+    <string name="jobs_details">See Details</string>
+    <string name="jobs_empty_title">No results</string>
+    <string name="jobs_empty_message">We didn\'t find offers for that search. Try another word.</string>
+    <string name="jobs_error_network">We couldn\'t load the offers. Check your connection and try again.</string>
+    <string name="jobs_error_generic">Something went wrong while loading the offers.</string>
+    <string name="jobs_match_score">%1$d%%</string>
+    <string name="jobs_location_and_modality">%1$s · %2$s</string>
+    <string name="jobs_requirement_bullet">• %1$s</string>
+    <string name="jobs_end_of_list">No more offers.</string>
+    <plurals name="jobs_result_count">
+        <item quantity="one">%1$d offer</item>
+        <item quantity="other">%1$d offers</item>
+    </plurals>
+
+    <!-- Modalidad de trabajo -->
+    <string name="modality_remote">Remote</string>
+    <string name="modality_on_site">On-site</string>
+    <string name="modality_hybrid">Hybrid</string>
+
+    <!-- Postulaciones -->
+    <string name="applications_title">Application Tracker</string>
+    <string name="applications_eyebrow">YOUR JOB SEARCH IN MOTION</string>
+    <string name="applications_count">Applications %1$d</string>
+    <string name="applications_column_empty">No applications here</string>
+    <string name="applications_applied_today">Today</string>
+    <string name="applications_applied_yesterday">Yesterday</string>
+    <plurals name="applications_applied_days_ago">
+        <item quantity="one">%1$d day ago</item>
+        <item quantity="other">%1$d days ago</item>
+    </plurals>
+    <string name="applications_applied_at">Applied on %1$s</string>
+    <string name="applications_see_all">See All</string>
+    <string name="applications_show_all">See all (%1$d more)</string>
+    <string name="applications_show_less">See less</string>
+    <string name="applications_action_status">Status</string>
+    <string name="applications_action_details">Details</string>
+    <string name="applications_change_status">Change status</string>
+    <string name="applications_logo_description">%1$s logo</string>
+    <string name="applications_error_title">Something went wrong while loading your applications</string>
+    <string name="applications_retry">Try again</string>
+    <string name="applications_empty_title">Nothing here</string>
+    <string name="applications_empty_message">You have no applications in \"%1$s\".</string>
+    <string name="application_status_applied">Applied</string>
+    <string name="application_status_in_progress">In progress</string>
+    <string name="application_status_interview">Interview</string>
+    <string name="application_status_rejected">Rejected</string>
+
+    <!-- Análisis de Brechas -->
+    <string name="skills_gap_eyebrow">PROFESSIONAL GROWTH</string>
+    <string name="skills_gap_screen_title">Skills Gap Analysis</string>
+    <string name="skills_gap_updated">Updated today</string>
+    <string name="skills_gap_comparison_eyebrow">MARKET COMPARISON</string>
+    <string name="skills_gap_comparison_title">Your profile vs. the target</string>
+    <string name="skills_gap_points_title">Areas to Improve</string>
+    <string name="skills_gap_points_subtitle">Skills to Improve</string>
+    <string name="skills_gap_row_number">%1$d.</string>
+    <string name="skills_gap_gap_percent">-%1$d%% gap</string>
+    <string name="skills_gap_show_all">See all (%1$d more)</string>
+    <string name="skills_gap_show_less">See less</string>
+    <string name="skills_gap_courses_count">%1$d courses</string>
+    <string name="skills_gap_course_duration">Duration: %1$s</string>
+    <string name="skills_gap_course_open">View Course</string>
+    <string name="skills_gap_target">Compared with: %1$s</string>
+    <string name="skills_gap_series_user">Your skills</string>
+    <string name="skills_gap_series_market">What offers ask for</string>
+    <string name="skills_gap_to_improve_title">Skills to improve</string>
+    <string name="skills_gap_no_gaps">You\'re at the level job offers ask for in all your skills.</string>
+    <string name="skills_gap_levels">You %1$d · Market %2$d</string>
+    <string name="skills_gap_amount">-%1$d</string>
+    <string name="skills_gap_courses_title">Courses to improve</string>
+    <string name="skills_gap_course_details">%1$s · %2$s</string>
+    <string name="skills_gap_course_no_duration">Duration not specified</string>
+    <string name="skills_gap_course_paid">Paid</string>
+    <string name="skills_gap_course_free">Free</string>
+    <string name="skills_gap_error_network">We couldn\'t load your analysis. Check your connection and try again.</string>
+    <string name="skills_gap_error_generic">Something went wrong while loading your analysis.</string>
+
+    <!-- Configuración -->
+    <string name="settings_theme_title">Theme</string>
+    <string name="settings_theme_description">Choose how you want to see the app. Your choice is saved on this phone.</string>
+    <string name="settings_theme_system">Follow system setting</string>
+    <string name="settings_theme_light">Light</string>
+    <string name="settings_theme_dark">Dark</string>
+
+    <!-- Pantallas todavía sin contenido -->
+    <string name="placeholder_cvs">Here you\'ll see your résumés, with preview, edit and download.</string>
+    <string name="placeholder_templates">Here you\'ll choose a template, even offline, or download new ones.</string>
+
+    <!-- Error de perfil -->
+    <string name="profile_load_error">The profile couldn\'t be loaded.</string>
+    <string name="profile_save_success">Profile saved.</string>
+    <string name="profile_save_error">The profile couldn\'t be saved.</string>
+
+    <!-- Configuración remota -->
+    <string name="settings_sessions_title">Active sessions</string>
+    <string name="settings_sessions_empty">There are no active sessions.</string>
+    <string name="settings_session_current">Current</string>
+    <string name="settings_session_last_active">Last active: %1$s</string>
+
+    <string name="settings_data_exporting">Preparing your data…</string>
+    <string name="settings_export_success">Data saved.</string>
+    <string name="settings_export_error">The data couldn\'t be saved.</string>
+
+    <string name="settings_document_version">Version %1$s</string>
+    <string name="settings_document_effective">Effective from %1$s</string>
+
+    <string name="settings_loading">Loading…</string>
+    <string name="settings_load_error">The information couldn\'t be loaded.</string>
+    <string name="settings_close">Close</string>
+
+    <string name="settings_delete_account_title">Delete account?</string>
+    <string name="settings_delete_account_message">This will permanently delete your account and your data. This can\'t be undone.</string>
+    <string name="settings_delete_account_confirm">Delete</string>
+    <string name="settings_cancel">Cancel</string>
+
+    <!-- Alertas de ofertas (servicio de Ofertas, /alerts) -->
+    <string name="alerts_title">Job alerts</string>
+    <string name="alerts_back">Back</string>
+    <string name="alerts_load_error">Your alerts couldn\'t be loaded.</string>
+    <string name="alerts_enabled">Notify me about new offers</string>
+    <string name="alerts_enabled_hint">You\'ll get a notice when an offer that matches your profile is posted.</string>
+    <string name="alerts_min_match">Minimum match: %1$d %%</string>
+    <string name="alerts_skills_title">Skills</string>
+    <string name="alerts_skills_hint">They\'re compared with the ones each offer asks for.</string>
+    <string name="alerts_skill_input">New skill</string>
+    <string name="alerts_skill_add">Add</string>
+    <string name="alerts_skill_remove">Remove %1$s</string>
+    <string name="alerts_skills_empty">You haven\'t added any skills yet.</string>
+    <string name="alerts_experience">Years of experience</string>
+    <string name="alerts_experience_hint">Include volunteering, projects and informal jobs.</string>
+    <string name="alerts_experience_error">Enter a number between 0 and 60.</string>
+    <string name="alerts_profile_title">Taken from your profile</string>
+    <string name="alerts_profile_hint">Updated automatically when you change your profile.</string>
+    <string name="alerts_profile_location">Location</string>
+    <string name="alerts_profile_modalities">Work mode</string>
+    <string name="alerts_profile_job_types">Schedule</string>
+    <string name="alerts_profile_sectors">Sectors</string>
+    <string name="alerts_profile_line">%1$s: %2$s</string>
+    <string name="alerts_missing_location">Your profile has no location. Add it to be able to save your alerts.</string>
+    <string name="alerts_go_to_profile">Complete profile</string>
+    <string name="alerts_save">Save alerts</string>
+    <string name="alerts_save_success">Alerts saved.</string>
+    <string name="alerts_save_invalid">Check your details: the service rejected a value.</string>
+    <string name="alerts_save_error">Your alerts couldn\'t be saved. Please try again.</string>
+    <string name="job_type_full_time">Full-time</string>
+    <string name="job_type_part_time">Part-time</string>
+    <string name="job_type_freelance">Freelance</string>
+    <string name="job_type_internship">Internship</string>
+    <string name="job_type_other">Other</string>
+</resources>

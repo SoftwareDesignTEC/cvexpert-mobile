@@ -35,10 +35,11 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
@@ -70,12 +71,21 @@ fun JobAlertsDialog(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
-    val context = LocalContext.current
 
+    // Mismo patrón que Perfil: el efecto solo guarda qué mensaje mostrar (con un número que sube
+    // para que el mismo mensaje dos veces seguidas se vea dos veces) y el texto se resuelve con
+    // stringResource, así sigue el idioma del teléfono.
+    var pendingMessage by remember { mutableStateOf<Pair<Int, Int>?>(null) }
     LaunchedEffect(viewModel) {
+        var seq = 0
         viewModel.messages.collect { messageRes ->
-            snackbarHostState.showSnackbar(context.getString(messageRes))
+            seq++
+            pendingMessage = seq to messageRes
         }
+    }
+    val messageText = pendingMessage?.let { (_, messageRes) -> stringResource(messageRes) }
+    LaunchedEffect(pendingMessage) {
+        if (messageText != null) snackbarHostState.showSnackbar(messageText)
     }
 
     Dialog(
