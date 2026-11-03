@@ -19,8 +19,8 @@ fun JobOfferDto.toDomain(): JobOffer {
         requirements = requirements.orEmpty(),
         salary = salary?.let { Salary(min = it.min ?: 0.0, max = it.max ?: 0.0, currency = it.currency.orEmpty()) },
         matchScore = matchScore,
-        // El servicio manda ISO 8601; la pantalla muestra la fecha ya legible.
-        postedAt = postedAt.toDisplayDate(),
+        // Llega en epoch (o ISO en los mocks viejos); la pantalla la muestra ya legible.
+        postedAt = postedAt.toEpochMillis().toDisplayDate(),
     )
 }
 

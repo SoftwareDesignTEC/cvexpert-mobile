@@ -15,8 +15,8 @@ data class JobApplication(
     val location: String,
     val modality: JobModality,
     val status: ApplicationStatus,
-    /** Fecha en que se postuló, ya lista para mostrar. */
-    val appliedAt: String,
+    /** Fecha en que se postuló, en epoch milisegundos UTC. Null si el servicio no la mandó. */
+    val appliedAt: Long?,
 )
 
 /**
