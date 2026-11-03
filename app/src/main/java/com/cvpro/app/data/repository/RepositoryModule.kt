@@ -9,6 +9,7 @@ import dagger.Module
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
+import com.cvpro.app.domain.repository.AlertsRepository
 import com.cvpro.app.domain.repository.ApplicationRepository
 import com.cvpro.app.domain.repository.ProfileRepository
 import com.cvpro.app.domain.repository.TemplateRepository
@@ -64,4 +65,8 @@ abstract class RepositoryModule {
     abstract fun bindSettingsContentRepository(
         impl: ApiSettingsContentRepository,
     ): SettingsContentRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAlertsRepository(impl: ApiAlertsRepository): AlertsRepository
 }

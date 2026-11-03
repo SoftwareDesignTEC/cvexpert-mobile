@@ -31,18 +31,20 @@ interface SettingsRepository {
 enum class NotificationType {
     APPLICATION_STATUS,
     COURSE_RECOMMENDATION,
-    JOB_ALERTS,
 }
 
-/** Estado de los tres avisos. Todos empiezan encendidos. */
+/**
+ * Estado de los avisos guardados en el teléfono. Todos empiezan encendidos.
+ *
+ * Las alertas de ofertas nuevas no están acá: se guardan en el servicio de Ofertas, que es
+ * quien decide a quién avisar (ver AlertsRepository).
+ */
 data class NotificationSettings(
     val applicationStatus: Boolean = true,
     val courseRecommendation: Boolean = true,
-    val jobAlerts: Boolean = true,
 ) {
     fun isEnabled(type: NotificationType): Boolean = when (type) {
         NotificationType.APPLICATION_STATUS -> applicationStatus
         NotificationType.COURSE_RECOMMENDATION -> courseRecommendation
-        NotificationType.JOB_ALERTS -> jobAlerts
     }
 }

@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.cvpro.app.R
 import com.cvpro.app.domain.model.SkillsGapAnalysis
 import com.cvpro.app.domain.model.UserProfile
+import com.cvpro.app.domain.repository.AlertsRepository
 import com.cvpro.app.domain.repository.AuthRepository
 import com.cvpro.app.domain.repository.ProfileRepository
 import com.cvpro.app.domain.repository.SkillsGapRepository
@@ -58,6 +59,7 @@ class ProfileViewModel @Inject constructor(
     authRepository: AuthRepository,
     private val profileRepository: ProfileRepository,
     private val skillsGapRepository: SkillsGapRepository,
+    private val alertsRepository: AlertsRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
@@ -225,6 +227,11 @@ class ProfileViewModel @Inject constructor(
                 }
 
                 _messages.send(R.string.profile_save_success)
+
+                // Las alertas de ofertas usan la ubicación del perfil: se mantienen al día.
+                // Si falla no se avisa, porque el perfil sí se guardó; la próxima vez que se
+                // abran las alertas se toma el perfil actualizado igual.
+                runCatching { alertsRepository.syncProfile(updated) }
 
             } catch (exception: Exception) {
                 _uiState.update {

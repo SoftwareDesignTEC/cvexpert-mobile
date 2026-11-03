@@ -65,6 +65,7 @@ import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cvpro.app.R
+import com.cvpro.app.ui.screens.alerts.JobAlertsDialog
 import com.cvpro.app.ui.components.toLocalDate
 import com.cvpro.app.ui.components.toLocalDateTime
 import com.cvpro.app.domain.model.HelpContact
@@ -80,6 +81,7 @@ private enum class SettingsDialog {
     PRIVACY,
     TERMS,
     DELETE_ACCOUNT,
+    JOB_ALERTS,
 }
 
 /**
@@ -264,14 +266,16 @@ fun SettingsContent(
                 onChange = onNotificationChange,
             )
 
-            NotificationRow(
+            // Las alertas de ofertas se guardan en el servicio y tienen más opciones que un
+            // interruptor (mínimo de compatibilidad y perfil), así que abren su pantalla.
+            SettingsRow(
                 label = stringResource(
                     R.string.settings_notifications_jobs
                 ),
                 icon = Icons.Default.Work,
-                type = NotificationType.JOB_ALERTS,
-                settings = uiState.notifications,
-                onChange = onNotificationChange,
+                onClick = {
+                    openDialog = SettingsDialog.JOB_ALERTS
+                },
             )
         }
 
@@ -489,6 +493,14 @@ fun SettingsContent(
                      * La confirmación existe porque es una acción
                      * destructiva. En esta fase no ejecutamos DELETE.
                      */
+                    openDialog = null
+                },
+            )
+        }
+
+        SettingsDialog.JOB_ALERTS -> {
+            JobAlertsDialog(
+                onDismiss = {
                     openDialog = null
                 },
             )

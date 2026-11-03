@@ -358,4 +358,37 @@
 
     <string name="settings_delete_account_confirm">Eliminar</string>
     <string name="settings_cancel">Cancelar</string>
+
+    <!-- Alertas de ofertas (servicio de Ofertas, /alerts) -->
+    <string name="alerts_title">Alertas de ofertas</string>
+    <string name="alerts_back">Volver</string>
+    <string name="alerts_load_error">No se pudieron cargar tus alertas.</string>
+    <string name="alerts_enabled">Avisarme de ofertas nuevas</string>
+    <string name="alerts_enabled_hint">Te llega un aviso cuando se publica una oferta compatible con tu perfil.</string>
+    <string name="alerts_min_match">Compatibilidad mínima: %1$d %%</string>
+    <string name="alerts_skills_title">Habilidades</string>
+    <string name="alerts_skills_hint">Se comparan con las que pide cada oferta.</string>
+    <string name="alerts_skill_input">Nueva habilidad</string>
+    <string name="alerts_skill_add">Agregar</string>
+    <string name="alerts_skill_remove">Quitar %1$s</string>
+    <string name="alerts_skills_empty">Todavía no agregaste habilidades.</string>
+    <string name="alerts_experience">Años de experiencia</string>
+    <string name="alerts_experience_hint">Incluye voluntariados, proyectos y trabajos informales.</string>
+    <string name="alerts_experience_error">Escribe un número entre 0 y 60.</string>
+    <string name="alerts_profile_title">Tomado de tu perfil</string>
+    <string name="alerts_profile_hint">Se actualiza solo cuando cambias tu perfil.</string>
+    <string name="alerts_profile_location">Ubicación</string>
+    <string name="alerts_profile_modalities">Modalidad</string>
+    <string name="alerts_profile_job_types">Jornada</string>
+    <string name="alerts_profile_sectors">Sectores</string>
+    <string name="alerts_profile_line">%1$s: %2$s</string>
+    <string name="alerts_save">Guardar alertas</string>
+    <string name="alerts_save_success">Alertas guardadas.</string>
+    <string name="alerts_save_invalid">Revisa los datos: el servicio rechazó algún valor.</string>
+    <string name="alerts_save_error">No se pudieron guardar las alertas. Inténtalo de nuevo.</string>
+    <string name="job_type_full_time">Tiempo completo</string>
+    <string name="job_type_part_time">Medio tiempo</string>
+    <string name="job_type_freelance">Freelance</string>
+    <string name="job_type_internship">Práctica</string>
+    <string name="job_type_other">Otra</string>
 </resources>

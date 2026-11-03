@@ -20,7 +20,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.cvpro.app.R
-import com.cvpro.app.data.mapper.toDisplayDate
 import com.cvpro.app.domain.model.ApplicationStatus
 import com.cvpro.app.domain.model.JobApplication
 import com.cvpro.app.domain.model.JobModality
@@ -178,7 +177,7 @@ fun JobApplicationDetailSheet(
 
             DetailField(
                 label = stringResource(R.string.detail_applied_at),
-                value = application.appliedAt.toDisplayDate(),
+                value = application.appliedAt.toLocalDate(),
             )
 
             // Cambiar de columna desde el detalle: es la misma operación del menú de la
