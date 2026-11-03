@@ -1,11 +1,16 @@
 package com.cvpro.app.data.remote.dto
 
+import com.google.gson.JsonElement
+
 /**
  * Representa una postulación tal como llega desde la API.
  *
  * Este modelo pertenece a la capa remota:
  * refleja el contrato JSON de APIM, no necesariamente
  * lo que utiliza internamente la aplicación.
+ *
+ * Las fechas son JsonElement porque el servicio de Postulaciones las manda en epoch
+ * milisegundos y los mocks de la Fase I como texto ISO; el mapper acepta las dos.
  */
 data class JobApplicationDto(
     val id: String? = null,
@@ -17,8 +22,8 @@ data class JobApplicationDto(
     val location: String? = null,
     val modality: String? = null,
     val status: String? = null,
-    val appliedAt: String? = null,
-    val updatedAt: String? = null,
+    val appliedAt: JsonElement? = null,
+    val updatedAt: JsonElement? = null,
     val notes: String? = null,
 )
 

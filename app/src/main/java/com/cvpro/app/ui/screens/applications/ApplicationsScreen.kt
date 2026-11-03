@@ -354,10 +354,10 @@ private fun ApplicationsError(
     }
 }
 
-/** "Hoy", "Ayer" o "Hace N días", a partir de la fecha ISO del servicio. */
+/** "Hoy", "Ayer" o "Hace N días", a partir de la fecha en epoch. Sin fecha no muestra nada. */
 @Composable
-private fun String.relativeLabel(): String {
-    val days = daysSince() ?: return this
+private fun Long?.relativeLabel(): String {
+    val days = daysSince() ?: return ""
     return when (days) {
         0 -> stringResource(R.string.applications_applied_today)
         1 -> stringResource(R.string.applications_applied_yesterday)
@@ -631,7 +631,7 @@ private fun ApplicationsPreview(darkTheme: Boolean) {
                             location = "San José",
                             modality = JobModality.HYBRID,
                             status = ApplicationStatus.APPLIED,
-                            appliedAt = "2026-09-28T12:00:00Z",
+                            appliedAt = 1790596800000L, // 2026-09-28
                         ),
                         JobApplication(
                             id = "2",
@@ -641,7 +641,7 @@ private fun ApplicationsPreview(darkTheme: Boolean) {
                             location = "Heredia",
                             modality = JobModality.REMOTE,
                             status = ApplicationStatus.IN_PROGRESS,
-                            appliedAt = "2026-09-26T12:00:00Z",
+                            appliedAt = 1790424000000L, // 2026-09-26
                         ),
                         JobApplication(
                             id = "3",
@@ -651,7 +651,7 @@ private fun ApplicationsPreview(darkTheme: Boolean) {
                             location = "Santa Ana",
                             modality = JobModality.ON_SITE,
                             status = ApplicationStatus.INTERVIEW,
-                            appliedAt = "2026-09-24T12:00:00Z",
+                            appliedAt = 1790251200000L, // 2026-09-24
                         ),
                     ),
                 ),

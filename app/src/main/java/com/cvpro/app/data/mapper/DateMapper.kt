@@ -53,16 +53,23 @@ fun JsonElement?.toEpochMillis(): Long? {
 }
 
 /**
- * Cuántos días pasaron desde una fecha ISO 8601, o null si el texto no se puede leer.
+ * Pasa una fecha en epoch milisegundos al formato que se lee en pantalla ("20/09/2026"), en
+ * la zona horaria del teléfono. Sin fecha devuelve un texto vacío.
+ */
+fun Long?.toDisplayDate(): String {
+    if (this == null) return ""
+    return Instant.ofEpochMilli(this).atZone(ZoneId.systemDefault()).format(DISPLAY_DATE_FORMAT)
+}
+
+/**
+ * Cuántos días pasaron desde una fecha en epoch milisegundos, o null si no hay fecha.
  *
  * Lo usa el tablero de postulaciones, que muestra "Hace 3 días" en vez de la fecha. Se
  * devuelve el número y no el texto a propósito: el texto se arma en la pantalla, que es
  * donde están los strings traducibles.
  */
-fun String?.daysSince(): Int? = try {
+fun Long?.daysSince(): Int? {
     if (this == null) return null
-    val date = Instant.parse(this).atZone(ZoneId.systemDefault()).toLocalDate()
-    ChronoUnit.DAYS.between(date, LocalDate.now()).toInt().coerceAtLeast(0)
-} catch (exception: DateTimeParseException) {
-    null
+    val date = Instant.ofEpochMilli(this).atZone(ZoneId.systemDefault()).toLocalDate()
+    return ChronoUnit.DAYS.between(date, LocalDate.now()).toInt().coerceAtLeast(0)
 }

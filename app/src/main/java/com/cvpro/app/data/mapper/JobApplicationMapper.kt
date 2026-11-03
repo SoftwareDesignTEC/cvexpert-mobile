@@ -14,9 +14,9 @@ fun JobApplicationDto.toDomain(): JobApplication {
         location = location.orEmpty(),
         modality = modality.toJobModality(),
         status = status.toApplicationStatus(),
-        // Se guarda tal cual llega, en ISO 8601: la tarjeta del tablero muestra cuántos días
+        // Se guarda en epoch y no como texto: la tarjeta del tablero muestra cuántos días
         // pasaron, y para eso hace falta la fecha y no un texto ya formateado.
-        appliedAt = appliedAt.orEmpty(),
+        appliedAt = appliedAt.toEpochMillis(),
     )
 }
 

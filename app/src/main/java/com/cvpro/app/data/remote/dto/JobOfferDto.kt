@@ -1,5 +1,6 @@
 package com.cvpro.app.data.remote.dto
 
+import com.google.gson.JsonElement
 import com.google.gson.annotations.SerializedName
 
 /**
@@ -11,6 +12,9 @@ import com.google.gson.annotations.SerializedName
  * los dos nombres con `alternate` de Gson: usa el primero que encuentre en el JSON.
  *
  * Así, cuando Cabrera corrija el mock, la app sigue funcionando sin tocar nada.
+ *
+ * `postedAt` es un JsonElement porque el servicio de Ofertas la manda en epoch milisegundos y
+ * los mocks de la Fase I como texto ISO; el mapper acepta las dos (ver toEpochMillis).
  * TODO: avisarle a Cabrera y a Pérez de estos dos nombres.
  *
  * Todos los campos son opcionales a propósito: Gson no respeta los tipos no nulos de
@@ -33,7 +37,7 @@ data class JobOfferDto(
     val matchScore: Int? = null,
 
     @SerializedName(value = "postedAt", alternate = ["createdAt"])
-    val postedAt: String? = null,
+    val postedAt: JsonElement? = null,
 )
 
 data class SalaryDto(
