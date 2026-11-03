@@ -76,6 +76,10 @@ android {
         buildConfigField("String", "APIM_BASE_URL", "\"${configValue("APIM_BASE_URL")}\"")
         // Web client ID de Google (OAuth). Es el mismo que usa la web como VITE_GOOGLE_CLIENT_ID.
         buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"${configValue("GOOGLE_WEB_CLIENT_ID")}\"")
+        // Enciende las llamadas al servicio de Notificaciones de Samuel. Queda apagada hasta que
+        // lo despliegue: con NOTIFICATIONS_ENABLED=true en local.properties (o en el workflow)
+        // se activa sin tocar código. Cualquier otro valor, o ninguno, la deja apagada.
+        buildConfigField("boolean", "NOTIFICATIONS_ENABLED", configValue("NOTIFICATIONS_ENABLED").equals("true", ignoreCase = true).toString())
     }
 
     signingConfigs {

@@ -48,6 +48,9 @@ jobs:
         env:
           APIM_BASE_URL: ${{ vars.APIM_BASE_URL }}
           GOOGLE_WEB_CLIENT_ID: ${{ vars.GOOGLE_WEB_CLIENT_ID }}
+          # Opcional: con la Variable en true se encienden las llamadas a Notificaciones.
+          # Si no existe llega vacía y quedan apagadas.
+          NOTIFICATIONS_ENABLED: ${{ vars.NOTIFICATIONS_ENABLED }}
           RELEASE_KEYSTORE_PATH: release-key.jks
           RELEASE_KEYSTORE_PASSWORD: ${{ secrets.RELEASE_KEYSTORE_PASSWORD }}
           RELEASE_KEY_ALIAS: ${{ secrets.RELEASE_KEY_ALIAS }}

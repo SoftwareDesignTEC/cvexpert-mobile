@@ -4,7 +4,9 @@ import android.app.Application
 import coil.ImageLoader
 import coil.ImageLoaderFactory
 import coil.decode.SvgDecoder
+import com.cvpro.app.data.notifications.NotificationDirectorySync
 import dagger.hilt.android.HiltAndroidApp
+import javax.inject.Inject
 
 /**
  * Clase Application de la app.
@@ -17,6 +19,16 @@ import dagger.hilt.android.HiltAndroidApp
  */
 @HiltAndroidApp
 class CvApplication : Application(), ImageLoaderFactory {
+
+    // Hilt llena este campo antes de onCreate.
+    @Inject
+    lateinit var notificationDirectorySync: NotificationDirectorySync
+
+    override fun onCreate() {
+        super.onCreate()
+        // Registro en el directorio de Notificaciones cada vez que alguien inicia sesión.
+        notificationDirectorySync.start()
+    }
 
     /**
      * Cargador de imágenes de la app, con soporte para SVG.
