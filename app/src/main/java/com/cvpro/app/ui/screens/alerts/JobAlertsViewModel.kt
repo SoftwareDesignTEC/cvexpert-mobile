@@ -47,7 +47,13 @@ data class JobAlertsUiState(
     val modalities: List<JobModality> = emptyList(),
     val jobTypes: List<String> = emptyList(),
     val sectors: List<String> = emptyList(),
-)
+) {
+    /**
+     * El servicio exige la ubicación (sin ella responde 400) y sale del perfil. Un usuario
+     * nuevo puede no tenerla todavía: en ese caso se le pide completar el perfil.
+     */
+    val missingLocation: Boolean get() = location.isBlank()
+}
 
 @HiltViewModel
 class JobAlertsViewModel @Inject constructor(
@@ -120,6 +126,10 @@ class JobAlertsViewModel @Inject constructor(
     fun onSaveClick() {
         val state = _uiState.value
         if (state.isSaving) return
+        if (state.missingLocation) {
+            viewModelScope.launch { _messages.send(R.string.alerts_missing_location) }
+            return
+        }
 
         val years = state.experienceYears.toIntOrNull()
         if (years == null || years > MAX_EXPERIENCE_YEARS) {

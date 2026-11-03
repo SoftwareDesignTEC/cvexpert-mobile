@@ -382,6 +382,8 @@
     <string name="alerts_profile_job_types">Jornada</string>
     <string name="alerts_profile_sectors">Sectores</string>
     <string name="alerts_profile_line">%1$s: %2$s</string>
+    <string name="alerts_missing_location">Tu perfil no tiene ubicación. Complétala para poder guardar las alertas.</string>
+    <string name="alerts_go_to_profile">Completar perfil</string>
     <string name="alerts_save">Guardar alertas</string>
     <string name="alerts_save_success">Alertas guardadas.</string>
     <string name="alerts_save_invalid">Revisa los datos: el servicio rechazó algún valor.</string>

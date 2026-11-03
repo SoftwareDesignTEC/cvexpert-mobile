@@ -94,6 +94,7 @@ private enum class SettingsDialog {
 @Composable
 fun SettingsScreen(
     onSignOutClick: () -> Unit,
+    onProfileClick: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: SettingsViewModel = hiltViewModel(),
 ) {
@@ -170,6 +171,7 @@ fun SettingsScreen(
         onTermsClick = viewModel::loadTerms,
         onExportClick = viewModel::requestDataExport,
         onSignOutClick = onSignOutClick,
+        onProfileClick = onProfileClick,
         modifier = modifier,
     )
 }
@@ -188,6 +190,7 @@ fun SettingsContent(
     onExportClick: () -> Unit = {},
     modifier: Modifier = Modifier,
     onSignOutClick: () -> Unit = {},
+    onProfileClick: () -> Unit = {},
 ) {
     var openDialog by remember {
         mutableStateOf<SettingsDialog?>(null)
@@ -502,6 +505,10 @@ fun SettingsContent(
             JobAlertsDialog(
                 onDismiss = {
                     openDialog = null
+                },
+                onProfileClick = {
+                    openDialog = null
+                    onProfileClick()
                 },
             )
         }

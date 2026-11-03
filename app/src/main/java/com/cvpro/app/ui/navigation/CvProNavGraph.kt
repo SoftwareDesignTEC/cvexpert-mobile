@@ -60,7 +60,11 @@ fun CvProNavGraph(
         composable(CvProDestination.TEMPLATES.route) { TemplatesScreen() }
         composable(CvProDestination.APPLICATIONS.route) { ApplicationsScreen() }
         composable(CvProDestination.SETTINGS.route) {
-            SettingsScreen(onSignOutClick = onSignOutClick)
+            SettingsScreen(
+                onSignOutClick = onSignOutClick,
+                // Desde Alertas de ofertas, cuando al perfil le falta la ubicación.
+                onProfileClick = { navController.navigateToDestination(CvProDestination.PROFILE) },
+            )
         }
     }
 }

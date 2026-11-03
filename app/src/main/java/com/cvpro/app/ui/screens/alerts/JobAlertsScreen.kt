@@ -65,6 +65,7 @@ import com.cvpro.app.ui.components.PrimaryButton
 @Composable
 fun JobAlertsDialog(
     onDismiss: () -> Unit,
+    onProfileClick: () -> Unit,
     viewModel: JobAlertsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -94,6 +95,7 @@ fun JobAlertsDialog(
             onRemoveSkill = viewModel::onRemoveSkill,
             onExperienceChange = viewModel::onExperienceChange,
             onSave = viewModel::onSaveClick,
+            onProfileClick = onProfileClick,
         )
     }
 }
@@ -113,6 +115,7 @@ fun JobAlertsContent(
     onRemoveSkill: (String) -> Unit,
     onExperienceChange: (String) -> Unit,
     onSave: () -> Unit,
+    onProfileClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
@@ -151,6 +154,7 @@ fun JobAlertsContent(
                 onRemoveSkill = onRemoveSkill,
                 onExperienceChange = onExperienceChange,
                 onSave = onSave,
+                onProfileClick = onProfileClick,
                 modifier = contentModifier,
             )
         }
@@ -168,6 +172,7 @@ private fun AlertsForm(
     onRemoveSkill: (String) -> Unit,
     onExperienceChange: (String) -> Unit,
     onSave: () -> Unit,
+    onProfileClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(
@@ -290,11 +295,25 @@ private fun AlertsForm(
             ProfileLine(stringResource(R.string.alerts_profile_modalities), modalityLabels.joinToString(", "))
             ProfileLine(stringResource(R.string.alerts_profile_job_types), jobTypeLabels.joinToString(", "))
             ProfileLine(stringResource(R.string.alerts_profile_sectors), uiState.sectors.joinToString(", "))
+
+            // Sin ubicación el servicio no acepta las alertas: se explica y se lleva al perfil.
+            if (uiState.missingLocation) {
+                Text(
+                    text = stringResource(R.string.alerts_missing_location),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(top = 12.dp),
+                )
+                TextButton(onClick = onProfileClick) {
+                    Text(stringResource(R.string.alerts_go_to_profile))
+                }
+            }
         }
 
         PrimaryButton(
             text = stringResource(R.string.alerts_save),
             onClick = onSave,
+            enabled = !uiState.missingLocation,
             isLoading = uiState.isSaving,
             modifier = Modifier.padding(vertical = 8.dp),
         )
