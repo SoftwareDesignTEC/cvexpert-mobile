@@ -14,6 +14,7 @@ import dagger.hilt.components.SingletonComponent
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import javax.inject.Singleton
+import com.cvpro.app.data.remote.api.AlertsApi
 import com.cvpro.app.data.remote.api.ApplicationApi
 import com.cvpro.app.data.remote.api.ProfileApi
 import com.cvpro.app.data.remote.api.SkillsGapApi
@@ -111,6 +112,12 @@ object NetworkModule {
     @Singleton
     fun provideNotificationApi(retrofit: Retrofit): NotificationApi {
         return retrofit.create(NotificationApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideAlertsApi(retrofit: Retrofit): AlertsApi {
+        return retrofit.create(AlertsApi::class.java)
     }
 
     /**

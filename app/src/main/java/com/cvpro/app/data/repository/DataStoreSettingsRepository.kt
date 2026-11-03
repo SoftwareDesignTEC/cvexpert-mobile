@@ -62,9 +62,6 @@ class DataStoreSettingsRepository @Inject constructor(
 
                 courseRecommendation =
                     preferences[keyOf(NotificationType.COURSE_RECOMMENDATION)] ?: true,
-
-                jobAlerts =
-                    preferences[keyOf(NotificationType.JOB_ALERTS)] ?: true,
             )
         }
 
