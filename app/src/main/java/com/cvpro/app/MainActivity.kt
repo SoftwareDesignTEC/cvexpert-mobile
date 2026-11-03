@@ -12,10 +12,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cvpro.app.data.notifications.NotificationDirectorySync
 import com.cvpro.app.ui.navigation.CvProApp
 import com.cvpro.app.ui.theme.CvProTheme
 import com.cvpro.app.ui.theme.ThemeViewModel
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,8 +34,15 @@ import com.cvpro.app.ui.screens.splash.SplashViewModel
  */
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var notificationDirectorySync: NotificationDirectorySync
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Android recrea la Activity cuando cambia el idioma del sistema: si cambió, se le avisa
+        // a Notificaciones para que los avisos lleguen en el idioma nuevo.
+        notificationDirectorySync.onLanguageMaybeChanged()
         // Dibuja detrás de las barras de sistema (comportamiento estándar en Android 15+).
         enableEdgeToEdge()
         setContent {

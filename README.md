@@ -30,6 +30,9 @@ APIM_BASE_URL=<URL base de APIM>
 # Client ID web de Google (OAuth) para el inicio de sesión.
 GOOGLE_WEB_CLIENT_ID=<client ID>
 
+# Opcional. true enciende las llamadas al servicio de Notificaciones; sin la línea quedan apagadas.
+NOTIFICATIONS_ENABLED=false
+
 # Solo para generar un APK de release firmado en local.
 RELEASE_KEYSTORE_PATH=release-key.jks
 RELEASE_KEYSTORE_PASSWORD=<contraseña>
@@ -68,8 +71,9 @@ Un push nuevo a la misma rama cancela la corrida anterior. El workflow necesita 
 | Variable | `APIM_BASE_URL` | URL base de APIM |
 | Variable | `GOOGLE_WEB_CLIENT_ID` | Client ID web de Google |
 | Variable | `FIREBASE_APP_ID` | App ID de Firebase |
+| Variable | `NOTIFICATIONS_ENABLED` | Opcional: `true` enciende las llamadas a Notificaciones |
 
-Las tres últimas son Variables, no Secrets: el workflow las lee con `vars.` y, si se guardan como Secrets, llegan vacías y el APK sale sin servicio ni inicio de sesión.
+Las cuatro últimas son Variables, no Secrets: el workflow las lee con `vars.` y, si se guardan como Secrets, llegan vacías y el APK sale sin servicio ni inicio de sesión.
 
 La rama `main` está protegida: todo entra por pull request revisado por otra persona.
 

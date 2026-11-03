@@ -4,6 +4,7 @@ import com.cvpro.app.BuildConfig
 import com.cvpro.app.data.remote.AuthInterceptor
 import com.cvpro.app.data.remote.LoggingInterceptor
 import com.cvpro.app.data.remote.api.JobApi
+import com.cvpro.app.data.remote.api.NotificationApi
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
 import dagger.Module
@@ -104,6 +105,12 @@ object NetworkModule {
     @Singleton
     fun provideSettingsApi(retrofit: Retrofit, ): SettingsApi {
         return retrofit.create(SettingsApi::class.java)
+    }
+
+    @Provides
+    @Singleton
+    fun provideNotificationApi(retrofit: Retrofit): NotificationApi {
+        return retrofit.create(NotificationApi::class.java)
     }
 
     /**
