@@ -195,7 +195,7 @@ fun ProfileCard(
 
         // Análisis de habilidades: el mismo radar del Panel Principal.
         val analysis = uiState.skillsGap
-        if (analysis != null) {
+        if (analysis != null && analysis.skills.isNotEmpty()) {
             ProfileSurface {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(
@@ -212,6 +212,10 @@ fun ProfileCard(
                     )
                 }
 
+                Text(stringResource(R.string.skills_gap_ordinal_scale))
+                Text(stringResource(R.string.skills_gap_deficits_only))
+                if (analysis.status != "complete" || analysis.unresolved.isNotEmpty())
+                    Text(stringResource(R.string.skills_gap_incomplete))
                 RadarChart(
                     labels = analysis.skills.map { it.name },
                     series = listOf(

@@ -6,6 +6,8 @@
 //
 // Los modelos de Kotlin en domain/model deben usar estos mismos nombres de campo: si acá
 // cambia algo, hay que reflejarlo del lado móvil o se rompe la paridad web–móvil.
+// Excepción explícita: la sección de brechas documenta el HTTP 0.2.0 del backend
+// (PR #16 hacia develop), no una sincronización ni cambio de la aplicación web.
 
 // ─── PERFIL DE USUARIO ────────────────────────────────────────────────────────
 
@@ -137,37 +139,39 @@ export interface JobApplication {
 // ─── ANÁLISIS DE BRECHA DE HABILIDADES ───────────────────────────────────────
 
 // Un ítem del radar: nivel del usuario contra lo que pide el mercado.
-export interface SkillGapItem {
-    name: string;        // ej: "Comunicación"
-    userLevel: number;   // 0-100, nivel actual del usuario
-    marketLevel: number; // 0-100, lo que pide el mercado
-}
-
-// Conversión del nivel categórico de Skill al 0-100 del radar.
-// Es una regla compartida: la web y el móvil deben dibujar el mismo gráfico.
+// Android skills gap HTTP 0.2.0. Other sections retain their original contract.
 export const levelToNumber: Record<Skill['level'], number> = {
-    beginner:     25,
-    intermediate: 50,
-    advanced:     75,
-    expert:       100,
-};
+    beginner: 1, intermediate: 2, advanced: 3, expert: 4,
+}; // cv-skill-v1 ordinal positions, never percentages.
 
-export interface SkillsGapAnalysis {
-    id: string;
-    userId: string;
-    targetJobTitle: string;
-    skills: SkillGapItem[];        // reemplaza missingSkills
-    recommendations: CourseRecommendation[];
-    createdAt: string;             // ISO 8601: "2026-09-13T21:00:00Z"
+export interface SkillGapItem {
+    skillName: string;
+    userLevel: number; // 1..4
+    marketLevel: number; // 1..4
+    deficitSteps: number; // 1..3
+    courses: CourseRecommendation[];
 }
-
 export interface CourseRecommendation {
     id: string;
     title: string;
-    platform: string;              // "YouTube", "Udemy", "Coursera", etc.
+    platform: string;
     url: string;
-    isPaid: boolean;
-    duration?: string;             // "4 horas", "6 semanas"
+    logoUrl: string | null;
+    durationHours: number | null;
+    isPaid?: boolean;
+    skills?: string[];
+}
+export interface SkillsGapAnalysis extends PagedResult<SkillGapItem> {
+    analysis: {
+        status: 'empty' | 'incomplete' | 'complete';
+        comparedSkills: number;
+        scaleKey: 'cv-skill-v1';
+        marketStatus: 'missing' | 'available';
+        unresolved: { skillName: string; reason: string; userLevel: number | null; marketLevel: number | null }[];
+    };
+}
+export interface SkillsGapInput {
+    skills: { skillName: string; level: Skill['level'] | null }[];
 }
 
 // ─── PAGINACIÓN Y ERRORES ─────────────────────────────────────────────────────

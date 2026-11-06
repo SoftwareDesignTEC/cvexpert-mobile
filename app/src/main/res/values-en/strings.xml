@@ -157,7 +157,7 @@
     <string name="home_create_cv_ai">AI</string>
     <string name="home_create_cv_offline">Offline</string>
     <string name="home_skills_title">Skills Analysis</string>
-    <string name="home_skills_subtitle">How well you match job market offers</string>
+    <string name="home_skills_subtitle">Ordinal comparison with market requirements</string>
     <string name="home_skills_empty">No analysis available yet.</string>
     <string name="home_offers_title">Recommended Job Offers</string>
     <string name="home_offers_see_all">See all Job Offers</string>
@@ -295,7 +295,6 @@
     <string name="skills_gap_points_title">Areas to Improve</string>
     <string name="skills_gap_points_subtitle">Skills to Improve</string>
     <string name="skills_gap_row_number">%1$d.</string>
-    <string name="skills_gap_gap_percent">-%1$d%% gap</string>
     <string name="skills_gap_show_all">See all (%1$d more)</string>
     <string name="skills_gap_show_less">See less</string>
     <string name="skills_gap_courses_count">%1$d courses</string>
@@ -305,7 +304,7 @@
     <string name="skills_gap_series_user">Your skills</string>
     <string name="skills_gap_series_market">What offers ask for</string>
     <string name="skills_gap_to_improve_title">Skills to improve</string>
-    <string name="skills_gap_no_gaps">You\'re at the level job offers ask for in all your skills.</string>
+    <string name="skills_gap_no_gaps">No calculable gaps among compared skills with complete coverage.</string>
     <string name="skills_gap_levels">You %1$d · Market %2$d</string>
     <string name="skills_gap_amount">-%1$d</string>
     <string name="skills_gap_courses_title">Courses to improve</string>
@@ -388,4 +387,32 @@
     <string name="job_type_freelance">Freelance</string>
     <string name="job_type_internship">Internship</string>
     <string name="job_type_other">Other</string>
+    <string name="skills_gap_disabled">Skills gap analysis is awaiting service activation. Other features remain available.</string>
+    <string name="skills_gap_unauthorized">Your session is unauthorized. Sign in again.</string>
+    <string name="skills_gap_input_required">No skills snapshot exists. Select a CV and submit its skills for analysis.</string>
+    <string name="skills_gap_invalid_input">Could not submit skills. Check empty names, surrounding spaces, duplicates and the 500 skill limit.</string>
+    <string name="skills_gap_incompatible">The service does not yet provide a verifiable response compatible with contract 0.2.0.</string>
+    <string name="skills_gap_unavailable">Analysis is temporarily unavailable. Try again later.</string>
+    <string name="skills_gap_select_cv">Select a CV to analyze its skills</string>
+    <string name="skills_gap_more_cvs">Load more CVs</string>
+    <string name="skills_gap_no_cvs">No CVs loaded. You can create one in My CVs.</string>
+    <string name="skills_gap_selected_cv">Selected CV: %1$s</string>
+    <string name="skills_gap_replace_notice">Will submit %1$d skills; %2$d with unknown level. This replaces your complete analysis snapshot with CV self assessments. It does not link or verify the CV. An empty list saves an empty snapshot.</string>
+    <string name="skills_gap_analyze">Submit skills and analyze</string>
+    <string name="skills_gap_previous">Previous</string>
+    <string name="skills_gap_next">Next</string>
+    <string name="skills_gap_page">Page %1$d · %2$d calculable gaps</string>
+    <string name="skills_gap_ordinal_scale">cv-skill-v1: beginner=1, intermediate=2, advanced=3, expert=4. Ordinal positions.</string>
+    <string name="skills_gap_coverage">%1$d skills compared · %2$d unresolved</string>
+    <string name="skills_gap_market_missing">Market requirements are missing. Absence of gaps cannot be confirmed.</string>
+    <string name="skills_gap_incomplete">Insufficient or incomplete coverage. Calculable results are partial.</string>
+    <string name="skills_gap_missing_user_skill">User skill missing</string>
+    <string name="skills_gap_missing_requirement">Market requirement missing</string>
+    <string name="skills_gap_unknown_level">Unknown level</string>
+    <string name="skills_gap_unknown_scale">Unknown scale</string>
+    <string name="skills_gap_scale_mismatch">Scale mismatch</string>
+    <string name="skills_gap_unresolved_other">Not comparable</string>
+    <string name="skills_gap_deficit_steps">%1$d ordinal steps</string>
+    <string name="skills_gap_deficits_only">Only skills with calculable deficits are shown.</string>
+    <string name="skills_gap_snapshot_notice">Result from the saved user snapshot. Selecting another CV does not change the snapshot until its skills are submitted.</string>
 </resources>

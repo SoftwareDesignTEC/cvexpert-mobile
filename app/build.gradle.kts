@@ -74,6 +74,8 @@ android {
 
         // Se inyectan como constantes en BuildConfig.
         buildConfigField("String", "APIM_BASE_URL", "\"${configValue("APIM_BASE_URL")}\"")
+        // Opt-in only after APIM exposes the real 0.2.0 GET and PUT operations.
+        buildConfigField("boolean", "SKILLS_GAP_HTTP_020_ENABLED", configValue("SKILLS_GAP_HTTP_020_ENABLED").equals("true", ignoreCase = true).toString())
         // Web client ID de Google (OAuth). Es el mismo que usa la web como VITE_GOOGLE_CLIENT_ID.
         buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"${configValue("GOOGLE_WEB_CLIENT_ID")}\"")
         // Enciende las llamadas al servicio de Notificaciones de Samuel. Queda apagada hasta que
@@ -133,6 +135,9 @@ kotlin {
 }
 
 dependencies {
+    testImplementation(libs.junit)
+    testImplementation(libs.kotlinx.coroutines.test)
+    testImplementation(libs.okhttp.mockwebserver)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.runtime.compose)
