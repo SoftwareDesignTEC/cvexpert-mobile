@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.cvpro.app.domain.model.ThemePreference
 import com.cvpro.app.domain.repository.NotificationSettings
 import com.cvpro.app.domain.repository.NotificationType
+import com.cvpro.app.domain.repository.AppLanguage
+import com.cvpro.app.domain.repository.LanguageRepository
 import com.cvpro.app.domain.repository.SettingsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -26,6 +28,9 @@ import kotlinx.coroutines.flow.update
 data class SettingsUiState(
     val themePreference: ThemePreference = ThemePreference.SYSTEM,
     val notifications: NotificationSettings = NotificationSettings(),
+
+    val language: AppLanguage = AppLanguage.SYSTEM,
+    val canChangeLanguage: Boolean = false,
 
     val sessions: List<ActiveSession> = emptyList(),
     val isLoadingSessions: Boolean = false,
@@ -64,22 +69,30 @@ class SettingsViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository,
     private val settingsContentRepository: SettingsContentRepository,
     private val authRepository: AuthRepository,
+    private val languageRepository: LanguageRepository,
 ) : ViewModel() {
 
     private val remoteState = MutableStateFlow(
         RemoteSettingsState()
     )
 
+    // El idioma lo guarda Android, no la app: se lee al crear el ViewModel y se actualiza al elegir.
+    private val language = MutableStateFlow(languageRepository.current())
+
     // Se combinan los dos flujos: cualquiera de los dos que cambie repinta la pantalla.
     val uiState: StateFlow<SettingsUiState> = combine(
         settingsRepository.themePreference,
         settingsRepository.notifications,
         remoteState,
-    ) { theme, notifications, remote ->
+        language,
+    ) { theme, notifications, remote, language ->
 
         SettingsUiState(
             themePreference = theme,
             notifications = notifications,
+
+            language = language,
+            canChangeLanguage = languageRepository.canChangeLanguage,
 
             sessions = remote.sessions,
             isLoadingSessions = remote.isLoadingSessions,
@@ -124,6 +137,16 @@ class SettingsViewModel @Inject constructor(
     /** Enciende o apaga un aviso. Se guarda en el dispositivo y sobrevive al cierre. */
     fun onNotificationChange(type: NotificationType, enabled: Boolean) {
         viewModelScope.launch { settingsRepository.setNotification(type, enabled) }
+    }
+
+    /**
+     * Cambia el idioma de la app. Android recrea la pantalla con los textos nuevos y, al
+     * recrearse, MainActivity le avisa a Notificaciones del idioma nuevo.
+     */
+    fun onLanguageSelected(selected: AppLanguage) {
+        if (selected == language.value) return
+        language.value = selected
+        languageRepository.set(selected)
     }
 
     /**

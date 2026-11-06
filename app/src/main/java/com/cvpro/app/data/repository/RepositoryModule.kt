@@ -1,7 +1,9 @@
 package com.cvpro.app.data.repository
 
 import com.cvpro.app.domain.repository.AuthRepository
+import com.cvpro.app.data.locale.SystemLanguageRepository
 import com.cvpro.app.domain.repository.JobOfferRepository
+import com.cvpro.app.domain.repository.LanguageRepository
 import com.cvpro.app.domain.repository.NotificationRepository
 import com.cvpro.app.domain.repository.SettingsRepository
 import com.cvpro.app.domain.repository.SkillsGapRepository
@@ -74,4 +76,8 @@ abstract class RepositoryModule {
     @Binds
     @Singleton
     abstract fun bindNotificationRepository(impl: ApiNotificationRepository): NotificationRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindLanguageRepository(impl: SystemLanguageRepository): LanguageRepository
 }
