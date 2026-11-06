@@ -366,7 +366,13 @@ private fun SkillsSection(
             return@SectionCard
         }
 
-        RadarChart(
+        Text(stringResource(R.string.skills_gap_ordinal_scale))
+        Text(stringResource(R.string.skills_gap_deficits_only))
+        if (analysis.marketStatus == "missing") Text(stringResource(R.string.skills_gap_market_missing))
+        if (analysis.status != "complete" || analysis.comparedSkills == 0)
+            Text(stringResource(R.string.skills_gap_incomplete))
+        if (analysis.canConfirmNoGaps) Text(stringResource(R.string.skills_gap_no_gaps))
+        if (analysis.skills.isNotEmpty()) RadarChart(
             labels = analysis.skills.map { it.name },
             series = listOf(
                 RadarSeries(

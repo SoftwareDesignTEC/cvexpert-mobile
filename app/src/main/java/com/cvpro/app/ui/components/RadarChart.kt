@@ -35,7 +35,7 @@ import kotlin.math.sin
 /**
  * Una capa del gráfico: un conjunto de valores con su color y su nombre.
  *
- * @property values un valor de 0 a 100 por cada eje, en el mismo orden que las etiquetas.
+ * @property values una posición ordinal de 1 a 4 por cada eje, en el mismo orden que las etiquetas.
  */
 data class RadarSeries(
     val label: String,
@@ -118,7 +118,7 @@ private fun DrawScope.drawRadarSeries(center: Offset, radius: Float, series: Rad
 
     val path = Path()
     series.values.forEachIndexed { index, value ->
-        val distance = radius * (value.coerceIn(0, 100) / 100f)
+        val distance = radius * (value.coerceIn(1, 4) / 4f)
         val point = radarPoint(center, distance, index, series.values.size)
         if (index == 0) path.moveTo(point.x, point.y) else path.lineTo(point.x, point.y)
     }

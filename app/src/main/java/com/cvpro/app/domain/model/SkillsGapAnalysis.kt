@@ -1,41 +1,31 @@
 package com.cvpro.app.domain.model
 
-/**
- * Una habilidad comparada contra lo que piden las ofertas del puesto al que apuntás.
- *
- * Los dos niveles van de 0 a 100. La brecha es cuánto le falta a tu nivel para alcanzar el
- * del mercado; si tu nivel ya es igual o mayor, no hay brecha.
- */
+/** cv-skill-v1: ordinal positions, never percentages. GET items contain deficits only. */
 data class SkillGapItem(
-    val name: String,
-    val userLevel: Int,
-    val marketLevel: Int,
-) {
-    val gap: Int = (marketLevel - userLevel).coerceAtLeast(0)
-}
-
-/**
- * Resultado del análisis de brechas: tus habilidades contra las del mercado, y qué cursos
- * te ayudarían a cerrar la diferencia.
- *
- * Campos iguales a SkillsGapAnalysis en docs/contract/models.ts.
- */
-data class SkillsGapAnalysis(
-    val skills: List<SkillGapItem>,
-    val recommendations: List<CourseRecommendation>,
-) {
-    val skillsToImprove: List<SkillGapItem> =
-        skills
-            .filter { it.gap > 0 }
-            .sortedByDescending { it.gap }
-}
-
-/** Curso sugerido para cerrar una brecha. */
-data class CourseRecommendation(
-    val id: String,
-    val title: String,
-    val platform: String,
-    val url: String,
-    val logoUrl: String?,
-    val duration: String?,
+    val name: String, val userLevel: Int, val marketLevel: Int,
+    val deficitSteps: Int = marketLevel - userLevel,
 )
+data class UnresolvedSkill(
+    val skillName: String, val reason: String, val userLevel: Int?, val marketLevel: Int?,
+)
+data class SkillsGapAnalysis(
+    val skills: List<SkillGapItem>, val recommendations: List<CourseRecommendation>,
+    val status: String = "incomplete", val comparedSkills: Int = 0,
+    val scaleKey: String = "cv-skill-v1", val marketStatus: String = "missing",
+    val unresolved: List<UnresolvedSkill> = emptyList(),
+    val page: Int = 1, val pageSize: Int = 100, val totalRecords: Int = skills.size,
+) {
+    val skillsToImprove get() = skills.sortedByDescending { it.deficitSteps }
+    val hasMore get() = page.toLong() * pageSize < totalRecords
+    val canConfirmNoGaps get() = status == "complete" && marketStatus == "available" &&
+        comparedSkills > 0 && unresolved.isEmpty() && totalRecords == 0
+}
+data class CourseRecommendation(
+    val id: String, val title: String, val platform: String, val url: String,
+    val logoUrl: String?, val duration: String?,
+)
+data class SkillInput(val skillName: String, val level: String?)
+enum class SkillsGapFailure {
+    DISABLED, UNAUTHORIZED, INPUT_REQUIRED, UNAVAILABLE, INVALID_INPUT, INCOMPATIBLE_RESPONSE,
+}
+class SkillsGapException(val failure: SkillsGapFailure) : Exception(failure.name)
