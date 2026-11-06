@@ -42,7 +42,11 @@
     <string name="settings_system_title">Preferencias del Sistema</string>
     <string name="settings_system_subtitle">Personaliza CVExpert para trabajar a tu manera.</string>
     <string name="settings_system_language">Idioma</string>
-    <string name="settings_system_language_value">Español</string>
+    <string name="settings_language_description">Elige en qué idioma ves la app.</string>
+    <string name="settings_language_system">Idioma del teléfono</string>
+    <string name="settings_language_spanish">Español</string>
+    <string name="settings_language_english">English</string>
+    <string name="settings_language_unsupported">En esta versión de Android la app usa el idioma del teléfono.</string>
     <string name="settings_system_timezone">Zona Horaria</string>
     <string name="settings_system_timezone_value">Costa Rica (GMT-6)</string>
     <string name="settings_help_title">¿Necesitas ayuda?</string>

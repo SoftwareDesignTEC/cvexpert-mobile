@@ -7,7 +7,7 @@
 -->
 <resources>
     <string name="app_name">CVExpert</string>
-    <string name="home_tagline">Your professional résumé, no prior experience needed.</string>
+    <string name="home_tagline">Your professional CV, no prior experience needed.</string>
     <string name="version_label">Version %1$s (build %2$d)</string>
 
     <!-- Login con Google -->
@@ -20,8 +20,8 @@
 
     <!-- Panel Principal -->
     <string name="home_greeting">Hi, %1$s</string>
-    <string name="home_subtitle">From here you can manage your résumés, your applications and the job offers that fit you.</string>
-    <string name="home_shortcut_templates">Create a résumé offline</string>
+    <string name="home_subtitle">From here you can manage your CVs, your applications and the job offers that fit you.</string>
+    <string name="home_shortcut_templates">Create a CV offline</string>
     <string name="home_shortcut_skills_gap">See areas to improve</string>
     <string name="home_sign_out">Sign out</string>
 
@@ -44,7 +44,11 @@
     <string name="settings_system_title">System Preferences</string>
     <string name="settings_system_subtitle">Set up CVExpert to work your way.</string>
     <string name="settings_system_language">Language</string>
-    <string name="settings_system_language_value">English</string>
+    <string name="settings_language_description">Choose the language you see the app in.</string>
+    <string name="settings_language_system">Phone language</string>
+    <string name="settings_language_spanish">Español</string>
+    <string name="settings_language_english">English</string>
+    <string name="settings_language_unsupported">On this Android version the app uses the phone language.</string>
     <string name="settings_system_timezone">Time Zone</string>
     <string name="settings_system_timezone_value">Costa Rica (GMT-6)</string>
     <string name="settings_help_title">Need help?</string>
@@ -70,8 +74,8 @@
     <string name="cv_detail_period_current">%1$s — Present</string>
 
     <!-- Editor de currículum -->
-    <string name="cv_editor_title">Edit résumé</string>
-    <string name="cv_editor_cv_title">Résumé title</string>
+    <string name="cv_editor_title">Edit CV</string>
+    <string name="cv_editor_cv_title">CV title</string>
     <string name="cv_editor_name">Full name</string>
     <string name="cv_editor_email">Email</string>
     <string name="cv_editor_phone">Phone</string>
@@ -102,9 +106,9 @@
     <string name="coming_soon_ai_title">AI generation</string>
     <string name="coming_soon_ai_message">You\'ll be able to describe your experience in a few words and the app will write it for you. Coming in the next phase of the project.</string>
     <string name="coming_soon_pdf_title">Export to PDF</string>
-    <string name="coming_soon_pdf_message">Downloading your résumé as a PDF comes in the next phase, together with the editor.</string>
+    <string name="coming_soon_pdf_message">Downloading your CV as a PDF comes in the next phase, together with the editor.</string>
     <string name="coming_soon_use_title">Use this template</string>
-    <string name="coming_soon_use_message">Choosing a template will open the editor to fill in your résumé. The editor comes in the next phase.</string>
+    <string name="coming_soon_use_message">Choosing a template will open the editor to fill in your CV. The editor comes in the next phase.</string>
     <string name="coming_soon_template_title">Download template</string>
     <string name="coming_soon_template_message">New templates will be available to download and use offline in the next phase.</string>
     <string name="coming_soon_preferences_title">Edit preferences</string>
@@ -130,29 +134,29 @@
 
     <!-- Mis Currículums -->
     <string name="cvs_eyebrow">YOUR PROFESSIONAL SPACE</string>
-    <string name="cvs_search_placeholder">Search résumés</string>
+    <string name="cvs_search_placeholder">Search CVs</string>
     <string name="cvs_create_subtitle">Choose how you want to start your next opportunity.</string>
     <string name="cvs_create_ai">AI mode</string>
     <string name="cvs_create_offline">Offline / Template</string>
     <string name="cvs_delete">Delete</string>
-    <string name="cvs_delete_title">Delete this résumé?</string>
+    <string name="cvs_delete_title">Delete this CV?</string>
     <string name="cvs_delete_message">\"%1$s\" will be deleted. This can\'t be undone.</string>
     <string name="cvs_delete_confirm">Delete</string>
     <string name="cvs_delete_cancel">Cancel</string>
     <string name="cvs_deleting">Deleting…</string>
-    <string name="cvs_empty_title">No résumés</string>
-    <string name="cvs_empty_message">Create your first résumé to get started.</string>
-    <string name="cvs_error_title">Résumés couldn\'t be loaded</string>
+    <string name="cvs_empty_title">No CVs</string>
+    <string name="cvs_empty_message">Create your first CV to get started.</string>
+    <string name="cvs_error_title">CVs couldn\'t be loaded</string>
 
     <!-- Panel Principal: secciones del diseño de Samuel -->
-    <string name="home_recent_cvs_title">Recent Résumés</string>
+    <string name="home_recent_cvs_title">Recent CVs</string>
     <string name="home_recent_cvs_see_all">See all</string>
-    <string name="home_recent_cvs_empty">You don\'t have any saved résumés yet.</string>
+    <string name="home_recent_cvs_empty">You don\'t have any saved CVs yet.</string>
     <string name="home_cv_preview">Preview</string>
     <string name="home_cv_updated_at">Modified %1$s</string>
     <string name="home_cv_edit">View/Edit</string>
     <string name="home_cv_download">Download</string>
-    <string name="home_create_cv_title">Create New Résumé</string>
+    <string name="home_create_cv_title">Create New CV</string>
     <string name="home_create_cv_subtitle">Start from scratch or use a template</string>
     <string name="home_create_cv_ai">AI</string>
     <string name="home_create_cv_offline">Offline</string>
@@ -167,7 +171,7 @@
 
     <!-- Navegación: nombres de los destinos del menú -->
     <string name="destination_dashboard">Dashboard</string>
-    <string name="destination_cvs">My Résumés</string>
+    <string name="destination_cvs">My CVs</string>
     <string name="destination_profile">My Profile</string>
     <string name="destination_jobs">Job Offers</string>
     <string name="destination_skills_gap">Skills Gap Analysis</string>
@@ -324,7 +328,7 @@
     <string name="settings_theme_dark">Dark</string>
 
     <!-- Pantallas todavía sin contenido -->
-    <string name="placeholder_cvs">Here you\'ll see your résumés, with preview, edit and download.</string>
+    <string name="placeholder_cvs">Here you\'ll see your CVs, with preview, edit and download.</string>
     <string name="placeholder_templates">Here you\'ll choose a template, even offline, or download new ones.</string>
 
     <!-- Error de perfil -->
