@@ -393,4 +393,16 @@
     <string name="job_type_freelance">Freelance</string>
     <string name="job_type_internship">Práctica</string>
     <string name="job_type_other">Otra</string>
+    <!-- Centro de notificaciones (servicio de Notificaciones) -->
+    <string name="notifications_title">Notificaciones</string>
+    <string name="notifications_filter_all">Todas</string>
+    <string name="notifications_filter_unread">No leídas</string>
+    <string name="notifications_mark_all">Marcar todas como leídas</string>
+    <string name="notifications_load_error">No se pudieron cargar tus notificaciones.</string>
+    <string name="notifications_empty_title">Sin notificaciones</string>
+    <string name="notifications_empty_message">Cuando haya novedades de tus postulaciones u ofertas nuevas, van a aparecer acá.</string>
+    <string name="notifications_empty_unread">Ya leíste todas tus notificaciones.</string>
+    <string name="notifications_load_more">Cargar más</string>
+    <string name="notifications_unread_label">Sin leer</string>
+    <string name="notifications_error_action">No se pudo completar la acción. Inténtalo de nuevo.</string>
 </resources>

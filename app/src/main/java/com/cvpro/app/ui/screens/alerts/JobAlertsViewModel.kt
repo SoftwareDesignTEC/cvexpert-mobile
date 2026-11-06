@@ -69,9 +69,7 @@ class JobAlertsViewModel @Inject constructor(
     private val _messages = Channel<Int>()
     val messages: Flow<Int> = _messages.receiveAsFlow()
 
-    init {
-        load()
-    }
+    // No se carga en init: el diálogo llama load() cada vez que se abre (ver su LaunchedEffect).
 
     /**
      * Pide las alertas y el perfil a la vez.
