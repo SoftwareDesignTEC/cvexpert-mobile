@@ -76,6 +76,10 @@ fun JobAlertsDialog(
     // para que el mismo mensaje dos veces seguidas se vea dos veces) y el texto se resuelve con
     // stringResource, así sigue el idioma del teléfono.
     var pendingMessage by remember { mutableStateOf<Pair<Int, Int>?>(null) }
+    // El ViewModel sobrevive al cerrar el diálogo, así que se recarga cada vez que se abre;
+    // si no, al volver se verían los datos de la vez anterior.
+    LaunchedEffect(Unit) { viewModel.load() }
+
     LaunchedEffect(viewModel) {
         var seq = 0
         viewModel.messages.collect { messageRes ->

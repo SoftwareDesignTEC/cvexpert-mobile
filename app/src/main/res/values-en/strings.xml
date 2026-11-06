@@ -388,4 +388,17 @@
     <string name="job_type_freelance">Freelance</string>
     <string name="job_type_internship">Internship</string>
     <string name="job_type_other">Other</string>
+
+    <!-- Centro de notificaciones (servicio de Notificaciones) -->
+    <string name="notifications_title">Notifications</string>
+    <string name="notifications_filter_all">All</string>
+    <string name="notifications_filter_unread">Unread</string>
+    <string name="notifications_mark_all">Mark all as read</string>
+    <string name="notifications_load_error">Your notifications couldn\'t be loaded.</string>
+    <string name="notifications_empty_title">No notifications</string>
+    <string name="notifications_empty_message">News about your applications and new job offers will show up here.</string>
+    <string name="notifications_empty_unread">You\'ve read all your notifications.</string>
+    <string name="notifications_load_more">Load more</string>
+    <string name="notifications_unread_label">Unread</string>
+    <string name="notifications_error_action">That couldn\'t be done. Please try again.</string>
 </resources>
