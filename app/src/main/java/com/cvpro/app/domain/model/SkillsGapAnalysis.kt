@@ -1,41 +1,57 @@
 package com.cvpro.app.domain.model
 
-/**
- * Una habilidad comparada contra lo que piden las ofertas del puesto al que apuntás.
- *
- * Los dos niveles van de 0 a 100. La brecha es cuánto le falta a tu nivel para alcanzar el
- * del mercado; si tu nivel ya es igual o mayor, no hay brecha.
- */
+/** Positions on cv-skill-v1 (1–4). The API returns only skills with a calculable deficit. */
 data class SkillGapItem(
     val name: String,
     val userLevel: Int,
     val marketLevel: Int,
-) {
-    val gap: Int = (marketLevel - userLevel).coerceAtLeast(0)
-}
+    val deficitSteps: Int,
+)
 
-/**
- * Resultado del análisis de brechas: tus habilidades contra las del mercado, y qué cursos
- * te ayudarían a cerrar la diferencia.
- *
- * Campos iguales a SkillsGapAnalysis en docs/contract/models.ts.
- */
+data class UnresolvedSkill(
+    val skillName: String,
+    val reason: String,
+    val userLevel: Int?,
+    val marketLevel: Int?,
+)
+
 data class SkillsGapAnalysis(
     val skills: List<SkillGapItem>,
     val recommendations: List<CourseRecommendation>,
+    val status: String,
+    val comparedSkills: Int,
+    val scaleKey: String,
+    val marketStatus: String,
+    val unresolved: List<UnresolvedSkill>,
+    val page: Long,
+    val pageSize: Int,
+    val totalRecords: Long,
 ) {
-    val skillsToImprove: List<SkillGapItem> =
-        skills
-            .filter { it.gap > 0 }
-            .sortedByDescending { it.gap }
+    val hasMore get() = page * pageSize < totalRecords
+    val hasFullCoverage get() = status == "complete" && marketStatus == "available" &&
+        comparedSkills > 0 && unresolved.isEmpty()
+    val canConfirmNoGaps get() = hasFullCoverage && totalRecords == 0L
 }
 
-/** Curso sugerido para cerrar una brecha. */
 data class CourseRecommendation(
     val id: String,
     val title: String,
     val platform: String,
     val url: String,
     val logoUrl: String?,
-    val duration: String?,
+    val durationHours: Int?,
 )
+
+data class SkillInput(val skillName: String, val level: SkillLevel?)
+
+fun List<SkillInput>.isValidSkillsGapInput(): Boolean =
+    size in 1..500 && distinctBy { it.skillName }.size == size && all {
+        val name = it.skillName
+        name.length in 1..200 && name.isNotBlank() && name == name.trim() && '\u0000' !in name
+    }
+
+enum class SkillsGapFailure {
+    UNAUTHORIZED, INPUT_REQUIRED, UNAVAILABLE, INVALID_INPUT, INCOMPATIBLE_RESPONSE,
+}
+
+class SkillsGapException(val failure: SkillsGapFailure) : Exception(failure.name)
