@@ -79,6 +79,25 @@
     <string name="cv_experience_type_volunteer">Volunteering</string>
     <string name="cv_experience_type_school_project">School project</string>
     <string name="cv_experience_type_informal">Informal work</string>
+    <string name="cv_ai_improve">Improve with AI</string>
+    <string name="cv_ai_improving">Writing…</string>
+    <string name="cv_ai_improve_hint">Write a short description and AI will rewrite it professionally.</string>
+    <string name="cv_ai_improved">Written with AI. Review it before saving.</string>
+    <string name="cv_ai_undo">Undo</string>
+    <string name="cv_ai_add_non_labor">Add non-work experience</string>
+    <string name="cv_ai_non_labor_title">Non-work experience</string>
+    <string name="cv_ai_non_labor_intro">Tell us in your own words what you did and AI will turn it into an experience for your CV.</string>
+    <string name="cv_ai_non_labor_type">Type</string>
+    <string name="cv_ai_non_labor_organization">Organization or place (optional)</string>
+    <string name="cv_ai_non_labor_position">What did you do?</string>
+    <string name="cv_ai_non_labor_description">Describe it in your own words</string>
+    <string name="cv_ai_translate">Translate with AI</string>
+    <string name="cv_ai_translating">Translating…</string>
+    <string name="ai_error_invalid">AI could not process the text. Check that all fields are filled in.</string>
+    <string name="ai_error_unavailable">AI is not available right now. Try again later.</string>
+    <string name="ai_error_timeout">AI took too long to respond. Try again.</string>
+    <string name="ai_error_network">No connection. Check your internet and try again.</string>
+    <string name="ai_error_generic">Something went wrong with AI. Try again.</string>
 
     <!-- Editor de currículum -->
     <string name="cv_editor_title">Edit CV</string>

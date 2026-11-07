@@ -1,5 +1,6 @@
 package com.cvpro.app.ui.components
 
+import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -7,11 +8,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -19,12 +24,14 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -32,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
@@ -39,9 +47,14 @@ import com.cvpro.app.R
 import com.cvpro.app.domain.model.Cv
 import com.cvpro.app.domain.model.Education
 import com.cvpro.app.domain.model.Language
+import com.cvpro.app.domain.model.NonLaborExperience
+import com.cvpro.app.domain.model.NonLaborType
 import com.cvpro.app.domain.model.Skill
 import com.cvpro.app.domain.model.WorkExperience
 import com.cvpro.app.domain.model.toCvDay
+import com.cvpro.app.ui.screens.cvs.CvAiActions
+import com.cvpro.app.ui.screens.cvs.CvAiResult
+import com.cvpro.app.ui.screens.cvs.CvAiUiState
 
 /**
  * Editor completo de un currículum.
@@ -62,9 +75,52 @@ fun CvEditorSheet(
     onSave: (Cv) -> Unit,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+    aiState: CvAiUiState = CvAiUiState(),
+    aiActions: CvAiActions = CvAiActions(),
 ) {
     // El borrador arranca del currículum recibido y se reinicia si llega otro distinto.
     var draft by remember(cv.id) { mutableStateOf(cv) }
+    // Descripción que tenía una experiencia antes de que la IA la redactara (posición y texto),
+    // para poder deshacerlo. Una sola a la vez: la última que se mejoró.
+    var undo by remember(cv.id) { mutableStateOf<Pair<Int, String>?>(null) }
+    var showNonLabor by remember(cv.id) { mutableStateOf(false) }
+
+    // Lo que devuelve la IA entra al borrador como si el usuario lo hubiera escrito: no se
+    // guarda hasta que toque "Guardar".
+    LaunchedEffect(aiState.result) {
+        when (val result = aiState.result) {
+            is CvAiResult.Expanded -> {
+                val experience = draft.workExperiences.getOrNull(result.index)
+                if (experience != null) {
+                    draft = draft.copy(
+                        workExperiences = draft.workExperiences.replaceAt(
+                            result.index,
+                            experience.copy(description = result.description),
+                        ),
+                    )
+                    undo = result.index to result.original
+                }
+            }
+            is CvAiResult.Translated -> {
+                draft = draft.copy(workExperiences = draft.workExperiences + result.experience)
+                showNonLabor = false
+            }
+            null -> return@LaunchedEffect
+        }
+        aiActions.onResultConsumed()
+    }
+
+    if (showNonLabor) {
+        NonLaborDialog(
+            isTranslating = aiState.isTranslating,
+            errorMessage = aiState.translateError,
+            onTranslate = aiActions.onTranslate,
+            onDismiss = {
+                showNonLabor = false
+                aiActions.onTranslateClosed()
+            },
+        )
+    }
     // Los errores solo aparecen después del primer intento de guardar, para no pintar el
     // formulario en rojo apenas se abre.
     var showErrors by remember(cv.id) { mutableStateOf(false) }
@@ -156,10 +212,14 @@ fun CvEditorSheet(
 
             draft.workExperiences.forEachIndexed { index, experience ->
                 EditorEntry(
+                    // Mientras la IA trabaja no se puede quitar: correría la posición de la
+                    // experiencia que está esperando su respuesta.
+                    removeEnabled = !aiState.isBusy,
                     onRemove = {
                         draft = draft.copy(
                             workExperiences = draft.workExperiences.removeAt(index),
                         )
+                        undo = null
                     },
                 ) {
                     fun update(changed: WorkExperience) {
@@ -188,10 +248,26 @@ fun CvEditorSheet(
                     )
                     FormTextField(
                         value = experience.description,
-                        onValueChange = { update(experience.copy(description = it)) },
+                        onValueChange = {
+                            update(experience.copy(description = it))
+                            // Si la corrige a mano, "Deshacer" ya no tiene sentido.
+                            if (undo?.first == index) undo = null
+                        },
                         label = stringResource(R.string.cv_editor_description),
                         singleLine = false,
                         imeAction = ImeAction.Default,
+                    )
+                    AiImproveRow(
+                        isLoading = aiState.expandingIndex == index,
+                        enabled = !aiState.isBusy && experience.description.isNotBlank(),
+                        showHint = experience.description.isBlank(),
+                        errorMessage = aiState.expandError?.takeIf { it.index == index }?.message,
+                        canUndo = undo?.first == index,
+                        onImprove = { aiActions.onExpand(index, experience) },
+                        onUndo = {
+                            undo?.let { (_, original) -> update(experience.copy(description = original)) }
+                            undo = null
+                        },
                     )
                 }
             }
@@ -201,6 +277,12 @@ fun CvEditorSheet(
                 onClick = {
                     draft = draft.copy(workExperiences = draft.workExperiences + emptyExperience())
                 },
+            )
+            // Para quien no tiene empleos formales: voluntariados, proyectos del colegio o la
+            // U, trabajos informales. La IA los pasa a lenguaje de CV.
+            AddButton(
+                text = stringResource(R.string.cv_ai_add_non_labor),
+                onClick = { showNonLabor = true },
             )
 
             // ----- Educación -----
@@ -370,6 +452,7 @@ private fun EditorSection(
 private fun EditorEntry(
     onRemove: () -> Unit,
     modifier: Modifier = Modifier,
+    removeEnabled: Boolean = true,
     content: @Composable androidx.compose.foundation.layout.ColumnScope.() -> Unit,
 ) {
     Surface(
@@ -383,12 +466,17 @@ private fun EditorEntry(
             content()
             TextButton(
                 onClick = onRemove,
+                enabled = removeEnabled,
                 modifier = Modifier.align(Alignment.End),
             ) {
                 Text(
                     text = stringResource(R.string.cv_editor_remove),
                     style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.error,
+                    color = if (removeEnabled) {
+                        MaterialTheme.colorScheme.error
+                    } else {
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = DISABLED_ALPHA)
+                    },
                 )
             }
         }
@@ -501,6 +589,186 @@ private fun DateField(
         }
     }
 }
+
+/**
+ * "Mejorar con IA" debajo de la descripción de una experiencia, con su estado: cargando,
+ * error (el mismo botón sirve para reintentar) y "Deshacer" cuando la IA ya la redactó.
+ */
+@Composable
+private fun AiImproveRow(
+    isLoading: Boolean,
+    enabled: Boolean,
+    showHint: Boolean,
+    @StringRes errorMessage: Int?,
+    canUndo: Boolean,
+    onImprove: () -> Unit,
+    onUndo: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier.fillMaxWidth()) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            OutlinedButton(
+                onClick = onImprove,
+                enabled = enabled,
+                colors = outlinedOnCardColors(),
+            ) {
+                if (isLoading) {
+                    CircularProgressIndicator(
+                        strokeWidth = 2.dp,
+                        modifier = Modifier
+                            .padding(end = 8.dp)
+                            .size(16.dp),
+                    )
+                }
+                Text(
+                    text = stringResource(if (isLoading) R.string.cv_ai_improving else R.string.cv_ai_improve),
+                    style = MaterialTheme.typography.labelMedium,
+                )
+            }
+            if (canUndo) {
+                TextButton(onClick = onUndo) {
+                    Text(text = stringResource(R.string.cv_ai_undo), style = MaterialTheme.typography.labelMedium)
+                }
+            }
+        }
+        val note = when {
+            errorMessage != null -> errorMessage
+            canUndo -> R.string.cv_ai_improved
+            showHint -> R.string.cv_ai_improve_hint
+            else -> null
+        }
+        note?.let {
+            Text(
+                text = stringResource(it),
+                style = MaterialTheme.typography.bodySmall,
+                color = if (errorMessage != null) {
+                    MaterialTheme.colorScheme.error
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+            )
+        }
+    }
+}
+
+/**
+ * Traductor de experiencia no laboral: el usuario cuenta con sus palabras qué hizo y la IA
+ * lo devuelve como una experiencia de CV, que se agrega al final de la lista.
+ *
+ * Si se cierra mientras la IA trabaja, la respuesta se descarta.
+ */
+@Composable
+private fun NonLaborDialog(
+    isTranslating: Boolean,
+    @StringRes errorMessage: Int?,
+    onTranslate: (NonLaborExperience) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var type by remember { mutableStateOf(NonLaborType.VOLUNTEER) }
+    var organization by remember { mutableStateOf("") }
+    var position by remember { mutableStateOf("") }
+    var description by remember { mutableStateOf("") }
+    val canTranslate = !isTranslating && position.isNotBlank() && description.isNotBlank()
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(text = stringResource(R.string.cv_ai_non_labor_title)) },
+        text = {
+            Column(modifier = Modifier.verticalScroll(rememberScrollState())) {
+                Text(
+                    text = stringResource(R.string.cv_ai_non_labor_intro),
+                    style = MaterialTheme.typography.bodyMedium,
+                )
+                Text(
+                    text = stringResource(R.string.cv_ai_non_labor_type),
+                    style = MaterialTheme.typography.labelLarge,
+                    modifier = Modifier.padding(top = 12.dp),
+                )
+                NonLaborType.entries.forEach { option ->
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .selectable(
+                                selected = type == option,
+                                enabled = !isTranslating,
+                                role = Role.RadioButton,
+                                onClick = { type = option },
+                            ),
+                    ) {
+                        // El clic lo maneja la fila entera, que es más fácil de tocar.
+                        RadioButton(selected = type == option, onClick = null, enabled = !isTranslating)
+                        Text(
+                            text = stringResource(option.labelRes()),
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.padding(start = 8.dp, top = 8.dp, bottom = 8.dp),
+                        )
+                    }
+                }
+                FormTextField(
+                    value = organization,
+                    onValueChange = { organization = it },
+                    label = stringResource(R.string.cv_ai_non_labor_organization),
+                    enabled = !isTranslating,
+                )
+                FormTextField(
+                    value = position,
+                    onValueChange = { position = it },
+                    label = stringResource(R.string.cv_ai_non_labor_position),
+                    enabled = !isTranslating,
+                )
+                FormTextField(
+                    value = description,
+                    onValueChange = { description = it },
+                    label = stringResource(R.string.cv_ai_non_labor_description),
+                    singleLine = false,
+                    imeAction = ImeAction.Default,
+                    enabled = !isTranslating,
+                )
+                errorMessage?.let {
+                    Text(
+                        text = stringResource(it),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            // Si falló, el mismo botón sirve para reintentar.
+            TextButton(
+                onClick = { onTranslate(NonLaborExperience(type, organization, position, description)) },
+                enabled = canTranslate,
+            ) {
+                if (isTranslating) {
+                    CircularProgressIndicator(
+                        strokeWidth = 2.dp,
+                        modifier = Modifier
+                            .padding(end = 8.dp)
+                            .size(16.dp),
+                    )
+                }
+                Text(text = stringResource(if (isTranslating) R.string.cv_ai_translating else R.string.cv_ai_translate))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = stringResource(R.string.cv_editor_cancel))
+            }
+        },
+    )
+}
+
+/** Nombre de cada tipo, el mismo que usa el PDF. */
+@StringRes
+private fun NonLaborType.labelRes(): Int = when (this) {
+    NonLaborType.VOLUNTEER -> R.string.cv_experience_type_volunteer
+    NonLaborType.SCHOOL_PROJECT -> R.string.cv_experience_type_school_project
+    NonLaborType.INFORMAL -> R.string.cv_experience_type_informal
+}
+
+/** Opacidad de Material 3 para un texto deshabilitado. */
+private const val DISABLED_ALPHA = 0.38f
 
 /** Botón de agregar una entrada más a una lista. */
 @Composable

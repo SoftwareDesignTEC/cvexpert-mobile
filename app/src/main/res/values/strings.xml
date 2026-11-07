@@ -77,6 +77,25 @@
     <string name="cv_experience_type_volunteer">Voluntariado</string>
     <string name="cv_experience_type_school_project">Proyecto escolar</string>
     <string name="cv_experience_type_informal">Trabajo informal</string>
+    <string name="cv_ai_improve">Mejorar con IA</string>
+    <string name="cv_ai_improving">Redactando…</string>
+    <string name="cv_ai_improve_hint">Escribe una descripción breve y la IA la redacta de forma profesional.</string>
+    <string name="cv_ai_improved">Redactado con IA. Revísalo antes de guardar.</string>
+    <string name="cv_ai_undo">Deshacer</string>
+    <string name="cv_ai_add_non_labor">Agregar experiencia no laboral</string>
+    <string name="cv_ai_non_labor_title">Experiencia no laboral</string>
+    <string name="cv_ai_non_labor_intro">Cuenta con tus palabras qué hiciste y la IA lo convierte en una experiencia para tu CV.</string>
+    <string name="cv_ai_non_labor_type">Tipo</string>
+    <string name="cv_ai_non_labor_organization">Organización o lugar (opcional)</string>
+    <string name="cv_ai_non_labor_position">¿Qué hacías?</string>
+    <string name="cv_ai_non_labor_description">Cuéntalo con tus palabras</string>
+    <string name="cv_ai_translate">Traducir con IA</string>
+    <string name="cv_ai_translating">Traduciendo…</string>
+    <string name="ai_error_invalid">La IA no pudo procesar el texto. Revisa que los campos estén completos.</string>
+    <string name="ai_error_unavailable">La IA no está disponible ahora. Intenta de nuevo más tarde.</string>
+    <string name="ai_error_timeout">La IA tardó demasiado en responder. Intenta de nuevo.</string>
+    <string name="ai_error_network">No hay conexión. Revisa tu internet e intenta de nuevo.</string>
+    <string name="ai_error_generic">Algo salió mal con la IA. Intenta de nuevo.</string>
 
     <!-- Editor de currículum -->
     <string name="cv_editor_title">Editar currículum</string>
