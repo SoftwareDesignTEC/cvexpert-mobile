@@ -63,54 +63,60 @@ fun SkillsGapScreen(
     SkillsGapContent(
         uiState = uiState,
         onRetryClick = viewModel::onRetryClick,
+        onOpenInput = viewModel::openInput,
+        onPage = viewModel::onPage,
         modifier = modifier,
     )
+    if (uiState.inputStage != null) SkillsInputDialog(uiState, viewModel)
 }
 
-/**
- * Análisis de brecha, siguiendo el diseño de Samuel.
- *
- * Tres bloques: la comparativa contra el mercado con el radar, los puntos a mejorar
- * ordenados por brecha, y los cursos recomendados.
- */
 @Composable
-fun SkillsGapContent(
+private fun SkillsGapContent(
     uiState: SkillsGapUiState,
     onRetryClick: () -> Unit,
+    onOpenInput: () -> Unit,
+    onPage: (Long) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val analysis = uiState.analysis
-
-    when {
-        uiState.isLoading -> Box(
-            modifier = modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center,
-        ) {
-            CircularProgressIndicator()
+    Column(
+        modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        if (uiState.isLoading) CircularProgressIndicator()
+        uiState.errorMessage?.let { Text(stringResource(it)) }
+        if (uiState.inputRequired || uiState.analysis != null) {
+            Button(onClick = onOpenInput) {
+                val label = if (uiState.inputRequired) {
+                    R.string.skills_gap_input_title
+                } else {
+                    R.string.skills_gap_update_skills
+                }
+                Text(stringResource(label))
+            }
         }
-
-        uiState.errorMessage != null -> Box(
-            modifier = modifier
-                .fillMaxSize()
-                .padding(16.dp),
-            contentAlignment = Alignment.Center,
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                Text(
-                    text = stringResource(uiState.errorMessage),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Button(onClick = onRetryClick) {
-                    Text(stringResource(R.string.applications_retry))
+        if (uiState.errorMessage != null && !uiState.inputRequired) {
+            OutlinedButton(onClick = onRetryClick) {
+                Text(stringResource(R.string.applications_retry))
+            }
+        }
+        uiState.analysis?.let { analysis ->
+            SkillsGapSections(analysis)
+            if (analysis.page > 1 || analysis.hasMore) {
+                Text(stringResource(R.string.skills_gap_page, analysis.page, analysis.totalRecords))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (analysis.page > 1) {
+                        OutlinedButton(onClick = { onPage(analysis.page - 1) }) {
+                            Text(stringResource(R.string.skills_gap_previous))
+                        }
+                    }
+                    if (analysis.hasMore) {
+                        OutlinedButton(onClick = { onPage(analysis.page + 1) }) {
+                            Text(stringResource(R.string.skills_gap_next))
+                        }
+                    }
                 }
             }
         }
-
-        analysis != null -> SkillsGapSections(analysis = analysis, modifier = modifier)
     }
 }
 
@@ -121,58 +127,39 @@ private fun SkillsGapSections(
 ) {
     Column(
         modifier = modifier
-            .fillMaxSize()
-            .verticalScroll(rememberScrollState())
+            .fillMaxWidth()
             .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        ComparisonCard(analysis = analysis)
-        ImprovementPointsCard(skills = analysis.skillsToImprove)
-        CoursesCard(courses = analysis.recommendations)
+        Text(stringResource(R.string.skills_gap_coverage, analysis.comparedSkills, analysis.unresolved.size))
+        if (analysis.marketStatus == "missing") {
+            Text(stringResource(R.string.skills_gap_market_missing))
+        }
+        when (analysis.status) {
+            "empty" -> Text(stringResource(R.string.skills_gap_empty))
+            "incomplete" -> Text(stringResource(R.string.skills_gap_incomplete))
+        }
+        analysis.unresolved.forEach { skill ->
+            Text(stringResource(
+                R.string.skills_gap_review_skill,
+                skill.skillName,
+                stringResource(unresolvedReasonMessage(skill.reason)),
+            ))
+        }
+        if (analysis.skills.isNotEmpty()) {
+            Text(stringResource(R.string.skills_gap_ordinal_scale))
+            Text(stringResource(R.string.skills_gap_deficits_only))
+            ComparisonCard(analysis = analysis)
+            ImprovementPointsCard(skills = analysis.skills)
+            CoursesCard(courses = analysis.recommendations)
+        } else if (analysis.canConfirmNoGaps) {
+            Text(stringResource(R.string.skills_gap_no_gaps))
+        } else if (analysis.totalRecords > 0) {
+            Text(stringResource(R.string.skills_gap_empty_page))
+        }
         Spacer(modifier = Modifier.height(8.dp))
     }
 }
-
-/** Antetítulo, título y la marca de actualización. */
-/** Antetítulo, título y la marca de actualización. */
-@Composable
-private fun SkillsGapHeader(modifier: Modifier = Modifier) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = modifier.fillMaxWidth(),
-    ) {
-        Column(modifier = Modifier.weight(1f)) {
-            Text(
-                text = stringResource(R.string.skills_gap_eyebrow),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.primary,
-            )
-
-            Text(
-                text = stringResource(R.string.skills_gap_screen_title),
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.onBackground,
-            )
-        }
-
-        // TODO: el análisis no trae createdAt en el dominio, así que la fecha es fija.
-        Surface(
-            color = MaterialTheme.colorScheme.surface,
-            shape = RoundedCornerShape(50),
-        ) {
-            Text(
-                text = stringResource(R.string.skills_gap_updated),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(
-                    horizontal = 10.dp,
-                    vertical = 5.dp,
-                ),
-            )
-        }
-    }
-}
-
 
 /** El radar con las dos series y su leyenda. */
 @Composable
@@ -364,7 +351,7 @@ private fun ImprovementRow(
                 modifier = Modifier.padding(start = 10.dp),
             )
             Text(
-                text = skill.name,
+                text = "${skill.name} (${skill.userLevel} → ${skill.marketLevel})",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface,
                 maxLines = 1,
@@ -374,7 +361,7 @@ private fun ImprovementRow(
                     .padding(start = 8.dp),
             )
             Text(
-                text = stringResource(R.string.skills_gap_gap_percent, skill.gap),
+                text = stringResource(R.string.skills_gap_deficit_steps, skill.deficitSteps),
                 style = MaterialTheme.typography.labelSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(end = 12.dp),
@@ -494,11 +481,9 @@ private fun CourseCard(
                 modifier = Modifier.padding(top = 6.dp),
             ) {
                 Text(
-                    text = stringResource(
-                        R.string.skills_gap_course_duration,
-                        course.duration
-                            ?: stringResource(R.string.skills_gap_course_no_duration),
-                    ),
+                    text = course.durationHours?.let {
+                        stringResource(R.string.skills_gap_course_duration, it)
+                    } ?: stringResource(R.string.skills_gap_course_no_duration),
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -540,11 +525,20 @@ private fun SectionCard(
     }
 }
 
-@Preview(name = "Brechas · claro", widthDp = 390, heightDp = 1200)
+private fun unresolvedReasonMessage(reason: String): Int = when (reason) {
+    "MISSING_USER_SKILL" -> R.string.skills_gap_missing_user_skill
+    "MISSING_MARKET_REQUIREMENT" -> R.string.skills_gap_missing_requirement
+    "UNKNOWN_LEVEL" -> R.string.skills_gap_unknown_level
+    "UNKNOWN_SCALE" -> R.string.skills_gap_unknown_scale
+    "SCALE_MISMATCH" -> R.string.skills_gap_scale_mismatch
+    else -> R.string.skills_gap_unresolved_other
+}
+
+@Preview(name = "Brechas · claro", widthDp = 390)
 @Composable
 private fun SkillsGapPreviewLight() = SkillsGapPreview(darkTheme = false)
 
-@Preview(name = "Brechas · oscuro", widthDp = 390, heightDp = 1200)
+@Preview(name = "Brechas · oscuro", widthDp = 390)
 @Composable
 private fun SkillsGapPreviewDark() = SkillsGapPreview(darkTheme = true)
 
@@ -554,29 +548,12 @@ private fun SkillsGapPreview(darkTheme: Boolean) {
         Surface(color = MaterialTheme.colorScheme.background) {
             SkillsGapContent(
                 uiState = SkillsGapUiState(
-                    analysis = SkillsGapAnalysis(
-                        skills = listOf(
-                            SkillGapItem("Python", 70, 88),
-                            SkillGapItem("SQL", 55, 73),
-                            SkillGapItem("Visualización", 60, 69),
-                            SkillGapItem("Machine Learning", 40, 54),
-                            SkillGapItem("Cloud", 45, 60),
-                            SkillGapItem("Comunicación", 75, 70),
-                            SkillGapItem("Liderazgo", 65, 60),
-                        ),
-                        recommendations = listOf(
-                            CourseRecommendation(
-                                id = "1",
-                                title = "Python para análisis de datos",
-                                platform = "DataCamp",
-                                url = "https://ejemplo.com",
-                                logoUrl = null,
-                                duration = "6 horas",
-                            ),
-                        ),
-                    ),
+                    inputRequired = true,
+                    errorMessage = R.string.skills_gap_input_required,
                 ),
                 onRetryClick = {},
+                onOpenInput = {},
+                onPage = {},
             )
         }
     }

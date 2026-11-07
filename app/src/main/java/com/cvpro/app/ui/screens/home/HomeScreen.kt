@@ -363,23 +363,30 @@ private fun SkillsSection(
 
         if (analysis == null) {
             EmptySectionText(stringResource(R.string.home_skills_empty))
-            return@SectionCard
+        } else {
+            if (analysis.marketStatus == "missing") Text(stringResource(R.string.skills_gap_market_missing))
+            if (analysis.status == "empty") Text(stringResource(R.string.skills_gap_empty))
+            if (analysis.status == "incomplete") Text(stringResource(R.string.skills_gap_incomplete))
+            if (analysis.canConfirmNoGaps) Text(stringResource(R.string.skills_gap_no_gaps))
+            if (analysis.skills.isNotEmpty()) {
+                Text(stringResource(R.string.skills_gap_ordinal_scale))
+                Text(stringResource(R.string.skills_gap_deficits_only))
+                RadarChart(
+                    labels = analysis.skills.map { it.name },
+                    series = listOf(
+                        RadarSeries(
+                            label = stringResource(R.string.skills_gap_series_user),
+                            values = analysis.skills.map { it.userLevel },
+                            color = MaterialTheme.colorScheme.primary,
+                        ),
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(240.dp)
+                        .padding(top = 12.dp),
+                )
+            }
         }
-
-        RadarChart(
-            labels = analysis.skills.map { it.name },
-            series = listOf(
-                RadarSeries(
-                    label = stringResource(R.string.skills_gap_series_user),
-                    values = analysis.skills.map { it.userLevel },
-                    color = MaterialTheme.colorScheme.primary,
-                ),
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(240.dp)
-                .padding(top = 12.dp),
-        )
 
         OutlinedButton(
             onClick = onSeeAreasClick,

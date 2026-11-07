@@ -13,6 +13,9 @@
 #   - hiltLifecycleViewmodelCompose 1.4+ exige compileSdk 37 y AGP 9.1
 #   - navigation 2.10+ exige compileSdk 37 y AGP 9.1
 [versions]
+junit = "4.13.2"
+coroutinesTest = "1.10.2"
+okhttpTest = "4.12.0"
 agp = "8.13.2"
 kotlin = "2.3.21"
 ksp = "2.3.12"
@@ -30,6 +33,9 @@ retrofit = "2.12.0"
 coil = "2.7.0"
 
 [libraries]
+junit = { group = "junit", name = "junit", version.ref = "junit" }
+kotlinx-coroutines-test = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-test", version.ref = "coroutinesTest" }
+okhttp-mockwebserver = { group = "com.squareup.okhttp3", name = "mockwebserver", version.ref = "okhttpTest" }
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-activity-compose = { group = "androidx.activity", name = "activity-compose", version.ref = "activityCompose" }
 androidx-lifecycle-runtime-ktx = { group = "androidx.lifecycle", name = "lifecycle-runtime-ktx", version.ref = "lifecycle" }
