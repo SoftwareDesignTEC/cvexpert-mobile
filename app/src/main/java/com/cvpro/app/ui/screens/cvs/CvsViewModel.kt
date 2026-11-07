@@ -1,14 +1,17 @@
 package com.cvpro.app.ui.screens.cvs
 
+import android.net.Uri
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import android.net.Uri
 import com.cvpro.app.data.pdf.CvPdfGenerator
 import com.cvpro.app.domain.model.Cv
 import com.cvpro.app.domain.repository.CvRepository
 import com.cvpro.app.domain.repository.TemplateRepository
 import com.cvpro.app.domain.repository.layoutFor
+import com.cvpro.app.ui.components.toUserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,14 +19,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 data class CvsUiState(
     val cvs: List<Cv> = emptyList(),
     val query: String = "",
     val isLoading: Boolean = false,
     val isGeneratingPdf: Boolean = false,
-    val error: String? = null,
+    @param:StringRes val error: Int? = null,
     val deletingId: String? = null,
     val isSaving: Boolean = false,
 )
@@ -53,7 +55,7 @@ class CvsViewModel @Inject constructor(
                 _uiState.update { it.copy(isGeneratingPdf = false) }
             } catch (exception: Exception) {
                 _uiState.update {
-                    it.copy(isGeneratingPdf = false, error = exception.message)
+                    it.copy(isGeneratingPdf = false, error = exception.toUserMessage())
                 }
             }
         }
@@ -115,7 +117,7 @@ class CvsViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         deletingId = null,
-                        error = exception.message ?: "Error al eliminar el CV",
+                        error = exception.toUserMessage(),
                     )
                 }
             }
@@ -146,7 +148,7 @@ class CvsViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isSaving = false,
-                        error = exception.message ?: "Error al guardar el CV",
+                        error = exception.toUserMessage(),
                     )
                 }
             }
@@ -189,7 +191,7 @@ class CvsViewModel @Inject constructor(
                     it.copy(
                         cvs = emptyList(),
                         isLoading = false,
-                        error = exception.message ?: "Error al cargar los CV",
+                        error = exception.toUserMessage(),
                     )
                 }
             }

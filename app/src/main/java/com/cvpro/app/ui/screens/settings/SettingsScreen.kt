@@ -487,7 +487,7 @@ fun SettingsContent(
             SessionsDialog(
                 sessions = uiState.sessions,
                 isLoading = uiState.isLoadingSessions,
-                error = uiState.error,
+                error = uiState.error?.let { stringResource(it) },
                 onDismiss = {
                     openDialog = null
                 },
@@ -501,7 +501,7 @@ fun SettingsContent(
                 ),
                 document = uiState.privacyPolicy,
                 isLoading = uiState.isLoadingLegal,
-                error = uiState.error,
+                error = uiState.error?.let { stringResource(it) },
                 onDismiss = {
                     openDialog = null
                 },
@@ -515,7 +515,7 @@ fun SettingsContent(
                 ),
                 document = uiState.terms,
                 isLoading = uiState.isLoadingLegal,
-                error = uiState.error,
+                error = uiState.error?.let { stringResource(it) },
                 onDismiss = {
                     openDialog = null
                 },

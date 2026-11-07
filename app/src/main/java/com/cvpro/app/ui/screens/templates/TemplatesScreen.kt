@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -77,9 +78,11 @@ fun TemplatesScreen(
     }
 
     // El resultado de usar o descargar una plantilla se avisa abajo y se limpia solo.
+    // LocalResources (y no context.getString) para que el texto siga el idioma si cambia la configuración.
+    val resources = LocalResources.current
     LaunchedEffect(uiState.message) {
         val mensaje = uiState.message ?: return@LaunchedEffect
-        snackbarHostState.showSnackbar(mensaje)
+        snackbarHostState.showSnackbar(resources.getString(mensaje.res, *mensaje.args.toTypedArray()))
         viewModel.onMessageShown()
     }
 
@@ -121,7 +124,7 @@ fun TemplatesContent(
                 CircularProgressIndicator()
             }
 
-            uiState.error != null -> TemplatesError(message = uiState.error, onRetry = onRetry)
+            uiState.error != null -> TemplatesError(message = stringResource(uiState.error), onRetry = onRetry)
 
             uiState.templates.isEmpty() -> EmptyState(
                 title = stringResource(R.string.templates_empty_title),

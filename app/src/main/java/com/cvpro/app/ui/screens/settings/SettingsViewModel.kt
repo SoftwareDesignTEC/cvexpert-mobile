@@ -1,28 +1,29 @@
 package com.cvpro.app.ui.screens.settings
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cvpro.app.domain.model.ActiveSession
+import com.cvpro.app.domain.model.HelpContact
+import com.cvpro.app.domain.model.LegalDocument
 import com.cvpro.app.domain.model.ThemePreference
+import com.cvpro.app.domain.repository.AppLanguage
+import com.cvpro.app.domain.repository.AuthRepository
+import com.cvpro.app.domain.repository.LanguageRepository
 import com.cvpro.app.domain.repository.NotificationSettings
 import com.cvpro.app.domain.repository.NotificationType
-import com.cvpro.app.domain.repository.AppLanguage
-import com.cvpro.app.domain.repository.LanguageRepository
+import com.cvpro.app.domain.repository.SettingsContentRepository
 import com.cvpro.app.domain.repository.SettingsRepository
+import com.cvpro.app.ui.components.toUserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
-import javax.inject.Inject
-
-import com.cvpro.app.domain.model.ActiveSession
-import com.cvpro.app.domain.model.HelpContact
-import com.cvpro.app.domain.model.LegalDocument
-import com.cvpro.app.domain.repository.AuthRepository
-import com.cvpro.app.domain.repository.SettingsContentRepository
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 /** Estado de Configuración: el tema y los avisos. */
 data class SettingsUiState(
@@ -44,7 +45,7 @@ data class SettingsUiState(
 
     val helpContacts: List<HelpContact> = emptyList(),
 
-    val error: String? = null,
+    @param:StringRes val error: Int? = null,
 )
 
 private data class RemoteSettingsState(
@@ -60,7 +61,7 @@ private data class RemoteSettingsState(
 
     val helpContacts: List<HelpContact> = emptyList(),
 
-    val error: String? = null,
+    @param:StringRes val error: Int? = null,
 )
 
 
@@ -187,7 +188,7 @@ class SettingsViewModel @Inject constructor(
                 remoteState.update {
                     it.copy(
                         isLoadingSessions = false,
-                        error = exception.message,
+                        error = exception.toUserMessage(),
                     )
                 }
             }
@@ -218,7 +219,7 @@ class SettingsViewModel @Inject constructor(
                 remoteState.update {
                     it.copy(
                         isLoadingLegal = false,
-                        error = exception.message,
+                        error = exception.toUserMessage(),
                     )
                 }
             }
@@ -249,7 +250,7 @@ class SettingsViewModel @Inject constructor(
                 remoteState.update {
                     it.copy(
                         isLoadingLegal = false,
-                        error = exception.message,
+                        error = exception.toUserMessage(),
                     )
                 }
             }
@@ -282,7 +283,7 @@ class SettingsViewModel @Inject constructor(
                 remoteState.update {
                     it.copy(
                         isExporting = false,
-                        error = exception.message,
+                        error = exception.toUserMessage(),
                     )
                 }
             }

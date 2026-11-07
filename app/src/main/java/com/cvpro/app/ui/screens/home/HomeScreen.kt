@@ -134,6 +134,7 @@ fun HomeContent(
         ComingSoonSheet(
             title = stringResource(aviso.titleRes),
             message = stringResource(aviso.messageRes),
+            badge = stringResource(aviso.badgeRes),
             onDismiss = { comingSoon = null },
         )
     }
@@ -636,6 +637,7 @@ private fun HomePreview(darkTheme: Boolean) {
 private enum class HomeComingSoon(
     @param:StringRes val titleRes: Int,
     @param:StringRes val messageRes: Int,
+    @param:StringRes val badgeRes: Int,
 ) {
-    AI(R.string.coming_soon_ai_title, R.string.coming_soon_ai_message),
+    AI(R.string.coming_soon_ai_title, R.string.coming_soon_ai_message, R.string.coming_soon_ai_badge),
 }

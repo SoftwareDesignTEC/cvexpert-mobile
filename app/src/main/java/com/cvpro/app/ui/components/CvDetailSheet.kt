@@ -139,6 +139,9 @@ fun CvDetailSheet(
  * Se usa en los botones que el diseño dibuja pero la Fase I no cubre: la generación con
  * IA, la exportación a PDF y la descarga de plantillas. Abrir una pantalla que lo explica
  * es más claro que un botón que no responde.
+ *
+ * [badge] es la etiqueta de arriba: "Próximamente" por defecto. La IA ya existe dentro del
+ * editor, así que su aviso usa "En el editor" y explica dónde encontrarla.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -147,6 +150,7 @@ fun ComingSoonSheet(
     message: String,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+    badge: String = stringResource(R.string.coming_soon_badge),
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -165,7 +169,7 @@ fun ComingSoonSheet(
                 shape = RoundedCornerShape(50),
             ) {
                 Text(
-                    text = stringResource(R.string.coming_soon_badge),
+                    text = badge,
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
