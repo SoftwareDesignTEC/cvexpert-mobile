@@ -165,8 +165,10 @@ fun CvsScreen(
     onTemplatesClick: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: CvsViewModel = hiltViewModel(),
+    aiViewModel: CvAiViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val aiState by aiViewModel.uiState.collectAsStateWithLifecycle()
     val generatedPdf by viewModel.generatedPdf.collectAsStateWithLifecycle()
     val savedCv by viewModel.savedCv.collectAsStateWithLifecycle()
     val context = LocalContext.current
@@ -193,6 +195,14 @@ fun CvsScreen(
         onSaveCv = viewModel::saveCv,
         onSaveHandled = viewModel::onSaveHandled,
         onTemplatesClick = onTemplatesClick,
+        aiState = aiState,
+        aiActions = CvAiActions(
+            onExpand = aiViewModel::expand,
+            onTranslate = aiViewModel::translate,
+            onResultConsumed = aiViewModel::onResultConsumed,
+            onTranslateClosed = aiViewModel::onTranslateClosed,
+        ),
+        onEditorChanged = aiViewModel::reset,
         modifier = modifier,
     )
 }
@@ -215,9 +225,16 @@ fun CvsContent(
     onSaveHandled: () -> Unit,
     onTemplatesClick: () -> Unit,
     modifier: Modifier = Modifier,
+    aiState: CvAiUiState = CvAiUiState(),
+    aiActions: CvAiActions = CvAiActions(),
+    onEditorChanged: () -> Unit = {},
 ) {
     // Currículum abierto en el editor, o null si no hay ninguno.
     var editingCv by remember { mutableStateOf<Cv?>(null) }
+
+    // Al abrir o cerrar el editor la IA vuelve a cero: una respuesta que llegue tarde no
+    // tiene que caer en otro currículum.
+    LaunchedEffect(editingCv?.id) { onEditorChanged() }
     var comingSoon by remember { mutableStateOf<ComingSoon?>(null) }
     // Currículum que el usuario pidió borrar, a la espera de que confirme.
     var cvToDelete by remember { mutableStateOf<Cv?>(null) }
@@ -228,6 +245,8 @@ fun CvsContent(
             isSaving = uiState.isSaving,
             onSave = onSaveCv,
             onDismiss = { editingCv = null },
+            aiState = aiState,
+            aiActions = aiActions,
         )
     }
 

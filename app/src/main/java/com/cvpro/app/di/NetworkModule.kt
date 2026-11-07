@@ -5,6 +5,7 @@ import com.cvpro.app.data.remote.AuthInterceptor
 import com.cvpro.app.data.remote.LoggingInterceptor
 import com.cvpro.app.data.remote.api.JobApi
 import com.cvpro.app.data.remote.api.NotificationApi
+import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
 import dagger.Module
@@ -41,6 +42,7 @@ object NetworkModule {
         OkHttpClient.Builder()
             .addInterceptor(authInterceptor)
             .addInterceptor(loggingInterceptor)
+            .addInterceptor(aiTimeoutInterceptor)
             .connectTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .readTimeout(TIMEOUT_SECONDS, TimeUnit.SECONDS)
             .build()
@@ -131,4 +133,23 @@ object NetworkModule {
 
     /** Tiempo máximo de espera de una llamada, en segundos. */
     private const val TIMEOUT_SECONDS = 20L
+
+    // Lo que puede tardar la IA en redactar una respuesta. Más que el resto de la API,
+    // porque un modelo de lenguaje suele demorar varios segundos.
+    private const val AI_TIMEOUT_SECONDS = 60L
+
+    /**
+     * Le da más tiempo de espera solo a las rutas de IA del servicio de CVs (/cvs/ai/...).
+     * Así no hace falta un segundo cliente HTTP, y el resto de la app sigue cortando a los
+     * 20 segundos para mostrar el error rápido.
+     */
+    private val aiTimeoutInterceptor = Interceptor { chain ->
+        val isAi = chain.request().url.encodedPath.contains("/cvs/ai/")
+        if (isAi) {
+            chain.withReadTimeout(AI_TIMEOUT_SECONDS.toInt(), TimeUnit.SECONDS)
+                .proceed(chain.request())
+        } else {
+            chain.proceed(chain.request())
+        }
+    }
 }
