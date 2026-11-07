@@ -261,6 +261,7 @@ fun CvsContent(
         ComingSoonSheet(
             title = stringResource(aviso.titleRes),
             message = stringResource(aviso.messageRes),
+            badge = stringResource(aviso.badgeRes),
             onDismiss = { comingSoon = null },
         )
     }
@@ -308,7 +309,7 @@ fun CvsContent(
                 CircularProgressIndicator()
             }
 
-            uiState.error != null -> CvsError(message = uiState.error, onRetry = onRetry)
+            uiState.error != null -> CvsError(message = stringResource(uiState.error), onRetry = onRetry)
 
             uiState.cvs.isEmpty() -> EmptyState(
                 title = stringResource(R.string.cvs_empty_title),
@@ -572,6 +573,7 @@ private fun CvsPreview(darkTheme: Boolean) {
 private enum class ComingSoon(
     @param:StringRes val titleRes: Int,
     @param:StringRes val messageRes: Int,
+    @param:StringRes val badgeRes: Int,
 ) {
-    AI(R.string.coming_soon_ai_title, R.string.coming_soon_ai_message),
+    AI(R.string.coming_soon_ai_title, R.string.coming_soon_ai_message, R.string.coming_soon_ai_badge),
 }

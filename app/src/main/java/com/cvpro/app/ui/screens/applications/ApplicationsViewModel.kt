@@ -1,17 +1,19 @@
 package com.cvpro.app.ui.screens.applications
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cvpro.app.domain.model.ApplicationStatus
 import com.cvpro.app.domain.model.JobApplication
 import com.cvpro.app.domain.repository.ApplicationRepository
+import com.cvpro.app.ui.components.toUserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * Estado del rastreador de postulaciones.
@@ -26,7 +28,7 @@ data class ApplicationsUiState(
     val selectedStatus: ApplicationStatus = ApplicationStatus.APPLIED,
     val totalRecords: Int = 0,
     val isLoading: Boolean = false,
-    val error: String? = null,
+    @param:StringRes val error: Int? = null,
 ) {
     /** Postulaciones de la pestaña abierta. */
     val visibleApplications: List<JobApplication> =
@@ -84,7 +86,7 @@ class ApplicationsViewModel @Inject constructor(
                     )
                 }
             } catch (exception: Exception) {
-                _uiState.update { it.copy(error = exception.message) }
+                _uiState.update { it.copy(error = exception.toUserMessage()) }
             }
         }
     }
@@ -113,7 +115,7 @@ class ApplicationsViewModel @Inject constructor(
                     it.copy(
                         applications = emptyList(),
                         isLoading = false,
-                        error = exception.message,
+                        error = exception.toUserMessage(),
                     )
                 }
             }

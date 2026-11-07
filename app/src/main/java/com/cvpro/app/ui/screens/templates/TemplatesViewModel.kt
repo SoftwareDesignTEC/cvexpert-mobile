@@ -1,28 +1,32 @@
 package com.cvpro.app.ui.screens.templates
 
 import android.net.Uri
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cvpro.app.R
 import com.cvpro.app.data.download.TemplatePreviewDownloader
 import com.cvpro.app.domain.model.CvTemplate
 import com.cvpro.app.domain.repository.CvRepository
 import com.cvpro.app.domain.repository.TemplateRepository
+import com.cvpro.app.ui.components.UiMessage
+import com.cvpro.app.ui.components.toUserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 data class TemplatesUiState(
     val templates: List<CvTemplate> = emptyList(),
     val isLoading: Boolean = false,
-    val error: String? = null,
+    @param:StringRes val error: Int? = null,
     /** Plantilla que se está descargando o usando, para apagar su botón mientras tanto. */
     val busyTemplateId: String? = null,
     /** Aviso del resultado de la última acción: se muestra y se limpia. */
-    val message: String? = null,
+    val message: UiMessage? = null,
 )
 
 @HiltViewModel
@@ -68,14 +72,14 @@ class TemplatesViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         busyTemplateId = null,
-                        message = "Se creó \"${cv.title}\" en Mis Currículums",
+                        message = UiMessage(R.string.templates_cv_created, listOf(cv.title)),
                     )
                 }
             } catch (exception: Exception) {
                 _uiState.update {
                     it.copy(
                         busyTemplateId = null,
-                        message = exception.message ?: "No se pudo crear el currículum",
+                        message = UiMessage(exception.toUserMessage()),
                     )
                 }
             }
@@ -101,14 +105,14 @@ class TemplatesViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         busyTemplateId = null,
-                        message = "Vista previa guardada en Descargas",
+                        message = UiMessage(R.string.templates_preview_saved),
                     )
                 }
             } catch (exception: Exception) {
                 _uiState.update {
                     it.copy(
                         busyTemplateId = null,
-                        message = exception.message ?: "No se pudo descargar la plantilla",
+                        message = UiMessage(exception.toUserMessage()),
                     )
                 }
             }
@@ -153,7 +157,7 @@ class TemplatesViewModel @Inject constructor(
                     it.copy(
                         templates = emptyList(),
                         isLoading = false,
-                        error = exception.message ?: "Error al cargar las plantillas",
+                        error = exception.toUserMessage(),
                     )
                 }
             }

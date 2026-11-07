@@ -134,7 +134,7 @@ fun ApplicationsTracker(
 
             uiState.error != null -> {
                 ApplicationsError(
-                    message = uiState.error,
+                    message = stringResource(uiState.error),
                     onRetry = onRetry,
                 )
             }

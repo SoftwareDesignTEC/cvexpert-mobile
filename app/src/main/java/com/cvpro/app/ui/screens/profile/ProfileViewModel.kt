@@ -11,7 +11,9 @@ import com.cvpro.app.domain.repository.AuthRepository
 import com.cvpro.app.domain.repository.ProfileRepository
 import com.cvpro.app.domain.repository.SkillsGapRepository
 import com.cvpro.app.ui.components.FormValidation
+import com.cvpro.app.ui.components.toUserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,7 +22,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 data class ProfileUiState(
     val name: String = "",
@@ -44,7 +45,7 @@ data class ProfileUiState(
 
     val isLoading: Boolean = false,
     val isSaving: Boolean = false,
-    val error: String? = null,
+    @param:StringRes val error: Int? = null,
 ) {
     val canSave: Boolean =
         name.isNotBlank() &&
@@ -140,7 +141,7 @@ class ProfileViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        error = exception.message,
+                        error = exception.toUserMessage(),
                     )
                 }
 
@@ -237,7 +238,7 @@ class ProfileViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isSaving = false,
-                        error = exception.message,
+                        error = exception.toUserMessage(),
                     )
                 }
 
