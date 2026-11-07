@@ -156,6 +156,9 @@ class CvAiViewModel @Inject constructor(
     @StringRes
     private fun Exception.toMessage(): Int = when {
         this is HttpException && code() == HTTP_BAD_REQUEST -> R.string.ai_error_invalid
+        // El servicio corta a los 30 s si Gemini no contesta y responde 503 (confirmado por Pérez):
+        // para el usuario es lo mismo que si la app se cansara de esperar.
+        this is HttpException && code() == HTTP_SERVICE_UNAVAILABLE -> R.string.ai_error_timeout
         // 404/5xx: el servicio de IA todavía no está desplegado o se cayó.
         this is HttpException -> R.string.ai_error_unavailable
         this is SocketTimeoutException -> R.string.ai_error_timeout
@@ -165,5 +168,6 @@ class CvAiViewModel @Inject constructor(
 
     private companion object {
         const val HTTP_BAD_REQUEST = 400
+        const val HTTP_SERVICE_UNAVAILABLE = 503
     }
 }

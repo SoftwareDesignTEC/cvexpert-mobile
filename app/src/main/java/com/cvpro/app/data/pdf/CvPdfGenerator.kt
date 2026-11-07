@@ -14,9 +14,12 @@ import androidx.core.content.FileProvider
 import com.cvpro.app.R
 import com.cvpro.app.domain.model.Cv
 import com.cvpro.app.domain.model.CvLayout
+import com.cvpro.app.domain.model.CvLevel
 import com.cvpro.app.domain.model.CvLayoutSection
 import com.cvpro.app.domain.model.CvSection
 import com.cvpro.app.domain.model.HeaderField
+import com.cvpro.app.domain.model.LanguageLevel
+import com.cvpro.app.domain.model.SkillLevel
 import com.cvpro.app.domain.model.toCvMonth
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
@@ -146,7 +149,11 @@ class CvPdfGenerator @Inject constructor(
                 entries = cv.skills.map { skill ->
                     entryOf(
                         fields = fields,
-                        values = mapOf("name" to skill.name, "level" to skill.level, "category" to skill.category),
+                        values = mapOf(
+                            "name" to skill.name,
+                            "level" to levelLabel(SkillLevel.fromApi(skill.level), skill.level),
+                            "category" to skill.category,
+                        ),
                     )
                 },
             )
@@ -155,7 +162,7 @@ class CvPdfGenerator @Inject constructor(
                 title = R.string.cv_detail_languages,
                 compact = true,
                 entries = cv.languages.map { language ->
-                    entryOf(fields = fields, values = mapOf("name" to language.name, "level" to language.level))
+                    entryOf(fields = fields, values = mapOf("name" to language.name, "level" to levelLabel(LanguageLevel.fromApi(language.level), language.level)))
                 },
             )
 
@@ -282,6 +289,10 @@ class CvPdfGenerator @Inject constructor(
         "informal" -> context.getString(R.string.cv_experience_type_informal)
         else -> type
     }
+
+    /** "advanced" → "Avanzado". Un nivel que la app no conoce se escribe tal cual. */
+    private fun levelLabel(level: CvLevel?, raw: String): String =
+        level?.let { context.getString(it.labelRes) } ?: raw
 
     /** "Experiencia laboral" → "EXPERIENCIA LABORAL", en el idioma de la app. */
     private fun sectionTitle(resId: Int): String =
