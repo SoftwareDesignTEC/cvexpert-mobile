@@ -8,6 +8,8 @@ import com.cvpro.app.domain.model.SkillsGapAnalysis
 import android.net.Uri
 import com.cvpro.app.data.pdf.CvPdfGenerator
 import com.cvpro.app.domain.repository.CvRepository
+import com.cvpro.app.domain.repository.TemplateRepository
+import com.cvpro.app.domain.repository.layoutFor
 import com.cvpro.app.domain.repository.JobOfferRepository
 import com.cvpro.app.domain.repository.SkillsGapRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -39,6 +41,7 @@ class HomeViewModel @Inject constructor(
     private val skillsGapRepository: SkillsGapRepository,
     private val jobOfferRepository: JobOfferRepository,
     private val pdfGenerator: CvPdfGenerator,
+    private val templateRepository: TemplateRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -62,7 +65,7 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isGeneratingPdf = true) }
             try {
-                _generatedPdf.value = pdfGenerator.generate(cv)
+                _generatedPdf.value = pdfGenerator.generate(cv, templateRepository.layoutFor(cv))
             } finally {
                 _uiState.update { it.copy(isGeneratingPdf = false) }
             }

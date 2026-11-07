@@ -475,6 +475,7 @@ private fun TemplatesPreview(darkTheme: Boolean) {
                             category = "General",
                             isPremium = false,
                             availableOffline = true,
+                            layout = null,
                         ),
                         CvTemplate(
                             id = "2",
@@ -484,6 +485,7 @@ private fun TemplatesPreview(darkTheme: Boolean) {
                             category = "General",
                             isPremium = true,
                             availableOffline = false,
+                            layout = null,
                         ),
                     ),
                 ),

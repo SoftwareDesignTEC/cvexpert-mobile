@@ -70,6 +70,13 @@
     <string name="cv_detail_languages">Idiomas</string>
     <string name="cv_detail_period">%1$s — %2$s</string>
     <string name="cv_detail_period_current">%1$s — Actual</string>
+    <string name="cv_detail_present">Actual</string>
+    <string name="cv_detail_certifications">Certificaciones</string>
+    <string name="cv_experience_type_formal">Empleo formal</string>
+    <string name="cv_experience_type_freelance">Trabajo independiente</string>
+    <string name="cv_experience_type_volunteer">Voluntariado</string>
+    <string name="cv_experience_type_school_project">Proyecto escolar</string>
+    <string name="cv_experience_type_informal">Trabajo informal</string>
 
     <!-- Editor de currículum -->
     <string name="cv_editor_title">Editar currículum</string>
@@ -81,8 +88,10 @@
     <string name="cv_editor_bio">Resumen</string>
     <string name="cv_editor_position">Puesto</string>
     <string name="cv_editor_company">Empresa</string>
-    <string name="cv_editor_start">Desde (AAAA-MM-DD)</string>
-    <string name="cv_editor_end">Hasta (AAAA-MM-DD)</string>
+    <string name="cv_editor_start">Desde</string>
+    <string name="cv_editor_end">Hasta</string>
+    <string name="cv_editor_pick_date">Elegir fecha</string>
+    <string name="cv_editor_date_ok">Aceptar</string>
     <string name="cv_editor_current">Sigue vigente</string>
     <string name="cv_editor_description">Descripción</string>
     <string name="cv_editor_institution">Institución</string>
