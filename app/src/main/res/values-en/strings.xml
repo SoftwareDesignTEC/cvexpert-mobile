@@ -463,8 +463,8 @@
     <string name="skills_gap_deficit_steps">Gap of %1$d levels</string>
     <string name="skills_gap_deficits_only">The chart includes skills with a calculable gap.</string>
     <string name="skills_gap_input_title">Enter skills</string>
-    <string name="skills_gap_update_skills">Update skills</string>
-    <string name="skills_gap_review_title">Review skills</string>
+    <string name="skills_gap_update_skills">Replace skills</string>
+    <string name="skills_gap_review_title">Review the full list</string>
     <string name="skills_gap_replace_notice">Saving replaces all your skills for gap analysis. Include any skills you want to keep. This form only shows the skills you entered here. Enter names exactly as they appear in the market requirements.</string>
     <string name="skills_gap_skill_name">Skill name</string>
     <string name="skills_gap_review_skill">%1$s · %2$s</string>
@@ -472,7 +472,7 @@
     <string name="skills_gap_remove_skill">Remove</string>
     <string name="skills_gap_review">Review</string>
     <string name="skills_gap_save_skills">Confirm and save</string>
-    <string name="skills_gap_edit_draft">Back to editing</string>
+    <string name="skills_gap_edit_draft">Back to draft</string>
     <string name="skills_gap_close_editor">Close</string>
     <string name="skills_gap_write_network">Saving could not be confirmed. Reload the analysis to check the result.</string>
 </resources>

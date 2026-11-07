@@ -467,8 +467,8 @@
     <string name="skills_gap_deficit_steps">Diferencia de %1$d</string>
     <string name="skills_gap_deficits_only">El gráfico incluye las habilidades con brecha calculable.</string>
     <string name="skills_gap_input_title">Registrar habilidades</string>
-    <string name="skills_gap_update_skills">Actualizar habilidades</string>
-    <string name="skills_gap_review_title">Revisar habilidades</string>
+    <string name="skills_gap_update_skills">Reemplazar habilidades</string>
+    <string name="skills_gap_review_title">Revisar la lista completa</string>
     <string name="skills_gap_replace_notice">Al guardar, esta lista reemplaza todas tus habilidades de Brecha. Incluye también las que quieras conservar. Aquí solo se muestran las habilidades que agregaste en este formulario. Escribe los nombres tal como aparecen en los requisitos del mercado.</string>
     <string name="skills_gap_skill_name">Nombre de la habilidad</string>
     <string name="skills_gap_review_skill">%1$s · %2$s</string>
@@ -476,7 +476,7 @@
     <string name="skills_gap_remove_skill">Quitar</string>
     <string name="skills_gap_review">Revisar</string>
     <string name="skills_gap_save_skills">Confirmar y guardar</string>
-    <string name="skills_gap_edit_draft">Volver a editar</string>
+    <string name="skills_gap_edit_draft">Volver al borrador</string>
     <string name="skills_gap_close_editor">Cerrar</string>
     <string name="skills_gap_write_network">No se pudo confirmar el guardado. Consulta el análisis para revisar el resultado.</string>
 </resources>
