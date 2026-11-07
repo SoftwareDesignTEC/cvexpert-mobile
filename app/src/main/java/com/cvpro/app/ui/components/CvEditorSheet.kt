@@ -1,6 +1,8 @@
 package com.cvpro.app.ui.components
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -10,6 +12,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Checkbox
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -18,6 +22,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -36,6 +41,7 @@ import com.cvpro.app.domain.model.Education
 import com.cvpro.app.domain.model.Language
 import com.cvpro.app.domain.model.Skill
 import com.cvpro.app.domain.model.WorkExperience
+import com.cvpro.app.domain.model.toCvDay
 
 /**
  * Editor completo de un currículum.
@@ -392,16 +398,16 @@ private fun EditorEntry(
 /** Fechas de inicio y fin, con la casilla que marca que el periodo sigue vigente. */
 @Composable
 private fun PeriodFields(
-    startDate: String,
-    endDate: String?,
+    startDate: Long?,
+    endDate: Long?,
     current: Boolean,
-    onStartChange: (String) -> Unit,
-    onEndChange: (String?) -> Unit,
+    onStartChange: (Long?) -> Unit,
+    onEndChange: (Long?) -> Unit,
     onCurrentChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
-        FormTextField(
+        DateField(
             value = startDate,
             onValueChange = onStartChange,
             label = stringResource(R.string.cv_editor_start),
@@ -409,9 +415,9 @@ private fun PeriodFields(
 
         // Si está marcado "Actual" no tiene sentido pedir fecha de fin: el campo se apaga y
         // se manda en null, que es lo que espera el contrato.
-        FormTextField(
-            value = endDate.orEmpty(),
-            onValueChange = { onEndChange(it.ifBlank { null }) },
+        DateField(
+            value = endDate,
+            onValueChange = onEndChange,
             label = stringResource(R.string.cv_editor_end),
             enabled = !current,
         )
@@ -429,6 +435,69 @@ private fun PeriodFields(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurface,
             )
+        }
+    }
+}
+
+/**
+ * Campo de fecha que abre el calendario de Material 3 al tocarlo.
+ *
+ * Antes era texto libre ("AAAA-MM-DD"), pero el servicio de CVs ahora guarda las fechas en
+ * epoch milisegundos: un texto mal escrito terminaba en un 400 al guardar. Con el calendario
+ * el usuario no puede escribir una fecha inválida. El calendario devuelve la medianoche UTC del
+ * día elegido, que es justo lo que espera el contrato (ver CvDates.kt).
+ *
+ * El campo de texto solo muestra la fecha; encima lleva una capa transparente que recibe el
+ * toque, así nunca abre el teclado.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DateField(
+    value: Long?,
+    onValueChange: (Long?) -> Unit,
+    label: String,
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true,
+) {
+    var picking by remember { mutableStateOf(false) }
+
+    Box(modifier = modifier.fillMaxWidth()) {
+        FormTextField(
+            value = value.toCvDay(),
+            onValueChange = {},
+            label = label,
+            enabled = enabled,
+        )
+        if (enabled) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .clickable(onClickLabel = stringResource(R.string.cv_editor_pick_date)) { picking = true },
+            )
+        }
+    }
+
+    if (picking) {
+        val state = rememberDatePickerState(initialSelectedDateMillis = value)
+        DatePickerDialog(
+            onDismissRequest = { picking = false },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onValueChange(state.selectedDateMillis)
+                        picking = false
+                    },
+                ) {
+                    Text(text = stringResource(R.string.cv_editor_date_ok))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { picking = false }) {
+                    Text(text = stringResource(R.string.cv_editor_cancel))
+                }
+            },
+        ) {
+            DatePicker(state = state)
         }
     }
 }
@@ -464,11 +533,13 @@ private fun emptyExperience() = WorkExperience(
     id = "",
     company = "",
     position = "",
-    startDate = "",
+    startDate = null,
     endDate = null,
     current = false,
     description = "",
-    type = "",
+    // El contrato exige un tipo y no acepta texto vacío. El editor todavía no deja elegirlo,
+    // así que una experiencia nueva arranca como empleo formal.
+    type = "formal",
 )
 
 private fun emptyEducation() = Education(
@@ -476,7 +547,7 @@ private fun emptyEducation() = Education(
     institution = "",
     degree = "",
     field = "",
-    startDate = "",
+    startDate = null,
     endDate = null,
     current = false,
 )

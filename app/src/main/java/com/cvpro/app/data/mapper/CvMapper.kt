@@ -1,5 +1,6 @@
 package com.cvpro.app.data.mapper
 
+import com.cvpro.app.data.remote.dto.CertificationDto
 import com.cvpro.app.data.remote.dto.CreateCvRequestDto
 import com.cvpro.app.data.remote.dto.CvDto
 import com.cvpro.app.data.remote.dto.EducationDto
@@ -8,6 +9,7 @@ import com.cvpro.app.data.remote.dto.SkillDto
 import com.cvpro.app.data.remote.dto.UpdateCvRequestDto
 import com.cvpro.app.data.remote.dto.UserProfileDto
 import com.cvpro.app.data.remote.dto.WorkExperienceDto
+import com.cvpro.app.domain.model.Certification
 import com.cvpro.app.domain.model.Cv
 import com.cvpro.app.domain.model.Education
 import com.cvpro.app.domain.model.JobModality
@@ -15,6 +17,8 @@ import com.cvpro.app.domain.model.Language
 import com.cvpro.app.domain.model.Skill
 import com.cvpro.app.domain.model.UserProfile
 import com.cvpro.app.domain.model.WorkExperience
+import com.google.gson.JsonElement
+import com.google.gson.JsonPrimitive
 
 fun CvDto.toDomain(): Cv {
     return Cv(
@@ -22,9 +26,9 @@ fun CvDto.toDomain(): Cv {
         userId = userId.orEmpty(),
         title = title.orEmpty(),
         templateId = templateId.orEmpty(),
-        // El servicio manda ISO 8601; las tarjetas muestran la fecha ya legible.
-        createdAt = createdAt.toDisplayDate(),
-        updatedAt = updatedAt.toDisplayDate(),
+        // Llegan en epoch (o ISO en los mocks viejos); las tarjetas muestran la fecha legible.
+        createdAt = createdAt.toEpochMillis().toDisplayDate(),
+        updatedAt = updatedAt.toEpochMillis().toDisplayDate(),
         previewUrl = previewUrl,
         // Sin datos personales el CV se muestra igual, con los campos vacíos.
         personalInfo = personalInfo?.toDomain() ?: UserProfile(
@@ -43,6 +47,7 @@ fun CvDto.toDomain(): Cv {
         education = education.orEmpty().map { it.toDomain() },
         skills = skills.orEmpty().map { it.toDomain() },
         languages = languages.orEmpty().map { it.toDomain() },
+        certifications = certifications.orEmpty().map { it.toDomain() },
     )
 }
 
@@ -50,8 +55,8 @@ private fun WorkExperienceDto.toDomain() = WorkExperience(
     id = id.orEmpty(),
     company = company.orEmpty(),
     position = position.orEmpty(),
-    startDate = startDate.orEmpty(),
-    endDate = endDate,
+    startDate = startDate.toEpochMillis(),
+    endDate = endDate.toEpochMillis(),
     current = current ?: false,
     description = description.orEmpty(),
     type = type.orEmpty(),
@@ -62,9 +67,18 @@ private fun EducationDto.toDomain() = Education(
     institution = institution.orEmpty(),
     degree = degree.orEmpty(),
     field = field.orEmpty(),
-    startDate = startDate.orEmpty(),
-    endDate = endDate,
+    startDate = startDate.toEpochMillis(),
+    endDate = endDate.toEpochMillis(),
     current = current ?: false,
+)
+
+private fun CertificationDto.toDomain() = Certification(
+    id = id.orEmpty(),
+    name = name.orEmpty(),
+    issuer = issuer.orEmpty(),
+    issuedAt = issuedAt.toEpochMillis(),
+    expiresAt = expiresAt.toEpochMillis(),
+    credentialUrl = credentialUrl?.takeIf { it.isNotBlank() },
 )
 
 private fun SkillDto.toDomain() = Skill(
@@ -95,6 +109,9 @@ fun Cv.toUpdateRequest(): UpdateCvRequestDto {
         education = education.map { it.toDto() },
         skills = skills.map { it.toDto() },
         languages = languages.map { it.toDto() },
+        // Aunque la app no edita certificaciones, se devuelven tal cual: el PUT reemplaza el
+        // CV entero y, si no se mandaran, se borrarían las que se cargaron desde la web.
+        certifications = certifications.map { it.toDto() },
     )
 }
 
@@ -113,6 +130,7 @@ fun newCvRequest(
         education = emptyList(),
         skills = emptyList(),
         languages = emptyList(),
+        certifications = emptyList(),
     )
 }
 
@@ -140,8 +158,8 @@ private fun WorkExperience.toDto() = WorkExperienceDto(
     id = id.takeIf { it.isNotBlank() },
     company = company,
     position = position,
-    startDate = startDate,
-    endDate = endDate,
+    startDate = startDate.toJson(),
+    endDate = endDate.toJson(),
     current = current,
     description = description,
     type = type,
@@ -152,8 +170,8 @@ private fun Education.toDto() = EducationDto(
     institution = institution,
     degree = degree,
     field = field,
-    startDate = startDate,
-    endDate = endDate,
+    startDate = startDate.toJson(),
+    endDate = endDate.toJson(),
     current = current,
 )
 
@@ -169,3 +187,15 @@ private fun Language.toDto() = LanguageDto(
     name = name,
     level = level,
 )
+
+private fun Certification.toDto() = CertificationDto(
+    id = id.takeIf { it.isNotBlank() },
+    name = name,
+    issuer = issuer,
+    issuedAt = issuedAt.toJson(),
+    expiresAt = expiresAt.toJson(),
+    credentialUrl = credentialUrl,
+)
+
+/** Epoch → número JSON, que es lo que pide el contrato al guardar. Sin fecha, no se manda. */
+private fun Long?.toJson(): JsonElement? = this?.let { JsonPrimitive(it) }

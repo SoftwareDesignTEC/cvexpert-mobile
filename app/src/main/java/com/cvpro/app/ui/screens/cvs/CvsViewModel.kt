@@ -6,6 +6,8 @@ import android.net.Uri
 import com.cvpro.app.data.pdf.CvPdfGenerator
 import com.cvpro.app.domain.model.Cv
 import com.cvpro.app.domain.repository.CvRepository
+import com.cvpro.app.domain.repository.TemplateRepository
+import com.cvpro.app.domain.repository.layoutFor
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -30,6 +32,7 @@ data class CvsUiState(
 class CvsViewModel @Inject constructor(
     private val repository: CvRepository,
     private val pdfGenerator: CvPdfGenerator,
+    private val templateRepository: TemplateRepository,
 ) : ViewModel() {
 
     // Dónde quedó el último PDF generado. La pantalla lo abre y después lo limpia.
@@ -46,7 +49,7 @@ class CvsViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isGeneratingPdf = true, error = null) }
             try {
-                _generatedPdf.value = pdfGenerator.generate(cv)
+                _generatedPdf.value = pdfGenerator.generate(cv, templateRepository.layoutFor(cv))
                 _uiState.update { it.copy(isGeneratingPdf = false) }
             } catch (exception: Exception) {
                 _uiState.update {

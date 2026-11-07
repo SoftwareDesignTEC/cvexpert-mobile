@@ -21,6 +21,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.cvpro.app.R
 import com.cvpro.app.domain.model.Cv
+import com.cvpro.app.domain.model.toCvMonth
 
 /**
  * Contenido completo de un currículum.
@@ -109,6 +110,19 @@ fun CvDetailSheet(
                 CvSection(title = stringResource(R.string.cv_detail_languages)) {
                     cv.languages.forEach { language ->
                         CvLine("${language.name} · ${language.level}")
+                    }
+                }
+            }
+
+            if (cv.certifications.isNotEmpty()) {
+                CvSection(title = stringResource(R.string.cv_detail_certifications)) {
+                    cv.certifications.forEach { cert ->
+                        CvEntry(
+                            title = cert.name,
+                            subtitle = cert.issuer,
+                            period = periodOf(cert.issuedAt, cert.expiresAt, current = false),
+                            detail = cert.credentialUrl.orEmpty(),
+                        )
                     }
                 }
             }
@@ -245,10 +259,17 @@ private fun CvLine(
     )
 }
 
-/** "2024-01 — Actual" o "2024-01 — 2025-06", según si el puesto sigue vigente. */
+/**
+ * "06/2024 — Actual" o "06/2024 — 03/2025", según si el puesto sigue vigente. Sin fecha de
+ * fin queda solo la de inicio, y sin ninguna, vacío.
+ */
 @Composable
-private fun periodOf(start: String, end: String?, current: Boolean): String = when {
-    current -> stringResource(R.string.cv_detail_period_current, start)
-    end != null -> stringResource(R.string.cv_detail_period, start, end)
-    else -> start
+private fun periodOf(start: Long?, end: Long?, current: Boolean): String {
+    val desde = start.toCvMonth()
+    return when {
+        desde.isEmpty() -> end.toCvMonth()
+        current -> stringResource(R.string.cv_detail_period_current, desde)
+        end != null -> stringResource(R.string.cv_detail_period, desde, end.toCvMonth())
+        else -> desde
+    }
 }

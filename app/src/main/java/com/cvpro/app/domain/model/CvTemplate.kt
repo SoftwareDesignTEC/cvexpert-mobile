@@ -8,4 +8,6 @@ data class CvTemplate(
     val category: String,
     val isPremium: Boolean,
     val availableOffline: Boolean,
+    // null = la plantilla todavía no tiene definición estructurada; el PDF usa CvLayout.DEFAULT.
+    val layout: CvLayout?,
 )
