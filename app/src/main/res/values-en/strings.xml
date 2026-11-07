@@ -112,6 +112,14 @@
     <string name="cv_editor_start">From</string>
     <string name="cv_editor_end">To</string>
     <string name="cv_editor_pick_date">Pick a date</string>
+    <string name="cv_editor_pick_level">Pick a level</string>
+    <!-- Contract levels (Skill.level and Language.level). -->
+    <string name="cv_level_beginner">Beginner</string>
+    <string name="cv_level_intermediate">Intermediate</string>
+    <string name="cv_level_advanced">Advanced</string>
+    <string name="cv_level_expert">Expert</string>
+    <string name="cv_level_basic">Basic</string>
+    <string name="cv_level_native">Native</string>
     <string name="cv_editor_date_ok">OK</string>
     <string name="cv_editor_current">Still ongoing</string>
     <string name="cv_editor_description">Description</string>

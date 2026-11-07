@@ -19,6 +19,8 @@ import androidx.compose.material3.Checkbox
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
@@ -45,11 +47,14 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.cvpro.app.R
 import com.cvpro.app.domain.model.Cv
+import com.cvpro.app.domain.model.CvLevel
 import com.cvpro.app.domain.model.Education
 import com.cvpro.app.domain.model.Language
+import com.cvpro.app.domain.model.LanguageLevel
 import com.cvpro.app.domain.model.NonLaborExperience
 import com.cvpro.app.domain.model.NonLaborType
 import com.cvpro.app.domain.model.Skill
+import com.cvpro.app.domain.model.SkillLevel
 import com.cvpro.app.domain.model.WorkExperience
 import com.cvpro.app.domain.model.toCvDay
 import com.cvpro.app.ui.screens.cvs.CvAiActions
@@ -343,10 +348,10 @@ fun CvEditorSheet(
                         onValueChange = { update(skill.copy(name = it)) },
                         label = stringResource(R.string.cv_editor_skill_name),
                     )
-                    FormTextField(
+                    LevelField(
                         value = skill.level,
+                        options = SkillLevel.entries,
                         onValueChange = { update(skill.copy(level = it)) },
-                        label = stringResource(R.string.cv_editor_level),
                     )
                     FormTextField(
                         value = skill.category,
@@ -377,11 +382,10 @@ fun CvEditorSheet(
                         onValueChange = { update(language.copy(name = it)) },
                         label = stringResource(R.string.cv_editor_language),
                     )
-                    FormTextField(
+                    LevelField(
                         value = language.level,
+                        options = LanguageLevel.entries,
                         onValueChange = { update(language.copy(level = it)) },
-                        label = stringResource(R.string.cv_editor_level),
-                        imeAction = ImeAction.Done,
                     )
                 }
             }
@@ -586,6 +590,47 @@ private fun DateField(
             },
         ) {
             DatePicker(state = state)
+        }
+    }
+}
+
+/**
+ * Nivel de una habilidad o un idioma. El servidor solo acepta los valores de su enum, así que
+ * en vez de texto libre se elige de una lista: el usuario ve "Avanzado" y se guarda "advanced".
+ * Si el CV trae un valor viejo que no está en la lista, se muestra tal cual hasta que lo cambie.
+ */
+@Composable
+private fun LevelField(
+    value: String,
+    options: List<CvLevel>,
+    onValueChange: (String) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val selected = options.firstOrNull { it.apiValue == value }
+
+    Box(modifier = modifier.fillMaxWidth()) {
+        FormTextField(
+            value = selected?.let { stringResource(it.labelRes) } ?: value,
+            onValueChange = {},
+            label = stringResource(R.string.cv_editor_level),
+        )
+        // Capa encima del campo: tocarlo abre la lista en vez del teclado (igual que DateField).
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .clickable(onClickLabel = stringResource(R.string.cv_editor_pick_level)) { expanded = true },
+        )
+        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
+            options.forEach { option ->
+                DropdownMenuItem(
+                    text = { Text(text = stringResource(option.labelRes)) },
+                    onClick = {
+                        onValueChange(option.apiValue)
+                        expanded = false
+                    },
+                )
+            }
         }
     }
 }
@@ -820,9 +865,10 @@ private fun emptyEducation() = Education(
     current = false,
 )
 
-private fun emptySkill() = Skill(id = "", name = "", level = "", category = "")
+// El nivel es obligatorio en el contrato: se arranca con uno válido para no mandar "" y recibir 400.
+private fun emptySkill() = Skill(id = "", name = "", level = SkillLevel.INTERMEDIATE.apiValue, category = "")
 
-private fun emptyLanguage() = Language(id = "", name = "", level = "")
+private fun emptyLanguage() = Language(id = "", name = "", level = LanguageLevel.INTERMEDIATE.apiValue)
 
 /** El mensaje de error solo se muestra una vez que el usuario intentó guardar. */
 @Composable

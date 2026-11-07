@@ -6,6 +6,7 @@ import com.cvpro.app.domain.model.CvTemplate
 import com.cvpro.app.domain.model.PagedResult
 import com.cvpro.app.domain.repository.TemplateRepository
 import java.util.concurrent.ConcurrentHashMap
+import retrofit2.HttpException
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -42,12 +43,25 @@ class ApiTemplateRepository @Inject constructor(
     }
 
     /**
-     * El contrato no tiene `GET /templates/{id}` y `search` filtra por nombre, no por id, así
-     * que se recorre el catálogo página por página hasta encontrarla. Son pocas plantillas.
-     * TODO: confirmar con Pérez si conviene agregar GET /templates/{id}.
+     * Pide la plantilla con `GET /templates/{id}`. Mientras esa ruta no esté publicada en el
+     * APIM responde 404; en ese caso se busca en el catálogo como antes, así la app funciona
+     * con o sin la ruta nueva. Un 404 del catálogo también significa "no existe": devuelve null.
      */
     override suspend fun getTemplate(id: String): CvTemplate? {
         cache[id]?.let { return it }
+        try {
+            return api.getTemplateById(id).toDomain().also { cache[it.id] = it }
+        } catch (exception: HttpException) {
+            if (exception.code() != HTTP_NOT_FOUND) throw exception
+        }
+        return findInCatalog(id)
+    }
+
+    /**
+     * `search` filtra por nombre, no por id, así que se recorre el catálogo página por página
+     * hasta encontrarla. Son pocas plantillas.
+     */
+    private suspend fun findInCatalog(id: String): CvTemplate? {
         var page = 1
         while (page <= MAX_PAGES) {
             val result = getTemplates(page = page, pageSize = PAGE_SIZE, query = "")
@@ -59,6 +73,7 @@ class ApiTemplateRepository @Inject constructor(
     }
 
     private companion object {
+        const val HTTP_NOT_FOUND = 404
         const val PAGE_SIZE = 50
 
         // Tope por si el servicio manda un totalRecords equivocado: nunca más de 500 plantillas.

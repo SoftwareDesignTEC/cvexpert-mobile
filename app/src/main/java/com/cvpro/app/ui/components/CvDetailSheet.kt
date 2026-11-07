@@ -21,6 +21,9 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.cvpro.app.R
 import com.cvpro.app.domain.model.Cv
+import com.cvpro.app.domain.model.CvLevel
+import com.cvpro.app.domain.model.LanguageLevel
+import com.cvpro.app.domain.model.SkillLevel
 import com.cvpro.app.domain.model.toCvMonth
 
 /**
@@ -101,7 +104,7 @@ fun CvDetailSheet(
             if (cv.skills.isNotEmpty()) {
                 CvSection(title = stringResource(R.string.cv_detail_skills)) {
                     cv.skills.forEach { skill ->
-                        CvLine("${skill.name} · ${skill.level}")
+                        CvLine(nameWithLevel(skill.name, SkillLevel.fromApi(skill.level), skill.level))
                     }
                 }
             }
@@ -109,7 +112,7 @@ fun CvDetailSheet(
             if (cv.languages.isNotEmpty()) {
                 CvSection(title = stringResource(R.string.cv_detail_languages)) {
                     cv.languages.forEach { language ->
-                        CvLine("${language.name} · ${language.level}")
+                        CvLine(nameWithLevel(language.name, LanguageLevel.fromApi(language.level), language.level))
                     }
                 }
             }
@@ -257,6 +260,16 @@ private fun CvLine(
         color = MaterialTheme.colorScheme.onSurface,
         modifier = modifier.padding(top = 2.dp),
     )
+}
+
+/**
+ * "Kotlin · Avanzado". El servidor manda el nivel en inglés ([level] es el enum ya reconocido,
+ * [raw] lo que llegó): si la app no lo conoce se muestra tal cual, y si no hay nivel, solo el nombre.
+ */
+@Composable
+private fun nameWithLevel(name: String, level: CvLevel?, raw: String): String {
+    val label = level?.let { stringResource(it.labelRes) } ?: raw
+    return if (label.isBlank()) name else "$name · $label"
 }
 
 /**
