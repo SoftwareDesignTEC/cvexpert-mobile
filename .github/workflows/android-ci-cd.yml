@@ -60,8 +60,12 @@ jobs:
       # Muestra con qué certificado quedó firmado el APK (SHA-1 y SHA-256). No es un secreto:
       # Google lo pide para registrar el cliente OAuth Android de com.cvpro.app, y sin él el
       # login con Google del release falla con NoCredentialException.
+      # Se usa apksigner y no keytool -printcert: con minSdk 26 el APK va firmado solo con los
+      # esquemas v2/v3, que keytool no sabe leer.
       - name: Show release signing certificate
-        run: keytool -printcert -jarfile app/build/outputs/apk/release/app-release.apk | grep -E "Owner|SHA1|SHA256"
+        run: |
+          APKSIGNER=$(ls "$ANDROID_HOME"/build-tools/*/apksigner | sort -V | tail -1)
+          "$APKSIGNER" verify --print-certs app/build/outputs/apk/release/app-release.apk | grep -E "DN:|SHA-1|SHA-256"
 
       # Solo desde main: si no, cada push a una rama le manda un correo a todo el grupo.
       - name: Upload to Firebase App Distribution
