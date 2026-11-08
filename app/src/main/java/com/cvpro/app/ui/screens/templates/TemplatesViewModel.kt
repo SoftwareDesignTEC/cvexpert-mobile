@@ -7,12 +7,16 @@ import androidx.lifecycle.viewModelScope
 import com.cvpro.app.R
 import com.cvpro.app.data.download.TemplatePreviewDownloader
 import com.cvpro.app.domain.model.CvTemplate
+import com.cvpro.app.domain.model.UserProfile
+import com.cvpro.app.domain.repository.AuthRepository
 import com.cvpro.app.domain.repository.CvRepository
+import com.cvpro.app.domain.repository.ProfileRepository
 import com.cvpro.app.domain.repository.TemplateRepository
 import com.cvpro.app.ui.components.UiMessage
 import com.cvpro.app.ui.components.toUserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -34,6 +38,8 @@ class TemplatesViewModel @Inject constructor(
     private val repository: TemplateRepository,
     private val cvRepository: CvRepository,
     private val previewDownloader: TemplatePreviewDownloader,
+    private val authRepository: AuthRepository,
+    private val profileRepository: ProfileRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TemplatesUiState())
@@ -54,8 +60,9 @@ class TemplatesViewModel @Inject constructor(
     /**
      * Crea un currículum nuevo con esta plantilla.
      *
-     * Va con POST contra el servicio, igual que el resto del CRUD. Nace vacío: los datos se
-     * llenan después desde "Mis Currículums", con el editor.
+     * Va con POST contra el servicio, igual que el resto del CRUD. Nace con los datos personales
+     * del perfil (el contrato exige `personalInfo` con nombre y correo) y sin experiencias: el
+     * resto se llena después desde "Mis Currículums", con el editor.
      */
     fun onUseTemplate(template: CvTemplate) {
         viewModelScope.launch {
@@ -65,8 +72,7 @@ class TemplatesViewModel @Inject constructor(
                 val cv = cvRepository.createCv(
                     title = template.name,
                     templateId = template.id,
-                    // El currículum nace sin datos personales: se llenan en el editor.
-                    personalInfo = null,
+                    personalInfo = personalInfoForNewCv(),
                 )
 
                 _uiState.update {
@@ -84,6 +90,37 @@ class TemplatesViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    /**
+     * Datos personales con que nace un CV: los del perfil guardado. Si el perfil no se puede
+     * leer o le falta el nombre o el correo, se completan con los de la cuenta de Google, que
+     * siempre están. Sin sesión devuelve null y el servicio responde 400, que se avisa igual.
+     */
+    private suspend fun personalInfoForNewCv(): UserProfile? {
+        val user = authRepository.currentUser.value ?: return null
+        val profile = try {
+            profileRepository.getProfile(user.id)
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            null
+        }
+        return profile?.copy(
+            name = profile.name.ifBlank { user.name },
+            email = profile.email.ifBlank { user.email },
+        ) ?: UserProfile(
+            id = user.id,
+            name = user.name,
+            email = user.email,
+            phone = null,
+            location = "",
+            photoUrl = user.photoUrl,
+            bio = null,
+            types = emptyList(),
+            modalities = emptyList(),
+            sectors = emptyList(),
+        )
     }
 
     /**
