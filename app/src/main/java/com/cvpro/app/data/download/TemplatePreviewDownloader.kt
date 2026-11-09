@@ -2,6 +2,7 @@ package com.cvpro.app.data.download
 
 import android.content.ContentValues
 import android.content.Context
+import android.graphics.Bitmap
 import android.net.Uri
 import android.os.Build
 import android.os.Environment
@@ -78,6 +79,24 @@ class TemplatePreviewDownloader @Inject constructor(
         }
     }
 
+    /**
+     * Guarda una vista previa ya dibujada en la app (ver CvPreviewRenderer) como PNG.
+     *
+     * Es lo que se usa ahora: el previewUrl del servicio es un rectángulo gris con el nombre
+     * de la plantilla, y la imagen dibujada muestra cómo queda de verdad.
+     */
+    suspend fun save(templateName: String, preview: Bitmap): Uri = withContext(Dispatchers.IO) {
+        val bytes = java.io.ByteArrayOutputStream().use { stream ->
+            preview.compress(Bitmap.CompressFormat.PNG, PNG_QUALITY, stream)
+            stream.toByteArray()
+        }
+        save(
+            fileName = fileNameFor(templateName, PNG_MIME),
+            mimeType = PNG_MIME,
+            bytes = bytes,
+        )
+    }
+
     /** "Creativo UI UX.png": sin caracteres que el sistema de archivos no acepta. */
     private fun fileNameFor(templateName: String, mimeType: String): String {
         val base = templateName
@@ -122,5 +141,9 @@ class TemplatePreviewDownloader @Inject constructor(
     private companion object {
         const val TIMEOUT_MS = 20_000
         const val DEFAULT_MIME = "image/jpeg"
+        const val PNG_MIME = "image/png"
+
+        /** PNG no tiene pérdida: este número no cambia nada, pero compress() lo pide. */
+        const val PNG_QUALITY = 100
     }
 }

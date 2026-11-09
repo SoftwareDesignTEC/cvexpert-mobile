@@ -1,17 +1,21 @@
 package com.cvpro.app.ui.screens.cvs
 
+import android.graphics.Bitmap
 import android.net.Uri
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cvpro.app.data.pdf.CvPdfGenerator
+import com.cvpro.app.data.pdf.CvPreviewRenderer
 import com.cvpro.app.domain.model.Cv
 import com.cvpro.app.domain.repository.CvRepository
 import com.cvpro.app.domain.repository.TemplateRepository
 import com.cvpro.app.domain.repository.layoutFor
+import com.cvpro.app.domain.model.titleToSave
 import com.cvpro.app.ui.components.toUserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,6 +32,8 @@ data class CvsUiState(
     @param:StringRes val error: Int? = null,
     val deletingId: String? = null,
     val isSaving: Boolean = false,
+    /** Primera hoja de cada CV ya dibujada, por id. Las que faltan usan el dibujo simple. */
+    val previews: Map<String, Bitmap> = emptyMap(),
 )
 
 @HiltViewModel
@@ -36,6 +42,7 @@ class CvsViewModel @Inject constructor(
     private val pdfGenerator: CvPdfGenerator,
     private val templateRepository: TemplateRepository,
     private val pendingCvEditor: PendingCvEditor,
+    private val previewRenderer: CvPreviewRenderer,
 ) : ViewModel() {
 
     /** Currículum que hay que abrir en el editor (recién creado desde Plantillas). */
@@ -159,7 +166,7 @@ class CvsViewModel @Inject constructor(
             _uiState.update { it.copy(isSaving = true, error = null) }
 
             try {
-                val saved = repository.updateCv(cv)
+                val saved = repository.updateCv(cv.copy(title = titleFor(cv)))
 
                 _uiState.update { state ->
                     state.copy(
@@ -168,6 +175,7 @@ class CvsViewModel @Inject constructor(
                     )
                 }
                 _savedCv.value = saved
+                refreshPreviews()
             } catch (exception: Exception) {
                 _uiState.update {
                     it.copy(
@@ -177,6 +185,30 @@ class CvsViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    /**
+     * Título con que se guarda: si el usuario no escribió uno propio, el automático
+     * "Nombre – puesto" con lo que tiene ahora el CV (ver CvTitle.kt).
+     */
+    private suspend fun titleFor(cv: Cv): String {
+        val original = _uiState.value.cvs.firstOrNull { it.id == cv.id } ?: return cv.title
+        // El nombre de la plantilla hace falta para reconocer los CV viejos, que se crearon
+        // con ese título. Si no se puede pedir, se guarda el título tal cual.
+        val templateName = try {
+            templateRepository.getTemplate(cv.templateId)?.name.orEmpty()
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            return cv.title
+        }
+        return cv.titleToSave(original, templateName)
+    }
+
+    /** Dibuja la vista previa de los CV de la lista (las ya dibujadas salen del caché). */
+    private suspend fun refreshPreviews() {
+        val previews = previewRenderer.previewsFor(_uiState.value.cvs)
+        _uiState.update { it.copy(previews = previews) }
     }
 
     /** Avisa que el guardado terminó bien, para que la pantalla cierre el editor. */
@@ -210,6 +242,7 @@ class CvsViewModel @Inject constructor(
                         error = null,
                     )
                 }
+                refreshPreviews()
             } catch (exception: Exception) {
                 _uiState.update {
                     it.copy(

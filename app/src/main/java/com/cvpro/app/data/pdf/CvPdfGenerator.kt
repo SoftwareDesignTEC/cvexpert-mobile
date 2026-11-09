@@ -2,7 +2,9 @@ package com.cvpro.app.data.pdf
 
 import android.content.ContentValues
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.Canvas
+import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
@@ -11,22 +13,31 @@ import android.os.Build
 import android.os.Environment
 import android.provider.MediaStore
 import androidx.core.content.FileProvider
+import androidx.core.graphics.createBitmap
 import com.cvpro.app.R
 import com.cvpro.app.domain.model.Cv
 import com.cvpro.app.domain.model.CvLayout
 import com.cvpro.app.domain.model.CvLevel
 import com.cvpro.app.domain.model.CvLayoutSection
 import com.cvpro.app.domain.model.CvSection
+import com.cvpro.app.domain.model.Education
 import com.cvpro.app.domain.model.HeaderField
+import com.cvpro.app.domain.model.Language
 import com.cvpro.app.domain.model.LanguageLevel
+import com.cvpro.app.domain.model.Skill
 import com.cvpro.app.domain.model.SkillLevel
+import com.cvpro.app.domain.model.UserProfile
+import com.cvpro.app.domain.model.WorkExperience
 import com.cvpro.app.domain.model.toCvMonth
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
+import java.time.LocalDate
+import java.time.ZoneOffset
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.math.roundToInt
 
 /**
  * Arma el PDF de un currículum y lo guarda en el teléfono.
@@ -62,6 +73,117 @@ class CvPdfGenerator @Inject constructor(
         document.close()
         uri
     }
+
+    /**
+     * Dibuja la primera hoja del currículum como imagen, para las vistas previas.
+     *
+     * Es exactamente lo mismo que va en el PDF (se usa el mismo [drawCv]), solo que pintado
+     * en un Bitmap y a menor tamaño. Así la vista previa nunca se aleja de lo que el usuario
+     * va a descargar. Corre en Dispatchers.Default porque es trabajo de CPU, no de disco.
+     */
+    suspend fun renderPreview(
+        cv: Cv,
+        layout: CvLayout = CvLayout.DEFAULT,
+        widthPx: Int = PREVIEW_WIDTH_PX,
+    ): Bitmap = withContext(Dispatchers.Default) {
+        val writer = PageWriter(Paints(layout))
+        writer.drawCv(cv, layout)
+
+        // La hoja mide 595 x 842 puntos; se escala para que entre en widthPx.
+        val scale = widthPx / PAGE_WIDTH.toFloat()
+        // RGB_565 gasta la mitad que ARGB_8888: la hoja es blanca y opaca, no hace falta
+        // transparencia, y así se puede dibujar más grande (más nítida) con la misma memoria.
+        val bitmap = createBitmap(widthPx, (PAGE_HEIGHT * scale).roundToInt(), Bitmap.Config.RGB_565)
+        val canvas = Canvas(bitmap)
+        // Fondo blanco como el papel: es la hoja impresa, no un elemento de la interfaz, así
+        // que no sigue el tema oscuro.
+        canvas.drawColor(Color.WHITE)
+        canvas.scale(scale, scale)
+        writer.renderFirstPage(canvas)
+        bitmap
+    }
+
+    /**
+     * Vista previa de una plantilla, con un currículum de ejemplo.
+     *
+     * El servicio de CVs no manda una imagen de cada plantilla (su previewUrl es un rectángulo
+     * gris con el nombre), así que se dibuja acá con el mismo motor del PDF.
+     */
+    suspend fun renderTemplatePreview(layout: CvLayout?): Bitmap =
+        renderPreview(sampleCv(), layout ?: CvLayout.DEFAULT)
+
+    /** Currículum inventado para las vistas previas. Los textos salen de strings.xml. */
+    private fun sampleCv(): Cv {
+        val name = context.getString(R.string.sample_cv_name)
+        return Cv(
+            id = "sample",
+            userId = "",
+            title = context.getString(R.string.sample_cv_job1_position),
+            templateId = "",
+            createdAt = "",
+            updatedAt = "",
+            previewUrl = null,
+            personalInfo = UserProfile(
+                id = "",
+                name = name,
+                email = context.getString(R.string.sample_cv_email),
+                phone = context.getString(R.string.sample_cv_phone),
+                location = context.getString(R.string.sample_cv_location),
+                photoUrl = null,
+                bio = context.getString(R.string.sample_cv_bio),
+                types = emptyList(),
+                modalities = emptyList(),
+                sectors = emptyList(),
+            ),
+            workExperiences = listOf(
+                WorkExperience(
+                    id = "1",
+                    company = context.getString(R.string.sample_cv_job1_company),
+                    position = context.getString(R.string.sample_cv_job1_position),
+                    startDate = epoch(2024, 3),
+                    endDate = null,
+                    current = true,
+                    description = context.getString(R.string.sample_cv_job1_description),
+                    type = "formal",
+                ),
+                WorkExperience(
+                    id = "2",
+                    company = context.getString(R.string.sample_cv_job2_company),
+                    position = context.getString(R.string.sample_cv_job2_position),
+                    startDate = epoch(2023, 1),
+                    endDate = epoch(2023, 12),
+                    current = false,
+                    description = context.getString(R.string.sample_cv_job2_description),
+                    type = "volunteer",
+                ),
+            ),
+            education = listOf(
+                Education(
+                    id = "1",
+                    institution = context.getString(R.string.sample_cv_institution),
+                    degree = context.getString(R.string.sample_cv_degree),
+                    field = "",
+                    startDate = epoch(2019, 2),
+                    endDate = epoch(2023, 12),
+                    current = false,
+                ),
+            ),
+            skills = listOf(
+                Skill("1", context.getString(R.string.sample_cv_skill1), SkillLevel.ADVANCED.apiValue, ""),
+                Skill("2", context.getString(R.string.sample_cv_skill2), SkillLevel.INTERMEDIATE.apiValue, ""),
+                Skill("3", context.getString(R.string.sample_cv_skill3), SkillLevel.ADVANCED.apiValue, ""),
+            ),
+            languages = listOf(
+                Language("1", context.getString(R.string.sample_cv_language1), LanguageLevel.NATIVE.apiValue),
+                Language("2", context.getString(R.string.sample_cv_language2), LanguageLevel.INTERMEDIATE.apiValue),
+            ),
+            certifications = emptyList(),
+        )
+    }
+
+    /** Primer día del mes, en epoch milisegundos UTC, como las fechas del servicio de CVs. */
+    private fun epoch(year: Int, month: Int): Long =
+        LocalDate.of(year, month, 1).atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
 
     /**
      * Encabezado arriba, a todo el ancho, y después las secciones en el orden de la plantilla.
@@ -360,6 +482,11 @@ class CvPdfGenerator @Inject constructor(
             y += height
         }
 
+        /** Dibuja solo la primera hoja en un lienzo cualquiera (para las vistas previas). */
+        fun renderFirstPage(canvas: Canvas) {
+            pages.first().forEach { it(canvas) }
+        }
+
         /** Dibuja todas las hojas en el documento, una tras otra. */
         fun render(document: PdfDocument) {
             pages.forEachIndexed { index, operations ->
@@ -469,6 +596,10 @@ class CvPdfGenerator @Inject constructor(
         const val LINE_GAP = 4f
         const val ENTRY_GAP = 6f
         const val PDF_MIME = "application/pdf"
+
+        // Ancho de las vistas previas: la tarjeta de Mis Currículums ocupa todo el ancho del
+        // teléfono, y con menos se veía borrosa. En RGB_565 son unos 1,5 MB por imagen.
+        const val PREVIEW_WIDTH_PX = 720
 
         // Separación de los títulos de sección, igual que antes: 10 hasta la línea y 16 hasta el texto.
         const val SECTION_TOP = 10f

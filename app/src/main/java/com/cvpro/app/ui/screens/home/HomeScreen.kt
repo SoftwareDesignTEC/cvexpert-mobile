@@ -1,5 +1,6 @@
 package com.cvpro.app.ui.screens.home
 
+import android.graphics.Bitmap
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -45,6 +46,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cvpro.app.ui.components.PagePreview
 import com.cvpro.app.ui.components.RemoteImage
 import com.cvpro.app.R
 import com.cvpro.app.ui.components.outlinedOnCardColors
@@ -82,6 +84,9 @@ fun HomeScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val generatedPdf by viewModel.generatedPdf.collectAsStateWithLifecycle()
     val context = LocalContext.current
+
+    // Cada vez que se entra al panel se recarga (ver onScreenShown).
+    LaunchedEffect(Unit) { viewModel.onScreenShown() }
 
     // Apenas el PDF está listo se abre con el visor que tenga el usuario, y se avisa al
     // ViewModel para que no vuelva a abrirse cada vez que la pantalla se repinta.
@@ -148,6 +153,7 @@ fun HomeContent(
     ) {
         RecentCvsSection(
             cvs = uiState.recentCvs,
+            previews = uiState.cvPreviews,
             onSeeAllClick = onCvsClick,
             onCvClick = { detailCv = it },
             onDownloadClick = onDownloadCv,
@@ -177,6 +183,7 @@ fun HomeContent(
 @Composable
 private fun RecentCvsSection(
     cvs: List<Cv>,
+    previews: Map<String, Bitmap>,
     onSeeAllClick: () -> Unit,
     onCvClick: (Cv) -> Unit,
     onDownloadClick: (Cv) -> Unit,
@@ -199,6 +206,7 @@ private fun RecentCvsSection(
                 items(items = cvs, key = { it.id }) { cv ->
                     RecentCvCard(
                         cv = cv,
+                        preview = previews[cv.id],
                         onCvClick = { onCvClick(cv) },
                         onDownloadClick = { onDownloadClick(cv) },
                     )
@@ -211,6 +219,7 @@ private fun RecentCvsSection(
 @Composable
 private fun RecentCvCard(
     cv: Cv,
+    preview: Bitmap?,
     onCvClick: () -> Unit,
     onDownloadClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -220,9 +229,16 @@ private fun RecentCvCard(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
     ) {
         Column {
-            // Imagen del currículum armado que manda el servicio. Si no llega o no carga,
-            // queda el recuadro con el rótulo, que es lo que había antes.
-            RemoteImage(
+            // Primero la hoja real del CV dibujada con su plantilla. Si todavía no está, la
+            // imagen que manda el servicio y, si tampoco, el recuadro con el rótulo.
+            if (preview != null) {
+                PagePreview(
+                    page = preview,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(110.dp),
+                )
+            } else RemoteImage(
                 url = cv.previewUrl,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,

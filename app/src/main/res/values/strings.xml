@@ -490,4 +490,23 @@
     <string name="skills_gap_edit_draft">Volver al borrador</string>
     <string name="skills_gap_close_editor">Cerrar</string>
     <string name="skills_gap_write_network">No se pudo confirmar el guardado. Consulta el análisis para revisar el resultado.</string>
+    <!-- Currículum de ejemplo de las vistas previas de plantillas (data/pdf/CvPdfGenerator.kt). -->
+    <string name="sample_cv_name" translatable="false">Ana Rodríguez Mora</string>
+    <string name="sample_cv_email" translatable="false">ana.rodriguez@correo.com</string>
+    <string name="sample_cv_phone" translatable="false">8888-1234</string>
+    <string name="sample_cv_location" translatable="false">Heredia</string>
+    <string name="sample_cv_bio">Estudiante de último año con experiencia atendiendo clientes y muchas ganas de aprender.</string>
+    <string name="sample_cv_job1_position">Cajera</string>
+    <string name="sample_cv_job1_company">Supermercado El Ahorro</string>
+    <string name="sample_cv_job1_description">Atención al cliente, manejo de caja y cierre diario de ventas.</string>
+    <string name="sample_cv_job2_position">Voluntaria</string>
+    <string name="sample_cv_job2_company">Cruz Roja Costarricense</string>
+    <string name="sample_cv_job2_description">Apoyo en actividades comunitarias y campañas de primeros auxilios.</string>
+    <string name="sample_cv_degree">Bachillerato en Educación Media</string>
+    <string name="sample_cv_institution">Liceo de Heredia</string>
+    <string name="sample_cv_skill1">Servicio al cliente</string>
+    <string name="sample_cv_skill2">Excel</string>
+    <string name="sample_cv_skill3">Trabajo en equipo</string>
+    <string name="sample_cv_language1">Español</string>
+    <string name="sample_cv_language2">Inglés</string>
 </resources>

@@ -1,5 +1,6 @@
 package com.cvpro.app.ui.screens.templates
 
+import android.graphics.Bitmap
 import android.content.Intent
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -45,6 +46,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material3.Icon
+import com.cvpro.app.ui.components.PagePreview
 import com.cvpro.app.ui.components.RemoteImage
 import com.cvpro.app.R
 import com.cvpro.app.domain.model.CvTemplate
@@ -164,6 +166,7 @@ fun TemplatesContent(
                         ) { template ->
                             TemplateCard(
                                 template = template,
+                                preview = uiState.previews[template.id],
                                 isInStore = false,
                                 isBusy = uiState.busyTemplateId == template.id,
                                 onActionClick = { onUseTemplate(template) },
@@ -193,6 +196,7 @@ fun TemplatesContent(
                         ) { template ->
                             TemplateCard(
                                 template = template,
+                                preview = uiState.previews[template.id],
                                 isInStore = true,
                                 isBusy = uiState.busyTemplateId == template.id,
                                 onActionClick = { onDownloadTemplate(template) },
@@ -296,6 +300,7 @@ private fun SectionTitle(
 @Composable
 private fun TemplateCard(
     template: CvTemplate,
+    preview: Bitmap?,
     isInStore: Boolean,
     isBusy: Boolean,
     onActionClick: () -> Unit,
@@ -307,7 +312,7 @@ private fun TemplateCard(
         modifier = modifier.fillMaxWidth(),
     ) {
         Row(modifier = Modifier.padding(10.dp)) {
-            TemplatePreview(previewUrl = template.previewUrl)
+            TemplatePreview(previewUrl = template.previewUrl, page = preview)
 
             Spacer(modifier = Modifier.width(12.dp))
 
@@ -383,6 +388,7 @@ private fun TemplateCard(
 @Composable
 private fun TemplatePreview(
     previewUrl: String,
+    page: Bitmap?,
     modifier: Modifier = Modifier,
 ) {
     Box(
@@ -392,7 +398,11 @@ private fun TemplatePreview(
             .clip(RoundedCornerShape(8.dp))
             .background(MaterialTheme.colorScheme.surfaceVariant),
     ) {
-        RemoteImage(
+        // La hoja dibujada con el CV de ejemplo; mientras se dibuja (o si falla), la imagen
+        // del servicio o el ícono, como antes.
+        if (page != null) {
+            PagePreview(page = page, modifier = Modifier.fillMaxSize())
+        } else RemoteImage(
             url = previewUrl,
             contentDescription = null,
             contentScale = ContentScale.Crop,

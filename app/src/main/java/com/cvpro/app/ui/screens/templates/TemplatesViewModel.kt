@@ -1,13 +1,16 @@
 package com.cvpro.app.ui.screens.templates
 
+import android.graphics.Bitmap
 import android.net.Uri
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cvpro.app.R
 import com.cvpro.app.data.download.TemplatePreviewDownloader
+import com.cvpro.app.data.pdf.CvPreviewRenderer
 import com.cvpro.app.domain.model.CvTemplate
 import com.cvpro.app.domain.model.UserProfile
+import com.cvpro.app.domain.model.newCvTitle
 import com.cvpro.app.domain.repository.AuthRepository
 import com.cvpro.app.domain.repository.CvRepository
 import com.cvpro.app.domain.repository.ProfileRepository
@@ -34,6 +37,8 @@ data class TemplatesUiState(
     val message: UiMessage? = null,
     /** El CV ya se creó: la pantalla tiene que ir a Mis Currículums, donde se abre solo. */
     val openCvs: Boolean = false,
+    /** Vista previa dibujada de cada plantilla, por id. Las que faltan usan el ícono. */
+    val previews: Map<String, Bitmap> = emptyMap(),
 )
 
 @HiltViewModel
@@ -44,6 +49,7 @@ class TemplatesViewModel @Inject constructor(
     private val authRepository: AuthRepository,
     private val profileRepository: ProfileRepository,
     private val pendingCvEditor: PendingCvEditor,
+    private val previewRenderer: CvPreviewRenderer,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TemplatesUiState())
@@ -73,10 +79,13 @@ class TemplatesViewModel @Inject constructor(
             _uiState.update { it.copy(busyTemplateId = template.id, error = null) }
 
             try {
+                val personalInfo = personalInfoForNewCv()
                 val cv = cvRepository.createCv(
-                    title = template.name,
+                    // "Ana Mora – Executive": al llenar las experiencias, el editor lo cambia
+                    // por el puesto (ver CvTitle.kt).
+                    title = newCvTitle(personalInfo?.name.orEmpty(), template.name),
                     templateId = template.id,
-                    personalInfo = personalInfoForNewCv(),
+                    personalInfo = personalInfo,
                 )
 
                 // En vez de dejar al usuario en Plantillas con un aviso, se lo lleva al editor
@@ -136,10 +145,17 @@ class TemplatesViewModel @Inject constructor(
             _uiState.update { it.copy(busyTemplateId = template.id, error = null) }
 
             try {
-                _downloadedPreview.value = previewDownloader.download(
-                    templateName = template.name,
-                    previewUrl = template.previewUrl,
-                )
+                // Se guarda la vista previa dibujada, que es la que muestra cómo queda. Si
+                // todavía no está, se baja la del servicio como antes.
+                val drawn = _uiState.value.previews[template.id]
+                _downloadedPreview.value = if (drawn != null) {
+                    previewDownloader.save(template.name, drawn)
+                } else {
+                    previewDownloader.download(
+                        templateName = template.name,
+                        previewUrl = template.previewUrl,
+                    )
+                }
 
                 _uiState.update {
                     it.copy(
@@ -196,6 +212,11 @@ class TemplatesViewModel @Inject constructor(
                         error = null,
                     )
                 }
+
+                // Las vistas previas llegan después de la lista: así las tarjetas aparecen
+                // enseguida y la imagen se completa apenas está dibujada.
+                val previews = previewRenderer.templatePreviewsFor(result.items)
+                _uiState.update { it.copy(previews = previews) }
             } catch (exception: Exception) {
                 _uiState.update {
                     it.copy(
