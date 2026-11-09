@@ -53,26 +53,27 @@ data class JobsUiState(
     /**
      * Ofertas que se ven con el filtro elegido.
      *
-     * El filtro se aplica sobre lo ya cargado, no en el servicio: los mocks del APIM no
-     * reciben modalidad como parámetro.
+     * El filtro se aplica sobre lo ya cargado, no en el servicio: la ruta /jobs no recibe
+     * modalidad ni fecha. Por eso la pantalla pide páginas grandes (ver JOBS_PAGE_SIZE): así
+     * el filtro ve todas las ofertas y no solo las primeras diez.
      */
     val visibleOffers: List<JobOffer> = when (selectedFilter) {
         JobsFilter.RECOMMENDED -> offers.sortedByDescending { it.matchScore ?: 0 }
         JobsFilter.REMOTE -> offers.filter { it.modality == JobModality.REMOTE }
         JobsFilter.HYBRID -> offers.filter { it.modality == JobModality.HYBRID }
         JobsFilter.RECENT -> offers
+            .filter { (it.postedAtMillis ?: 0) >= System.currentTimeMillis() - RECENT_WINDOW_MS }
+            .sortedByDescending { it.postedAtMillis }
     }
 
     /** Sin error y sin resultados: hay que mostrar el estado vacío, no una lista en blanco. */
     val isEmpty: Boolean = !isLoading && errorMessage == null && visibleOffers.isEmpty()
 }
 
-/**
- * Filtros rápidos del diseño.
- *
- * RECENT está dibujado pero no filtra: el modelo de oferta no trae la fecha de publicación.
- * TODO: pedirle a Pérez que postedAt llegue al dominio para poder filtrar por fecha.
- */
+/** "Últimos 7 días", en milisegundos. */
+private const val RECENT_WINDOW_MS = 7L * 24 * 60 * 60 * 1000
+
+/** Filtros rápidos del diseño. */
 enum class JobsFilter(@param:StringRes val labelRes: Int) {
     RECOMMENDED(R.string.jobs_filter_recommended),
     REMOTE(R.string.jobs_filter_remote),
@@ -221,7 +222,7 @@ class JobsViewModel @Inject constructor(
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoadingMore = true) }
-            runCatching { jobOfferRepository.getOffers(page = currentPage + 1, query = state.query) }
+            runCatching { jobOfferRepository.getOffers(page = currentPage + 1, pageSize = JOBS_PAGE_SIZE, query = state.query) }
                 .onSuccess { result ->
                     currentPage = result.page
                     _uiState.update {
@@ -243,7 +244,7 @@ class JobsViewModel @Inject constructor(
     private fun loadFirstPage() {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            runCatching { jobOfferRepository.getOffers(page = 1, query = _uiState.value.query) }
+            runCatching { jobOfferRepository.getOffers(page = 1, pageSize = JOBS_PAGE_SIZE, query = _uiState.value.query) }
                 .onSuccess { result ->
                     currentPage = result.page
                     _uiState.update {
@@ -276,6 +277,11 @@ class JobsViewModel @Inject constructor(
 
     private companion object {
         const val SEARCH_DEBOUNCE_MS = 350L
+        /**
+         * Ofertas por página. Alcanza para todas las que importa el servicio (unas 40), así los
+         * filtros rápidos trabajan sobre todas; si hay más, sigue el botón "Cargar más".
+         */
+        const val JOBS_PAGE_SIZE = 50
         /** Igual que el tablero de Postulaciones: alcanza para todas las de un usuario. */
         const val APPLICATIONS_PAGE_SIZE = 50
         /** El servicio de Ofertas responde 409 si el usuario ya se postuló a esa oferta. */
