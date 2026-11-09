@@ -100,7 +100,6 @@
     <string name="error_unavailable">The service is not available right now. Try again later.</string>
     <string name="error_network">No connection. Check your internet and try again.</string>
     <string name="error_generic">Something went wrong. Try again.</string>
-    <string name="templates_cv_created">\"%1$s\" was created in My CVs</string>
     <string name="templates_preview_saved">Preview saved to Downloads</string>
     <string name="ai_error_timeout">AI took too long to respond. Try again.</string>
     <string name="ai_error_network">No connection. Check your internet and try again.</string>
@@ -288,6 +287,10 @@
     <string name="jobs_match_label">Match</string>
     <string name="jobs_requirements_title">Main requirements</string>
     <string name="jobs_details">See Details</string>
+    <string name="jobs_apply">Apply</string>
+    <string name="jobs_applied">Applied</string>
+    <string name="jobs_apply_success">You applied to \"%1$s\". Track it in My Applications.</string>
+    <string name="jobs_apply_already">You had already applied to this offer.</string>
     <string name="jobs_empty_title">No results</string>
     <string name="jobs_empty_message">We didn\'t find offers for that search. Try another word.</string>
     <string name="jobs_error_network">We couldn\'t load the offers. Check your connection and try again.</string>

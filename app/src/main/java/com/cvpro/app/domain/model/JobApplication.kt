@@ -17,6 +17,11 @@ data class JobApplication(
     val status: ApplicationStatus,
     /** Fecha en que se postuló, en epoch milisegundos UTC. Null si el servicio no la mandó. */
     val appliedAt: Long?,
+    /**
+     * Oferta a la que corresponde. Ofertas Laborales lo usa para marcar las ofertas a las que
+     * el usuario ya se postuló. Vacío si el servicio no lo mandó.
+     */
+    val jobOfferId: String = "",
 )
 
 /**

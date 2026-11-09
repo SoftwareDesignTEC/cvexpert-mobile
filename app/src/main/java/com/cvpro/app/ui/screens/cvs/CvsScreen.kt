@@ -171,7 +171,11 @@ fun CvsScreen(
     val aiState by aiViewModel.uiState.collectAsStateWithLifecycle()
     val generatedPdf by viewModel.generatedPdf.collectAsStateWithLifecycle()
     val savedCv by viewModel.savedCv.collectAsStateWithLifecycle()
+    val cvToOpen by viewModel.cvToOpen.collectAsStateWithLifecycle()
     val context = LocalContext.current
+
+    // Cada vez que se entra a la pantalla se recarga la lista (ver onScreenShown).
+    LaunchedEffect(Unit) { viewModel.onScreenShown() }
 
     // Apenas el PDF está listo se abre con el visor que tenga el usuario, y se avisa al
     // ViewModel para que no vuelva a abrirse cada vez que la pantalla se repinta.
@@ -195,6 +199,8 @@ fun CvsScreen(
         onSaveCv = viewModel::saveCv,
         onSaveHandled = viewModel::onSaveHandled,
         onTemplatesClick = onTemplatesClick,
+        cvToOpen = cvToOpen,
+        onCvOpened = viewModel::onCvOpened,
         aiState = aiState,
         aiActions = CvAiActions(
             onExpand = aiViewModel::expand,
@@ -228,9 +234,19 @@ fun CvsContent(
     aiState: CvAiUiState = CvAiUiState(),
     aiActions: CvAiActions = CvAiActions(),
     onEditorChanged: () -> Unit = {},
+    cvToOpen: Cv? = null,
+    onCvOpened: () -> Unit = {},
 ) {
     // Currículum abierto en el editor, o null si no hay ninguno.
     var editingCv by remember { mutableStateOf<Cv?>(null) }
+
+    // CV recién creado desde Plantillas: se abre solo en el editor para empezar a llenarlo.
+    LaunchedEffect(cvToOpen) {
+        if (cvToOpen != null) {
+            editingCv = cvToOpen
+            onCvOpened()
+        }
+    }
 
     // Al abrir o cerrar el editor la IA vuelve a cero: una respuesta que llegue tarde no
     // tiene que caer en otro currículum.

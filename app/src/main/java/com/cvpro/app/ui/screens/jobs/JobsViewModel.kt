@@ -4,10 +4,16 @@ import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cvpro.app.R
+import com.cvpro.app.domain.model.ApplicationStatus
 import com.cvpro.app.domain.model.JobModality
 import com.cvpro.app.domain.model.JobOffer
+import com.cvpro.app.domain.repository.ApplicationRepository
+import com.cvpro.app.domain.repository.AuthRepository
 import com.cvpro.app.domain.repository.JobOfferRepository
+import com.cvpro.app.ui.components.UiMessage
+import com.cvpro.app.ui.components.toUserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -15,6 +21,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
 import java.io.IOException
 import javax.inject.Inject
 
@@ -34,6 +41,12 @@ data class JobsUiState(
     val totalRecords: Int = 0,
     val hasMore: Boolean = false,
     val selectedFilter: JobsFilter = JobsFilter.RECOMMENDED,
+    /** Oferta cuya postulación se está enviando, para mostrar el loader en su botón. */
+    val applyingOfferId: String? = null,
+    /** Ofertas a las que el usuario ya se postuló: su botón queda apagado. */
+    val appliedOfferIds: Set<String> = emptySet(),
+    /** Resultado de la última postulación: se muestra en el snackbar y se limpia. */
+    val message: UiMessage? = null,
 ) {
     /**
      * Ofertas que se ven con el filtro elegido.
@@ -68,6 +81,8 @@ enum class JobsFilter(@param:StringRes val labelRes: Int) {
 @HiltViewModel
 class JobsViewModel @Inject constructor(
     private val jobOfferRepository: JobOfferRepository,
+    private val applicationRepository: ApplicationRepository,
+    private val authRepository: AuthRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(JobsUiState())
@@ -94,6 +109,90 @@ class JobsViewModel @Inject constructor(
     }
 
     fun onRetryClick() = loadFirstPage()
+
+    /**
+     * Se llama cada vez que la pantalla aparece: pide las postulaciones del usuario para
+     * marcar las ofertas a las que ya se postuló. Se repite al volver porque desde el
+     * tablero de Postulaciones pudo haber cambiado algo.
+     */
+    fun onScreenShown() {
+        viewModelScope.launch {
+            try {
+                val applications = applicationRepository.getApplications(
+                    page = 1,
+                    pageSize = APPLICATIONS_PAGE_SIZE,
+                    query = "",
+                )
+                val ids = applications.items.map { it.jobOfferId }.filter { it.isNotBlank() }
+                _uiState.update { it.copy(appliedOfferIds = ids.toSet()) }
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Exception) {
+                // Si falla no se muestra error: las ofertas se ven igual y, si el usuario se
+                // vuelve a postular, el servicio responde 409 y se marca en ese momento.
+            }
+        }
+    }
+
+    /**
+     * Postula al usuario a la oferta (POST /applications).
+     *
+     * El servicio de Ofertas toma el usuario del token y la postulación nace en "Aplicado".
+     * Un 409 significa que ya estaba postulado: no es un error para el usuario, así que se
+     * le avisa y la oferta queda marcada igual.
+     */
+    fun onApply(offer: JobOffer) {
+        val state = _uiState.value
+        if (state.applyingOfferId != null || offer.id in state.appliedOfferIds) return
+
+        viewModelScope.launch {
+            _uiState.update { it.copy(applyingOfferId = offer.id) }
+            try {
+                applicationRepository.createApplication(
+                    userId = authRepository.currentUser.value?.id.orEmpty(),
+                    jobOfferId = offer.id,
+                    jobTitle = offer.title,
+                    company = offer.company,
+                    companyLogoUrl = offer.companyLogoUrl,
+                    location = offer.location,
+                    modality = offer.modality,
+                    status = ApplicationStatus.APPLIED,
+                    notes = null,
+                )
+                markApplied(offer, UiMessage(R.string.jobs_apply_success, listOf(offer.title)))
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: HttpException) {
+                if (exception.code() == HTTP_CONFLICT) {
+                    markApplied(offer, UiMessage(R.string.jobs_apply_already))
+                } else {
+                    failApply(exception)
+                }
+            } catch (exception: Exception) {
+                failApply(exception)
+            }
+        }
+    }
+
+    fun onMessageShown() {
+        _uiState.update { it.copy(message = null) }
+    }
+
+    private fun markApplied(offer: JobOffer, message: UiMessage) {
+        _uiState.update {
+            it.copy(
+                applyingOfferId = null,
+                appliedOfferIds = it.appliedOfferIds + offer.id,
+                message = message,
+            )
+        }
+    }
+
+    private fun failApply(exception: Exception) {
+        _uiState.update {
+            it.copy(applyingOfferId = null, message = UiMessage(exception.toUserMessage()))
+        }
+    }
 
     /** Cambia el filtro rápido. No vuelve a pedir: se aplica sobre lo que ya está cargado. */
     fun onFilterChange(filter: JobsFilter) {
@@ -162,5 +261,9 @@ class JobsViewModel @Inject constructor(
 
     private companion object {
         const val SEARCH_DEBOUNCE_MS = 350L
+        /** Igual que el tablero de Postulaciones: alcanza para todas las de un usuario. */
+        const val APPLICATIONS_PAGE_SIZE = 50
+        /** El servicio de Ofertas responde 409 si el usuario ya se postuló a esa oferta. */
+        const val HTTP_CONFLICT = 409
     }
 }

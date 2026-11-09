@@ -5,9 +5,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
@@ -38,6 +41,8 @@ fun JobOfferDetailSheet(
     offer: JobOffer,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+    applyState: ApplyState? = null,
+    onApply: () -> Unit = {},
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -126,6 +131,47 @@ fun JobOfferDetailSheet(
                 label = stringResource(R.string.detail_posted_at),
                 value = offer.postedAt,
             )
+
+            // Sin applyState no hay botón: así la hoja se puede abrir desde donde no tenga
+            // sentido postularse.
+            applyState?.let { state ->
+                ApplyButton(
+                    state = state,
+                    onClick = onApply,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 24.dp),
+                )
+            }
+        }
+    }
+}
+
+/** En qué punto está la postulación del usuario a una oferta. */
+enum class ApplyState { AVAILABLE, SENDING, APPLIED }
+
+/**
+ * Botón "Postularme". Mientras se envía muestra un loader, y si el usuario ya se postuló
+ * queda apagado con "Ya te postulaste", para que no lo intente dos veces.
+ */
+@Composable
+fun ApplyButton(
+    state: ApplyState,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Button(
+        onClick = onClick,
+        enabled = state == ApplyState.AVAILABLE,
+        modifier = modifier,
+    ) {
+        when (state) {
+            ApplyState.SENDING -> CircularProgressIndicator(
+                strokeWidth = 2.dp,
+                modifier = Modifier.size(18.dp),
+            )
+            ApplyState.APPLIED -> Text(stringResource(R.string.jobs_applied), maxLines = 1)
+            ApplyState.AVAILABLE -> Text(stringResource(R.string.jobs_apply), maxLines = 1)
         }
     }
 }

@@ -35,7 +35,12 @@ class CvsViewModel @Inject constructor(
     private val repository: CvRepository,
     private val pdfGenerator: CvPdfGenerator,
     private val templateRepository: TemplateRepository,
+    private val pendingCvEditor: PendingCvEditor,
 ) : ViewModel() {
+
+    /** Currículum que hay que abrir en el editor (recién creado desde Plantillas). */
+    private val _cvToOpen = MutableStateFlow<Cv?>(null)
+    val cvToOpen: StateFlow<Cv?> = _cvToOpen.asStateFlow()
 
     // Dónde quedó el último PDF generado. La pantalla lo abre y después lo limpia.
     private val _generatedPdf = MutableStateFlow<Uri?>(null)
@@ -72,8 +77,27 @@ class CvsViewModel @Inject constructor(
     /** Espera de la búsqueda, para no pedirle al servicio en cada tecla. */
     private var searchJob: Job? = null
 
-    init {
-        loadCvs()
+    /**
+     * Se llama cada vez que la pantalla aparece, no solo la primera.
+     *
+     * El menú guarda el estado de cada pantalla al salir y lo recupera al volver, así que el
+     * ViewModel sobrevive. Si cargara solo al crearse, un CV recién creado desde Plantillas
+     * no aparecería en la lista. El indicador de carga solo sale si todavía no hay nada que
+     * mostrar, para que la lista no parpadee cada vez que se entra.
+     */
+    fun onScreenShown() {
+        loadCvs(showLoader = _uiState.value.cvs.isEmpty())
+        val id = pendingCvEditor.take() ?: return
+        viewModelScope.launch {
+            // Se pide por id y no se busca en la lista: el CV nuevo puede no estar en la
+            // primera página. Si falla, el usuario igual lo ve en la lista.
+            runCatching { repository.getCvById(id) }.onSuccess { _cvToOpen.value = it }
+        }
+    }
+
+    /** La pantalla avisa que ya abrió el editor, para no abrirlo otra vez al repintarse. */
+    fun onCvOpened() {
+        _cvToOpen.value = null
     }
 
     fun retry() {
@@ -163,11 +187,11 @@ class CvsViewModel @Inject constructor(
         _savedCv.value = null
     }
 
-    private fun loadCvs() {
+    private fun loadCvs(showLoader: Boolean = true) {
         viewModelScope.launch {
             _uiState.update {
                 it.copy(
-                    isLoading = true,
+                    isLoading = showLoader,
                     error = null,
                 )
             }

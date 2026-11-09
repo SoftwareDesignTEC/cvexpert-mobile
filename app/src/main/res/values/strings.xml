@@ -101,7 +101,6 @@
     <string name="error_unavailable">El servicio no está disponible ahora. Intenta de nuevo más tarde.</string>
     <string name="error_network">No hay conexión. Revisa tu internet e intenta de nuevo.</string>
     <string name="error_generic">Algo salió mal. Intenta de nuevo.</string>
-    <string name="templates_cv_created">Se creó \"%1$s\" en Mis Currículums</string>
     <string name="templates_preview_saved">Vista previa guardada en Descargas</string>
 
     <!-- Editor de currículum -->
@@ -286,6 +285,10 @@
     <string name="jobs_match_label">Compatibilidad</string>
     <string name="jobs_requirements_title">Requisitos principales</string>
     <string name="jobs_details">Ver Detalles</string>
+    <string name="jobs_apply">Postularme</string>
+    <string name="jobs_applied">Ya te postulaste</string>
+    <string name="jobs_apply_success">Te postulaste a \"%1$s\". Síguela en Mis Postulaciones.</string>
+    <string name="jobs_apply_already">Ya te habías postulado a esta oferta.</string>
     <string name="jobs_empty_title">Sin resultados</string>
     <string name="jobs_empty_message">No encontramos ofertas con esa búsqueda. Prueba con otra palabra.</string>
     <string name="jobs_error_network">No pudimos cargar las ofertas. Revisa tu conexión e inténtalo de nuevo.</string>

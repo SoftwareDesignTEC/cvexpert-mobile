@@ -43,7 +43,17 @@ class ApplicationsViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(ApplicationsUiState())
     val uiState: StateFlow<ApplicationsUiState> = _uiState.asStateFlow()
 
-    init { loadApplications() }
+    /**
+     * Se llama cada vez que la pantalla aparece, no solo la primera.
+     *
+     * El menú guarda el estado de cada pantalla al salir y lo recupera al volver, así que el
+     * ViewModel sobrevive. Si cargara solo al crearse, una postulación hecha desde Ofertas
+     * no aparecería al volver al tablero. El indicador de carga solo sale si todavía no hay
+     * nada que mostrar, para que el tablero no parpadee cada vez que se entra.
+     */
+    fun onScreenShown() {
+        loadApplications(showLoader = _uiState.value.applications.isEmpty())
+    }
 
     fun onStatusSelected(status: ApplicationStatus) {
         _uiState.update { it.copy(selectedStatus = status) }
@@ -91,9 +101,9 @@ class ApplicationsViewModel @Inject constructor(
         }
     }
 
-    private fun loadApplications() {
+    private fun loadApplications(showLoader: Boolean = true) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null) }
+            _uiState.update { it.copy(isLoading = showLoader, error = null) }
 
             try {
                 val result = repository.getApplications(

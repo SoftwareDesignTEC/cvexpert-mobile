@@ -14,6 +14,7 @@ import com.cvpro.app.domain.repository.ProfileRepository
 import com.cvpro.app.domain.repository.TemplateRepository
 import com.cvpro.app.ui.components.UiMessage
 import com.cvpro.app.ui.components.toUserMessage
+import com.cvpro.app.ui.screens.cvs.PendingCvEditor
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.CancellationException
@@ -31,6 +32,8 @@ data class TemplatesUiState(
     val busyTemplateId: String? = null,
     /** Aviso del resultado de la última acción: se muestra y se limpia. */
     val message: UiMessage? = null,
+    /** El CV ya se creó: la pantalla tiene que ir a Mis Currículums, donde se abre solo. */
+    val openCvs: Boolean = false,
 )
 
 @HiltViewModel
@@ -40,6 +43,7 @@ class TemplatesViewModel @Inject constructor(
     private val previewDownloader: TemplatePreviewDownloader,
     private val authRepository: AuthRepository,
     private val profileRepository: ProfileRepository,
+    private val pendingCvEditor: PendingCvEditor,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TemplatesUiState())
@@ -75,12 +79,10 @@ class TemplatesViewModel @Inject constructor(
                     personalInfo = personalInfoForNewCv(),
                 )
 
-                _uiState.update {
-                    it.copy(
-                        busyTemplateId = null,
-                        message = UiMessage(R.string.templates_cv_created, listOf(cv.title)),
-                    )
-                }
+                // En vez de dejar al usuario en Plantillas con un aviso, se lo lleva al editor
+                // del CV nuevo para que lo llene ahí mismo.
+                pendingCvEditor.request(cv.id)
+                _uiState.update { it.copy(busyTemplateId = null, openCvs = true) }
             } catch (exception: Exception) {
                 _uiState.update {
                     it.copy(
@@ -164,6 +166,11 @@ class TemplatesViewModel @Inject constructor(
     /** La pantalla avisa que ya mostró el aviso. */
     fun onMessageShown() {
         _uiState.update { it.copy(message = null) }
+    }
+
+    /** La pantalla ya navegó a Mis Currículums; se baja la bandera para no volver a hacerlo. */
+    fun onCvsOpened() {
+        _uiState.update { it.copy(openCvs = false) }
     }
 
     private fun loadTemplates() {
