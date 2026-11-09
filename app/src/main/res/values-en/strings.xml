@@ -486,4 +486,19 @@
     <string name="skills_gap_edit_draft">Back to draft</string>
     <string name="skills_gap_close_editor">Close</string>
     <string name="skills_gap_write_network">Saving could not be confirmed. Reload the analysis to check the result.</string>
+    <!-- Sample CV for template previews (data/pdf/CvPdfGenerator.kt). -->
+    <string name="sample_cv_bio">Final-year student with customer service experience and eager to learn.</string>
+    <string name="sample_cv_job1_position">Cashier</string>
+    <string name="sample_cv_job1_company">El Ahorro Supermarket</string>
+    <string name="sample_cv_job1_description">Customer service, cash handling and daily sales closing.</string>
+    <string name="sample_cv_job2_position">Volunteer</string>
+    <string name="sample_cv_job2_company">Costa Rican Red Cross</string>
+    <string name="sample_cv_job2_description">Support for community activities and first aid campaigns.</string>
+    <string name="sample_cv_degree">High School Diploma</string>
+    <string name="sample_cv_institution">Liceo de Heredia</string>
+    <string name="sample_cv_skill1">Customer service</string>
+    <string name="sample_cv_skill2">Excel</string>
+    <string name="sample_cv_skill3">Teamwork</string>
+    <string name="sample_cv_language1">Spanish</string>
+    <string name="sample_cv_language2">English</string>
 </resources>

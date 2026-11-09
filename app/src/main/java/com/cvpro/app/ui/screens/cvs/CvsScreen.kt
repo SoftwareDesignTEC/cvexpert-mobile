@@ -1,5 +1,6 @@
 package com.cvpro.app.ui.screens.cvs
 
+import android.graphics.Bitmap
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.ui.graphics.Color
@@ -50,6 +51,7 @@ import androidx.annotation.StringRes
 import com.cvpro.app.ui.components.ComingSoonSheet
 import com.cvpro.app.ui.components.CvEditorSheet
 import com.cvpro.app.ui.components.EmptyState
+import com.cvpro.app.ui.components.PagePreview
 import com.cvpro.app.ui.components.RemoteImage
 import com.cvpro.app.ui.theme.CvProTheme
 
@@ -63,8 +65,14 @@ import com.cvpro.app.ui.theme.CvProTheme
 @Composable
 private fun CvPreview(
     cv: Cv,
+    page: Bitmap?,
     modifier: Modifier = Modifier,
 ) {
+    // Primero la hoja real dibujada con su plantilla; si todavía no está, lo de antes.
+    if (page != null) {
+        PagePreview(page = page, modifier = modifier)
+        return
+    }
     RemoteImage(
         url = cv.previewUrl,
         contentDescription = null,
@@ -344,6 +352,7 @@ fun CvsContent(
                 items(items = uiState.cvs, key = { it.id }) { cv ->
                     CvCard(
                         cv = cv,
+                        preview = uiState.previews[cv.id],
                         isDeleting = uiState.deletingId == cv.id,
                         onDeleteClick = { cvToDelete = cv },
                         onCvClick = { editingCv = it },
@@ -432,6 +441,7 @@ private fun CreateCvBanner(
 @Composable
 private fun CvCard(
     cv: Cv,
+    preview: Bitmap?,
     isDeleting: Boolean,
     onDeleteClick: () -> Unit,
     onCvClick: (Cv) -> Unit,
@@ -447,6 +457,7 @@ private fun CvCard(
             // del diseño.
             CvPreview(
                 cv = cv,
+                page = preview,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(170.dp),

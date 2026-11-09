@@ -134,7 +134,13 @@ fun CvEditorSheet(
     val emailError = FormValidation.email(draft.personalInfo.email)
     val nameError = FormValidation.required(draft.personalInfo.name)
     val phoneError = FormValidation.phoneOptional(draft.personalInfo.phone.orEmpty())
-    val hasErrors = listOf(titleError, emailError, nameError, phoneError).any { it != null }
+    // El servicio de CVs exige la fecha de inicio de cada experiencia y de cada estudio
+    // (startDate es obligatorio en el contrato). Sin esto el editor dejaba guardar y el
+    // servicio respondía 400 con un aviso genérico, sin decir qué faltaba.
+    val missingStartDate = draft.workExperiences.any { it.startDate == null } ||
+        draft.education.any { it.startDate == null }
+    val hasErrors = listOf(titleError, emailError, nameError, phoneError).any { it != null } ||
+        missingStartDate
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -247,6 +253,7 @@ fun CvEditorSheet(
                         startDate = experience.startDate,
                         endDate = experience.endDate,
                         current = experience.current,
+                        showErrors = showErrors,
                         onStartChange = { update(experience.copy(startDate = it)) },
                         onEndChange = { update(experience.copy(endDate = it)) },
                         onCurrentChange = { update(experience.copy(current = it)) },
@@ -320,6 +327,7 @@ fun CvEditorSheet(
                         startDate = study.startDate,
                         endDate = study.endDate,
                         current = study.current,
+                        showErrors = showErrors,
                         onStartChange = { update(study.copy(startDate = it)) },
                         onEndChange = { update(study.copy(endDate = it)) },
                         onCurrentChange = { update(study.copy(current = it)) },
@@ -493,16 +501,23 @@ private fun PeriodFields(
     startDate: Long?,
     endDate: Long?,
     current: Boolean,
+    showErrors: Boolean,
     onStartChange: (Long?) -> Unit,
     onEndChange: (Long?) -> Unit,
     onCurrentChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
+        // "Desde" es obligatorio (ver missingStartDate en el editor).
         DateField(
             value = startDate,
             onValueChange = onStartChange,
             label = stringResource(R.string.cv_editor_start),
+            errorMessage = if (showErrors && startDate == null) {
+                stringResource(R.string.validation_required)
+            } else {
+                null
+            },
         )
 
         // Si está marcado "Actual" no tiene sentido pedir fecha de fin: el campo se apaga y
@@ -550,6 +565,7 @@ private fun DateField(
     label: String,
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
+    errorMessage: String? = null,
 ) {
     var picking by remember { mutableStateOf(false) }
 
@@ -559,6 +575,7 @@ private fun DateField(
             onValueChange = {},
             label = label,
             enabled = enabled,
+            errorMessage = errorMessage,
         )
         if (enabled) {
             Box(
