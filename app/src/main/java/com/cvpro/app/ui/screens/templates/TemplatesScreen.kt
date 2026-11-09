@@ -56,6 +56,7 @@ import com.cvpro.app.ui.theme.CvProTheme
 /** Plantillas sin conexión con estado. */
 @Composable
 fun TemplatesScreen(
+    onCvCreated: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: TemplatesViewModel = hiltViewModel(),
 ) {
@@ -84,6 +85,14 @@ fun TemplatesScreen(
         val mensaje = uiState.message ?: return@LaunchedEffect
         snackbarHostState.showSnackbar(resources.getString(mensaje.res, *mensaje.args.toTypedArray()))
         viewModel.onMessageShown()
+    }
+
+    // CV creado: se va a Mis Currículums, que lo abre en el editor.
+    LaunchedEffect(uiState.openCvs) {
+        if (uiState.openCvs) {
+            viewModel.onCvsOpened()
+            onCvCreated()
+        }
     }
 
     TemplatesContent(

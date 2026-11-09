@@ -27,6 +27,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,12 +37,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cvpro.app.ui.components.ApplyButton
+import com.cvpro.app.ui.components.ApplyState
+import com.cvpro.app.ui.components.LocalSnackbarHostState
 import com.cvpro.app.ui.components.RemoteImage
 import com.cvpro.app.ui.components.outlinedOnCardColors
 import com.cvpro.app.R
@@ -58,6 +63,19 @@ fun JobsScreen(
     viewModel: JobsViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    // El Scaffold de la raíz comparte un único snackbar, igual que en Plantillas.
+    val snackbarHostState = LocalSnackbarHostState.current
+    val resources = LocalResources.current
+
+    // Cada vez que se entra se revisa a qué ofertas ya se postuló el usuario.
+    LaunchedEffect(Unit) { viewModel.onScreenShown() }
+
+    // El resultado de postularse se avisa abajo y se limpia solo.
+    LaunchedEffect(uiState.message) {
+        val mensaje = uiState.message ?: return@LaunchedEffect
+        snackbarHostState.showSnackbar(resources.getString(mensaje.res, *mensaje.args.toTypedArray()))
+        viewModel.onMessageShown()
+    }
 
     JobsContent(
         uiState = uiState,
@@ -65,6 +83,7 @@ fun JobsScreen(
         onFilterChange = viewModel::onFilterChange,
         onRetryClick = viewModel::onRetryClick,
         onLoadMore = viewModel::onLoadMore,
+        onApply = viewModel::onApply,
         modifier = modifier,
     )
 }
@@ -82,13 +101,19 @@ fun JobsContent(
     onFilterChange: (JobsFilter) -> Unit,
     onRetryClick: () -> Unit,
     onLoadMore: () -> Unit,
+    onApply: (JobOffer) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     // Oferta abierta en el detalle, o null si la hoja está cerrada.
     var detailOffer by remember { mutableStateOf<JobOffer?>(null) }
 
     detailOffer?.let { offer ->
-        JobOfferDetailSheet(offer = offer, onDismiss = { detailOffer = null })
+        JobOfferDetailSheet(
+            offer = offer,
+            onDismiss = { detailOffer = null },
+            applyState = uiState.applyStateOf(offer),
+            onApply = { onApply(offer) },
+        )
     }
 
     Column(modifier = modifier.fillMaxSize()) {
@@ -127,7 +152,12 @@ fun JobsContent(
                 modifier = Modifier.fillMaxSize(),
             ) {
                 items(items = uiState.visibleOffers, key = { it.id }) { offer ->
-                    JobCard(offer = offer, onDetailsClick = { detailOffer = offer })
+                    JobCard(
+                        offer = offer,
+                        applyState = uiState.applyStateOf(offer),
+                        onDetailsClick = { detailOffer = offer },
+                        onApplyClick = { onApply(offer) },
+                    )
                 }
 
                 if (uiState.hasMore) {
@@ -220,14 +250,23 @@ private fun JobsFilters(
     }
 }
 
+/** Estado del botón "Postularme" de una oferta. */
+private fun JobsUiState.applyStateOf(offer: JobOffer): ApplyState = when (offer.id) {
+    applyingOfferId -> ApplyState.SENDING
+    in appliedOfferIds -> ApplyState.APPLIED
+    else -> ApplyState.AVAILABLE
+}
+
 /**
  * Tarjeta de una oferta: el logo y los datos arriba, el anillo de compatibilidad, los
- * requisitos, y el botón de detalle abajo.
+ * requisitos, y abajo los botones de detalle y de postularse.
  */
 @Composable
 private fun JobCard(
     offer: JobOffer,
+    applyState: ApplyState,
     onDetailsClick: () -> Unit,
+    onApplyClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Surface(
@@ -296,13 +335,26 @@ private fun JobCard(
                 )
             }
 
-            Button(
-                onClick = onDetailsClick,
+            // Detalle y postularse lado a lado. Postularse es la acción principal, por eso
+            // va con el botón relleno y el detalle con el delineado.
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 12.dp),
             ) {
-                Text(stringResource(R.string.jobs_details))
+                OutlinedButton(
+                    onClick = onDetailsClick,
+                    colors = outlinedOnCardColors(),
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(stringResource(R.string.jobs_details), maxLines = 1)
+                }
+                ApplyButton(
+                    state = applyState,
+                    onClick = onApplyClick,
+                    modifier = Modifier.weight(1f),
+                )
             }
         }
     }
@@ -455,6 +507,7 @@ private fun JobsPreview(darkTheme: Boolean) {
                 onFilterChange = {},
                 onRetryClick = {},
                 onLoadMore = {},
+                onApply = {},
             )
         }
     }
