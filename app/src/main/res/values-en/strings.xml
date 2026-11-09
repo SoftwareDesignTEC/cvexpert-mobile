@@ -285,6 +285,7 @@
     <string name="jobs_filter_recent">Last 7 days</string>
     <string name="jobs_match_percentage">%1$d%%</string>
     <string name="jobs_match_label">Match</string>
+    <string name="jobs_skills_title">Skills they ask for</string>
     <string name="jobs_requirements_title">Main requirements</string>
     <string name="jobs_details">See Details</string>
     <string name="jobs_apply">Apply</string>
@@ -294,6 +295,7 @@
     <string name="jobs_apply_success_external">We saved \"%1$s\" in My Applications. Finish applying on the company page.</string>
     <string name="jobs_open_original">See original offer</string>
     <string name="jobs_empty_title">No results</string>
+    <string name="jobs_empty_filter_message">There are no offers with this filter right now. Try another one.</string>
     <string name="jobs_empty_message">We didn\'t find offers for that search. Try another word.</string>
     <string name="jobs_error_network">We couldn\'t load the offers. Check your connection and try again.</string>
     <string name="jobs_error_generic">Something went wrong while loading the offers.</string>

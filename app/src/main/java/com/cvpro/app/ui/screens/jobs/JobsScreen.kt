@@ -152,7 +152,15 @@ fun JobsContent(
 
             uiState.isEmpty -> EmptyState(
                 title = stringResource(R.string.jobs_empty_title),
-                message = stringResource(R.string.jobs_empty_message),
+                // Si hay ofertas pero ninguna pasa el filtro rápido, el problema no es la
+                // búsqueda: se dice que pruebe con otro filtro.
+                message = stringResource(
+                    if (uiState.offers.isNotEmpty() && uiState.selectedFilter != JobsFilter.RECOMMENDED) {
+                        R.string.jobs_empty_filter_message
+                    } else {
+                        R.string.jobs_empty_message
+                    },
+                ),
             )
 
             else -> LazyColumn(
@@ -329,17 +337,29 @@ private fun JobCard(
                 }
             }
 
-            if (offer.requirements.isNotEmpty()) {
+            // Las ofertas reales casi nunca traen requisitos aparte, pero sí las habilidades que
+            // el servicio saca del texto: si no hay requisitos, se muestran esas.
+            val (summaryTitle, summary) = when {
+                offer.requirements.isNotEmpty() ->
+                    R.string.jobs_requirements_title to offer.requirements.joinToString(", ")
+                offer.skills.isNotEmpty() ->
+                    R.string.jobs_skills_title to offer.skills.joinToString(", ")
+                else -> null to ""
+            }
+            if (summaryTitle != null) {
                 Text(
-                    text = stringResource(R.string.jobs_requirements_title),
+                    text = stringResource(summaryTitle),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(top = 12.dp),
                 )
+                // Dos renglones como mucho: los requisitos reales pueden ser oraciones largas.
                 Text(
-                    text = offer.requirements.joinToString(", "),
+                    text = summary,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.padding(top = 2.dp),
                 )
             }

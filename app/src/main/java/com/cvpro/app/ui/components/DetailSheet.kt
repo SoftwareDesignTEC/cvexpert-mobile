@@ -82,7 +82,7 @@ fun JobOfferDetailSheet(
                     modifier = Modifier.padding(top = 6.dp),
                 ) {
                     DetailChip(text = offer.sector)
-                    DetailChip(text = offer.type)
+                    DetailChip(text = jobTypeLabel(offer.type))
                 }
             }
 
@@ -127,6 +127,13 @@ fun JobOfferDetailSheet(
                         modifier = Modifier.padding(top = 4.dp),
                     )
                 }
+            }
+
+            if (offer.skills.isNotEmpty()) {
+                DetailField(
+                    label = stringResource(R.string.jobs_skills_title),
+                    value = offer.skills.joinToString(", "),
+                )
             }
 
             DetailField(
@@ -352,6 +359,19 @@ private fun DetailField(
             color = MaterialTheme.colorScheme.onSurface,
         )
     }
+}
+
+/**
+ * "full-time" → "Tiempo completo". El servicio manda la jornada como en el contrato (en
+ * inglés); una que la app no conoce se muestra tal cual.
+ */
+@Composable
+private fun jobTypeLabel(type: String): String = when (type.lowercase()) {
+    "full-time" -> stringResource(R.string.job_type_full_time)
+    "part-time" -> stringResource(R.string.job_type_part_time)
+    "freelance" -> stringResource(R.string.job_type_freelance)
+    "internship" -> stringResource(R.string.job_type_internship)
+    else -> type
 }
 
 private fun JobModality.labelRes(): Int = when (this) {

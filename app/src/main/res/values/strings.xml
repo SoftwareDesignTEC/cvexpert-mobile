@@ -284,6 +284,7 @@
     <string name="jobs_match_percentage">%1$d%%</string>
     <string name="jobs_match_label">Compatibilidad</string>
     <string name="jobs_requirements_title">Requisitos principales</string>
+    <string name="jobs_skills_title">Habilidades que piden</string>
     <string name="jobs_details">Ver Detalles</string>
     <string name="jobs_apply">Postularme</string>
     <string name="jobs_applied">Ya te postulaste</string>
@@ -293,6 +294,7 @@
     <string name="jobs_open_original">Ver oferta original</string>
     <string name="jobs_empty_title">Sin resultados</string>
     <string name="jobs_empty_message">No encontramos ofertas con esa búsqueda. Prueba con otra palabra.</string>
+    <string name="jobs_empty_filter_message">No hay ofertas con este filtro por ahora. Prueba con otro.</string>
     <string name="jobs_error_network">No pudimos cargar las ofertas. Revisa tu conexión e inténtalo de nuevo.</string>
     <string name="jobs_error_generic">Algo salió mal al cargar las ofertas.</string>
     <string name="jobs_match_score">%1$d%%</string>
