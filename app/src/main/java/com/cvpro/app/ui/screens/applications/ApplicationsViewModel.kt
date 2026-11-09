@@ -6,6 +6,8 @@ import androidx.lifecycle.viewModelScope
 import com.cvpro.app.domain.model.ApplicationStatus
 import com.cvpro.app.domain.model.JobApplication
 import com.cvpro.app.domain.repository.ApplicationRepository
+import com.cvpro.app.R
+import com.cvpro.app.ui.components.UiMessage
 import com.cvpro.app.ui.components.toUserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -29,6 +31,8 @@ data class ApplicationsUiState(
     val totalRecords: Int = 0,
     val isLoading: Boolean = false,
     @param:StringRes val error: Int? = null,
+    /** Aviso de una sola vez (retirar una postulación): se muestra y se limpia. */
+    val message: UiMessage? = null,
 ) {
     /** Postulaciones de la pestaña abierta. */
     val visibleApplications: List<JobApplication> =
@@ -99,6 +103,31 @@ class ApplicationsViewModel @Inject constructor(
                 _uiState.update { it.copy(error = exception.toUserMessage()) }
             }
         }
+    }
+
+    /**
+     * Retira la postulación (DELETE /applications/{id}) y la quita del tablero. Sirve, por
+     * ejemplo, si el usuario se postuló por error o la oferta ya no existe.
+     */
+    fun onWithdraw(application: JobApplication) {
+        viewModelScope.launch {
+            try {
+                repository.deleteApplication(application.id)
+                _uiState.update { state ->
+                    state.copy(
+                        applications = state.applications.filterNot { it.id == application.id },
+                        totalRecords = (state.totalRecords - 1).coerceAtLeast(0),
+                        message = UiMessage(R.string.applications_withdrawn, listOf(application.jobTitle)),
+                    )
+                }
+            } catch (exception: Exception) {
+                _uiState.update { it.copy(message = UiMessage(exception.toUserMessage())) }
+            }
+        }
+    }
+
+    fun onMessageShown() {
+        _uiState.update { it.copy(message = null) }
     }
 
     private fun loadApplications(showLoader: Boolean = true) {

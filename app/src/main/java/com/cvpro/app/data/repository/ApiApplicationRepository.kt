@@ -11,6 +11,7 @@ import com.cvpro.app.domain.model.PagedResult
 import com.cvpro.app.domain.repository.ApplicationRepository
 import javax.inject.Inject
 import javax.inject.Singleton
+import retrofit2.HttpException
 
 @Singleton
 class ApiApplicationRepository @Inject constructor(
@@ -62,6 +63,13 @@ class ApiApplicationRepository @Inject constructor(
         )
 
         return api.createApplication(request).toDomain()
+    }
+
+    override suspend fun deleteApplication(id: String) {
+        val response = api.deleteApplication(id)
+        // Con Response<Unit>, Retrofit no lanza error por un 404 o 500: hay que revisarlo aquí
+        // para que la pantalla lo muestre igual que los demás errores.
+        if (!response.isSuccessful) throw HttpException(response)
     }
 
     override suspend fun updateApplicationStatus(

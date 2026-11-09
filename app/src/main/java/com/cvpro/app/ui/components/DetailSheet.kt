@@ -17,6 +17,7 @@ import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -213,6 +214,7 @@ fun JobApplicationDetailSheet(
     onDismiss: () -> Unit,
     onStatusChange: (ApplicationStatus) -> Unit,
     modifier: Modifier = Modifier,
+    onWithdraw: (() -> Unit)? = null,
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -264,6 +266,21 @@ fun JobApplicationDetailSheet(
                     isCurrent = status == application.status,
                     onClick = { onStatusChange(status) },
                 )
+            }
+
+            // Retirar va aparte y en rojo: borra la postulación del tablero.
+            onWithdraw?.let { withdraw ->
+                TextButton(
+                    onClick = withdraw,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.applications_withdraw),
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
             }
         }
     }

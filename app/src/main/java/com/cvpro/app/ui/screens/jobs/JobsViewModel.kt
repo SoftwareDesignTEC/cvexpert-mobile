@@ -119,6 +119,9 @@ class JobsViewModel @Inject constructor(
      * tablero de Postulaciones pudo haber cambiado algo.
      */
     fun onScreenShown() {
+        // Si ya había ofertas, se vuelven a pedir sin indicador de carga: el servicio importa
+        // ofertas nuevas cada dos días y el menú conserva esta pantalla con lo de antes.
+        if (_uiState.value.offers.isNotEmpty()) loadFirstPage(showLoader = false)
         viewModelScope.launch {
             try {
                 val applications = applicationRepository.getApplications(
@@ -241,9 +244,9 @@ class JobsViewModel @Inject constructor(
         }
     }
 
-    private fun loadFirstPage() {
+    private fun loadFirstPage(showLoader: Boolean = true) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            _uiState.update { it.copy(isLoading = showLoader, errorMessage = null) }
             runCatching { jobOfferRepository.getOffers(page = 1, pageSize = JOBS_PAGE_SIZE, query = _uiState.value.query) }
                 .onSuccess { result ->
                     currentPage = result.page
