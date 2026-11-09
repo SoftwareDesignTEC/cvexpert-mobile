@@ -47,6 +47,8 @@ data class JobsUiState(
     val appliedOfferIds: Set<String> = emptySet(),
     /** Resultado de la última postulación: se muestra en el snackbar y se limpia. */
     val message: UiMessage? = null,
+    /** Página real de la oferta que hay que abrir en el navegador (después de postularse). */
+    val urlToOpen: String? = null,
 ) {
     /**
      * Ofertas que se ven con el filtro elegido.
@@ -159,7 +161,15 @@ class JobsViewModel @Inject constructor(
                     status = ApplicationStatus.APPLIED,
                     notes = null,
                 )
-                markApplied(offer, UiMessage(R.string.jobs_apply_success, listOf(offer.title)))
+                // Con una oferta real, la postulación de verdad se termina en la página de la
+                // empresa: se registra en el tablero y se abre esa página.
+                val message = if (offer.applyUrl != null) {
+                    UiMessage(R.string.jobs_apply_success_external, listOf(offer.title))
+                } else {
+                    UiMessage(R.string.jobs_apply_success, listOf(offer.title))
+                }
+                markApplied(offer, message)
+                _uiState.update { it.copy(urlToOpen = offer.applyUrl) }
             } catch (exception: CancellationException) {
                 throw exception
             } catch (exception: HttpException) {
@@ -176,6 +186,11 @@ class JobsViewModel @Inject constructor(
 
     fun onMessageShown() {
         _uiState.update { it.copy(message = null) }
+    }
+
+    /** La pantalla ya abrió la página; se limpia para no abrirla otra vez al repintarse. */
+    fun onUrlOpened() {
+        _uiState.update { it.copy(urlToOpen = null) }
     }
 
     private fun markApplied(offer: JobOffer, message: UiMessage) {

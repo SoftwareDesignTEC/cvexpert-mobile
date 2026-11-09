@@ -21,6 +21,7 @@ fun JobOfferDto.toDomain(): JobOffer {
         matchScore = matchScore,
         // Llega en epoch (o ISO en los mocks viejos); la pantalla la muestra ya legible.
         postedAt = postedAt.toEpochMillis().toDisplayDate(),
+        applyUrl = applyUrl?.takeIf { it.isNotBlank() },
     )
 }
 

@@ -69,8 +69,8 @@ android {
         targetSdk = 35
         // Se sube en cada hito etiquetado. versionCode siempre crece: Firebase y Play
         // rechazan una subida con un número igual o menor al anterior.
-        versionCode = 10
-        versionName = "0.7.5"
+        versionCode = 11
+        versionName = "0.8.0"
 
         // Se inyectan como constantes en BuildConfig.
         buildConfigField("String", "APIM_BASE_URL", "\"${configValue("APIM_BASE_URL")}\"")

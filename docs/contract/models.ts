@@ -108,6 +108,9 @@ export interface JobOffer {
     };
     matchScore?: number;           // 0-100, calculado según el perfil del usuario
     postedAt: string;              // ISO 8601: "2026-09-13T21:00:00Z"
+    // CAMBIO (Andrés, Fase II): las ofertas ahora son reales (importadas de JSearch). Esta es la
+    // página donde la persona se postula de verdad. Opcional. Avisado a Pérez para la web.
+    applyUrl?: string;
 }
 
 // ─── TRACKER DE POSTULACIONES (KANBAN) ────────────────────────────────────────
