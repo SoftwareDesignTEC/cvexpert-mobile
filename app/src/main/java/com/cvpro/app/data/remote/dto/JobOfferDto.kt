@@ -38,6 +38,9 @@ data class JobOfferDto(
 
     @SerializedName(value = "postedAt", alternate = ["createdAt"])
     val postedAt: JsonElement? = null,
+
+    /** Página donde se postula de verdad. Solo la traen las ofertas reales importadas. */
+    val applyUrl: String? = null,
 )
 
 data class SalaryDto(

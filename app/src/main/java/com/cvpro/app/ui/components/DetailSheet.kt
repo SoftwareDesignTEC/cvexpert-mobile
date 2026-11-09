@@ -14,12 +14,14 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.cvpro.app.R
@@ -132,6 +134,21 @@ fun JobOfferDetailSheet(
                 value = offer.postedAt,
             )
 
+            // La oferta es real: este botón abre la publicación original en el navegador.
+            offer.applyUrl?.let { url ->
+                val uriHandler = LocalUriHandler.current
+                OutlinedButton(
+                    // runCatching: si el teléfono no tiene navegador, no se cae la app.
+                    onClick = { runCatching { uriHandler.openUri(url) } },
+                    colors = outlinedOnCardColors(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 24.dp),
+                ) {
+                    Text(stringResource(R.string.jobs_open_original))
+                }
+            }
+
             // Sin applyState no hay botón: así la hoja se puede abrir desde donde no tenga
             // sentido postularse.
             applyState?.let { state ->
@@ -140,7 +157,7 @@ fun JobOfferDetailSheet(
                     onClick = onApply,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(top = 24.dp),
+                        .padding(top = if (offer.applyUrl != null) 8.dp else 24.dp),
                 )
             }
         }

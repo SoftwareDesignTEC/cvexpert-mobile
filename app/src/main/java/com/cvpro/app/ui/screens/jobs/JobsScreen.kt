@@ -38,6 +38,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -66,6 +67,14 @@ fun JobsScreen(
     // El Scaffold de la raíz comparte un único snackbar, igual que en Plantillas.
     val snackbarHostState = LocalSnackbarHostState.current
     val resources = LocalResources.current
+
+    // Después de registrar la postulación a una oferta real, se abre su página para terminarla.
+    val uriHandler = LocalUriHandler.current
+    LaunchedEffect(uiState.urlToOpen) {
+        val url = uiState.urlToOpen ?: return@LaunchedEffect
+        runCatching { uriHandler.openUri(url) }
+        viewModel.onUrlOpened()
+    }
 
     // Cada vez que se entra se revisa a qué ofertas ya se postuló el usuario.
     LaunchedEffect(Unit) { viewModel.onScreenShown() }

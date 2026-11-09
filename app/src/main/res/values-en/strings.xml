@@ -291,6 +291,8 @@
     <string name="jobs_applied">Applied</string>
     <string name="jobs_apply_success">You applied to \"%1$s\". Track it in My Applications.</string>
     <string name="jobs_apply_already">You had already applied to this offer.</string>
+    <string name="jobs_apply_success_external">We saved \"%1$s\" in My Applications. Finish applying on the company page.</string>
+    <string name="jobs_open_original">See original offer</string>
     <string name="jobs_empty_title">No results</string>
     <string name="jobs_empty_message">We didn\'t find offers for that search. Try another word.</string>
     <string name="jobs_error_network">We couldn\'t load the offers. Check your connection and try again.</string>

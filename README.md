@@ -4,7 +4,7 @@ Aplicación Android nativa de CVExpert, escrita en Kotlin con Jetpack Compose. A
 
 - `applicationId`: `com.cvpro.app`
 - `minSdk` 26, `targetSdk` y `compileSdk` 35
-- Versión actual: 0.7.5 (`versionCode` 10). Se salta de 0.4.0 a 0.7.0 porque las etiquetas `v0.5.0` y `v0.6.0` ya existen: vienen del monorepo de la Fase I y apuntan a otro código.
+- Versión actual: 0.8.0 (`versionCode` 11). Se salta de 0.4.0 a 0.7.0 porque las etiquetas `v0.5.0` y `v0.6.0` ya existen: vienen del monorepo de la Fase I y apuntan a otro código.
 
 ## Origen del repositorio
 

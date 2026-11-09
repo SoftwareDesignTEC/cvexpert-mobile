@@ -289,6 +289,8 @@
     <string name="jobs_applied">Ya te postulaste</string>
     <string name="jobs_apply_success">Te postulaste a \"%1$s\". Síguela en Mis Postulaciones.</string>
     <string name="jobs_apply_already">Ya te habías postulado a esta oferta.</string>
+    <string name="jobs_apply_success_external">Guardamos \"%1$s\" en Mis Postulaciones. Termina de postularte en la página de la empresa.</string>
+    <string name="jobs_open_original">Ver oferta original</string>
     <string name="jobs_empty_title">Sin resultados</string>
     <string name="jobs_empty_message">No encontramos ofertas con esa búsqueda. Prueba con otra palabra.</string>
     <string name="jobs_error_network">No pudimos cargar las ofertas. Revisa tu conexión e inténtalo de nuevo.</string>
