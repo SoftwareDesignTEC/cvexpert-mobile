@@ -25,6 +25,9 @@ interface ApplicationRepository {
         notes: String?,
     ): JobApplication
 
+    /** Retira la postulación (la borra del tablero). */
+    suspend fun deleteApplication(id: String)
+
     suspend fun updateApplicationStatus(
         id: String,
         status: ApplicationStatus,

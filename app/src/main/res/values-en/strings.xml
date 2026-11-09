@@ -330,6 +330,11 @@
     <string name="applications_show_less">See less</string>
     <string name="applications_action_status">Status</string>
     <string name="applications_action_details">Details</string>
+    <string name="applications_withdraw">Withdraw application</string>
+    <string name="applications_withdraw_title">Withdraw application?</string>
+    <string name="applications_withdraw_message">\"%1$s\" will be removed from your board. If you already applied on the company page, this does not cancel it there.</string>
+    <string name="applications_withdraw_confirm">Withdraw</string>
+    <string name="applications_withdrawn">You withdrew \"%1$s\" from your board.</string>
     <string name="applications_change_status">Change status</string>
     <string name="applications_logo_description">%1$s logo</string>
     <string name="applications_error_title">Something went wrong while loading your applications</string>
