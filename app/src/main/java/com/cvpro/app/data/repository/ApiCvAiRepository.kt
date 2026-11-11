@@ -2,8 +2,13 @@ package com.cvpro.app.data.repository
 
 import android.content.Context
 import com.cvpro.app.data.remote.api.CvApi
+import com.cvpro.app.data.mapper.toDomain
 import com.cvpro.app.data.remote.dto.ExpandExperienceRequestDto
+import com.cvpro.app.data.remote.dto.GenerateCvRequestDto
+import com.cvpro.app.data.remote.dto.GenerateTextRequestDto
 import com.cvpro.app.data.remote.dto.TranslateExperienceRequestDto
+import com.cvpro.app.domain.model.AiTextField
+import com.cvpro.app.domain.model.Cv
 import com.cvpro.app.domain.model.NonLaborExperience
 import com.cvpro.app.domain.model.TranslatedExperience
 import com.cvpro.app.domain.model.WorkExperience
@@ -53,6 +58,31 @@ class ApiCvAiRepository @Inject constructor(
             description = description,
         )
     }
+
+    override suspend fun generateText(field: AiTextField, context: String): String {
+        val response = api.generateText(
+            GenerateTextRequestDto(field = field.apiValue, context = context.trim(), language = currentLanguage()),
+        )
+        return response.text?.takeIf { it.isNotBlank() }?.trim()
+            ?: throw IllegalStateException("La IA respondió sin texto")
+    }
+
+    override suspend fun generateCv(
+        title: String,
+        templateId: String,
+        fullName: String,
+        phone: String?,
+        freeText: String,
+    ): Cv = api.generateCv(
+        GenerateCvRequestDto(
+            title = title,
+            templateId = templateId,
+            fullName = fullName.trim(),
+            phone = phone?.trim()?.ifBlank { null },
+            freeText = freeText.trim(),
+            language = currentLanguage(),
+        ),
+    ).toDomain()
 
     /**
      * El idioma de la app ("es" o "en"), para que la IA escriba en el mismo idioma que el

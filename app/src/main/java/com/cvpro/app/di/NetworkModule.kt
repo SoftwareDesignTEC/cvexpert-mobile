@@ -134,9 +134,14 @@ object NetworkModule {
     /** Tiempo máximo de espera de una llamada, en segundos. */
     private const val TIMEOUT_SECONDS = 20L
 
-    // Lo que puede tardar la IA en redactar una respuesta. Más que el resto de la API,
-    // porque un modelo de lenguaje suele demorar varios segundos.
-    private const val AI_TIMEOUT_SECONDS = 60L
+    // Lo que puede tardar la IA en redactar una respuesta. El APIM corta las rutas de IA a los
+    // 120 s; la app espera un poco más para que, si algo se corta, sea el APIM con su error y
+    // no la app con un "sin conexión" que confunde.
+    private const val AI_TIMEOUT_SECONDS = 130L
+
+    // Modo IA: arma un CV entero de una vez. El APIM le da 180 s a generate-cv (confirmado por
+    // Cabrera); la app espera 190.
+    private const val AI_CV_TIMEOUT_SECONDS = 190L
 
     /**
      * Le da más tiempo de espera solo a las rutas de IA del servicio de CVs (/cvs/ai/...).
@@ -144,9 +149,10 @@ object NetworkModule {
      * 20 segundos para mostrar el error rápido.
      */
     private val aiTimeoutInterceptor = Interceptor { chain ->
-        val isAi = chain.request().url.encodedPath.contains("/cvs/ai/")
-        if (isAi) {
-            chain.withReadTimeout(AI_TIMEOUT_SECONDS.toInt(), TimeUnit.SECONDS)
+        val path = chain.request().url.encodedPath
+        if (path.contains("/cvs/ai/")) {
+            val seconds = if (path.endsWith("/generate-cv")) AI_CV_TIMEOUT_SECONDS else AI_TIMEOUT_SECONDS
+            chain.withReadTimeout(seconds.toInt(), TimeUnit.SECONDS)
                 .proceed(chain.request())
         } else {
             chain.proceed(chain.request())

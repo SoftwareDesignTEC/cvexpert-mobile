@@ -93,6 +93,8 @@ fun CvEditorSheet(
     // para poder deshacerlo. Una sola a la vez: la última que se mejoró.
     var undo by remember(cv.id) { mutableStateOf<Pair<Int, String>?>(null) }
     var showNonLabor by remember(cv.id) { mutableStateOf(false) }
+    // Perfil que había antes de que la IA lo escribiera, para "Deshacer".
+    var bioUndo by remember(cv.id) { mutableStateOf<String?>(null) }
 
     // Lo que devuelve la IA entra al borrador como si el usuario lo hubiera escrito: no se
     // guarda hasta que toque "Guardar".
@@ -113,6 +115,10 @@ fun CvEditorSheet(
             is CvAiResult.Translated -> {
                 draft = draft.copy(workExperiences = draft.workExperiences + result.experience)
                 showNonLabor = false
+            }
+            is CvAiResult.GeneratedBio -> {
+                draft = draft.copy(personalInfo = draft.personalInfo.copy(bio = result.bio))
+                bioUndo = result.original
             }
             null -> return@LaunchedEffect
         }
@@ -143,8 +149,11 @@ fun CvEditorSheet(
     // servicio respondía 400 con un aviso genérico, sin decir qué faltaba.
     val missingStartDate = draft.workExperiences.any { it.startDate == null } ||
         draft.education.any { it.startDate == null }
+    // El contrato de CVs exige puesto y descripción siempre, y empresa solo en empleos formales:
+    // en un voluntariado o un proyecto escolar puede no haber empresa.
+    val experienceErrors = draft.workExperiences.any { it.missingPosition() || it.missingDescription() || it.missingCompany() }
     val hasErrors = listOf(titleError, emailError, nameError, phoneError).any { it != null } ||
-        missingStartDate
+        missingStartDate || experienceErrors
 
     // Cada campo que puede fallar se registra con una clave. Al guardar con errores, la hoja se
     // desplaza sola al primero, para que el usuario no tenga que buscar qué falta.
@@ -156,10 +165,16 @@ fun CvEditorSheet(
         nameError != null -> KEY_NAME
         emailError != null -> KEY_EMAIL
         phoneError != null -> KEY_PHONE
-        else -> draft.workExperiences.indexOfFirst { it.startDate == null }.takeIf { it >= 0 }
-            ?.let { "$KEY_EXPERIENCE$it" }
-            ?: draft.education.indexOfFirst { it.startDate == null }.takeIf { it >= 0 }
-                ?.let { "$KEY_EDUCATION$it" }
+        else -> draft.workExperiences.withIndex().firstNotNullOfOrNull { (i, e) ->
+            when {
+                e.missingPosition() -> "$KEY_EXPERIENCE_POSITION$i"
+                e.missingCompany() -> "$KEY_EXPERIENCE_COMPANY$i"
+                e.startDate == null -> "$KEY_EXPERIENCE$i"
+                e.missingDescription() -> "$KEY_EXPERIENCE_DESCRIPTION$i"
+                else -> null
+            }
+        } ?: draft.education.indexOfFirst { it.startDate == null }.takeIf { it >= 0 }
+            ?.let { "$KEY_EDUCATION$it" }
     }
 
     ModalBottomSheet(
@@ -242,11 +257,28 @@ fun CvEditorSheet(
                     draft = draft.copy(
                         personalInfo = draft.personalInfo.copy(bio = it.ifBlank { null }),
                     )
+                    // Si lo corrige a mano, "Deshacer" ya no tiene sentido.
+                    bioUndo = null
                 },
                 label = stringResource(R.string.cv_editor_bio),
                 singleLine = false,
                 imeAction = ImeAction.Default,
                 placeholder = stringResource(R.string.cv_example_bio),
+            )
+            // La IA escribe el perfil con lo que ya tiene el CV (experiencias, estudios, habilidades).
+            AiImproveRow(
+                isLoading = aiState.isGeneratingBio,
+                enabled = !aiState.isBusy,
+                label = R.string.cv_ai_generate,
+                hint = R.string.cv_ai_generate_bio_hint,
+                showHint = draft.personalInfo.bio.isNullOrBlank(),
+                errorMessage = aiState.bioError,
+                canUndo = bioUndo != null,
+                onImprove = { aiActions.onGenerateBio(draft) },
+                onUndo = {
+                    draft = draft.copy(personalInfo = draft.personalInfo.copy(bio = bioUndo?.ifBlank { null }))
+                    bioUndo = null
+                },
             )
 
             // ----- Experiencia laboral -----
@@ -275,12 +307,18 @@ fun CvEditorSheet(
                         onValueChange = { update(experience.copy(position = it)) },
                         label = stringResource(R.string.cv_editor_position),
                         placeholder = stringResource(R.string.cv_example_position),
+                        errorMessage = requiredMessage(showErrors && experience.missingPosition()),
+                        modifier = Modifier.bringIntoViewRequester(requester("$KEY_EXPERIENCE_POSITION$index")),
                     )
                     FormTextField(
                         value = experience.company,
                         onValueChange = { update(experience.copy(company = it)) },
                         label = stringResource(R.string.cv_editor_company),
                         placeholder = stringResource(R.string.cv_example_company),
+                        errorMessage = requiredMessage(showErrors && experience.missingCompany()),
+                        // Fuera de un empleo formal, la empresa se puede dejar vacía.
+                        helperText = if (experience.isFormal()) null else stringResource(R.string.cv_editor_company_optional),
+                        modifier = Modifier.bringIntoViewRequester(requester("$KEY_EXPERIENCE_COMPANY$index")),
                     )
                     PeriodFields(
                         startDate = experience.startDate,
@@ -308,14 +346,28 @@ fun CvEditorSheet(
                         singleLine = false,
                         imeAction = ImeAction.Default,
                         placeholder = stringResource(R.string.cv_example_description),
+                        errorMessage = requiredMessage(showErrors && experience.missingDescription()),
+                        modifier = Modifier.bringIntoViewRequester(requester("$KEY_EXPERIENCE_DESCRIPTION$index")),
                     )
+                    // Sin descripción, la IA la escribe desde cero con el puesto ("Generar con IA");
+                    // con descripción, la redacta mejor ("Mejorar con IA").
+                    val blankDescription = experience.description.isBlank()
                     AiImproveRow(
                         isLoading = aiState.expandingIndex == index,
-                        enabled = !aiState.isBusy && experience.description.isNotBlank(),
-                        showHint = experience.description.isBlank(),
+                        enabled = !aiState.isBusy &&
+                            (!blankDescription || experience.position.isNotBlank()),
+                        label = if (blankDescription) R.string.cv_ai_generate else R.string.cv_ai_improve,
+                        hint = R.string.cv_ai_generate_description_hint,
+                        showHint = blankDescription,
                         errorMessage = aiState.expandError?.takeIf { it.index == index }?.message,
                         canUndo = undo?.first == index,
-                        onImprove = { aiActions.onExpand(index, experience) },
+                        onImprove = {
+                            if (blankDescription) {
+                                aiActions.onGenerateDescription(index, experience)
+                            } else {
+                                aiActions.onExpand(index, experience)
+                            }
+                        },
                         onUndo = {
                             undo?.let { (_, original) -> update(experience.copy(description = original)) }
                             undo = null
@@ -720,6 +772,8 @@ private fun AiImproveRow(
     onImprove: () -> Unit,
     onUndo: () -> Unit,
     modifier: Modifier = Modifier,
+    @StringRes label: Int = R.string.cv_ai_improve,
+    @StringRes hint: Int = R.string.cv_ai_improve_hint,
 ) {
     Column(modifier = modifier.fillMaxWidth()) {
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -737,7 +791,7 @@ private fun AiImproveRow(
                     )
                 }
                 Text(
-                    text = stringResource(if (isLoading) R.string.cv_ai_improving else R.string.cv_ai_improve),
+                    text = stringResource(if (isLoading) R.string.cv_ai_improving else label),
                     style = MaterialTheme.typography.labelMedium,
                 )
             }
@@ -750,7 +804,7 @@ private fun AiImproveRow(
         val note = when {
             errorMessage != null -> errorMessage
             canUndo -> R.string.cv_ai_improved
-            showHint -> R.string.cv_ai_improve_hint
+            showHint -> hint
             else -> null
         }
         note?.let {
@@ -953,3 +1007,21 @@ private const val KEY_EMAIL = "email"
 private const val KEY_PHONE = "phone"
 private const val KEY_EXPERIENCE = "experience-"
 private const val KEY_EDUCATION = "education-"
+private const val KEY_EXPERIENCE_POSITION = "experience-position-"
+private const val KEY_EXPERIENCE_COMPANY = "experience-company-"
+private const val KEY_EXPERIENCE_DESCRIPTION = "experience-description-"
+
+/** Empleo con una empresa. Las experiencias viejas sin tipo cuentan como formales. */
+private fun WorkExperience.isFormal(): Boolean = type.isBlank() || type == "formal"
+
+private fun WorkExperience.missingPosition(): Boolean = position.isBlank()
+
+private fun WorkExperience.missingDescription(): Boolean = description.isBlank()
+
+/** La empresa solo falta si es un empleo formal; en lo demás es opcional. */
+private fun WorkExperience.missingCompany(): Boolean = isFormal() && company.isBlank()
+
+/** "Este campo es obligatorio." cuando [show] es verdadero; si no, null (sin error). */
+@Composable
+private fun requiredMessage(show: Boolean): String? =
+    if (show) stringResource(R.string.validation_required) else null

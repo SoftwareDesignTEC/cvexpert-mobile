@@ -4,6 +4,9 @@ import com.cvpro.app.data.remote.dto.CreateCvRequestDto
 import com.cvpro.app.data.remote.dto.CvDto
 import com.cvpro.app.data.remote.dto.ExpandExperienceRequestDto
 import com.cvpro.app.data.remote.dto.ExpandExperienceResponseDto
+import com.cvpro.app.data.remote.dto.GenerateCvRequestDto
+import com.cvpro.app.data.remote.dto.GenerateTextRequestDto
+import com.cvpro.app.data.remote.dto.GenerateTextResponseDto
 import com.cvpro.app.data.remote.dto.TranslateExperienceRequestDto
 import com.cvpro.app.data.remote.dto.TranslateExperienceResponseDto
 import com.cvpro.app.data.remote.dto.PagedResponseDto
@@ -57,4 +60,16 @@ interface CvApi {
     suspend fun translateExperience(
         @Body request: TranslateExperienceRequestDto,
     ): TranslateExperienceResponseDto
+
+    /** Escribe un perfil profesional o una descripción de experiencia. No guarda nada. */
+    @POST("cvs/ai/generate-text")
+    suspend fun generateText(
+        @Body request: GenerateTextRequestDto,
+    ): GenerateTextResponseDto
+
+    /** Modo IA: arma y guarda un CV completo a partir de lo que el usuario contó. Responde 201. */
+    @POST("cvs/ai/generate-cv")
+    suspend fun generateCv(
+        @Body request: GenerateCvRequestDto,
+    ): CvDto
 }

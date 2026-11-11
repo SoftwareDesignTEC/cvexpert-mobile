@@ -79,6 +79,10 @@
     <string name="cv_experience_type_volunteer">Volunteering</string>
     <string name="cv_experience_type_school_project">School project</string>
     <string name="cv_experience_type_informal">Informal work</string>
+    <string name="cv_ai_generate">Generate with AI</string>
+    <string name="cv_ai_generate_bio_hint">The AI writes your profile from what your CV already has.</string>
+    <string name="cv_ai_generate_description_hint">Write the position and the AI writes the description for you.</string>
+    <string name="cv_editor_company_optional">Optional for volunteering, projects and informal work.</string>
     <string name="cv_ai_improve">Improve with AI</string>
     <string name="cv_ai_improving">Writing…</string>
     <string name="cv_ai_improve_hint">Write a short description and AI will rewrite it professionally.</string>
@@ -195,7 +199,7 @@
     <string name="home_cv_edit">View/Edit</string>
     <string name="home_cv_download">Download</string>
     <string name="create_cv_ai_title">Create your CV with AI</string>
-    <string name="create_cv_ai_steps">1. Pick a template. 2. Describe your experience in a few words. 3. Tap \"Improve with AI\" and the AI writes it professionally. It also works for volunteering, school projects or informal work.</string>
+    <string name="create_cv_ai_steps">Tell the AI about your experience in your own words (or dictate it) and it builds your full CV. You can also pick a template and use \"Improve with AI\" in the editor.</string>
     <string name="create_cv_ai_action">Pick a template</string>
     <string name="home_skills_title">Skills Analysis</string>
     <string name="home_skills_subtitle">Ordinal comparison with market requirements</string>
@@ -521,6 +525,18 @@
     <string name="cv_example_skill">E.g.: Excel</string>
     <string name="cv_example_category">E.g.: Office tools</string>
     <string name="cv_example_language">E.g.: English</string>
+    <!-- Modo IA (ui/screens/cvs/AiCvSheet.kt) -->
+    <string name="create_cv_ai_write">Write with AI</string>
+    <string name="ai_cv_title">Create your CV with AI</string>
+    <string name="ai_cv_subtitle">Tell us in your own words what you have done: studies, jobs, volunteering, projects and what you can do. The AI builds your full CV and then you review it in the editor.</string>
+    <string name="ai_cv_free_text">Your experience</string>
+    <string name="ai_cv_free_text_example">E.g.: I am in my last year at Liceo de Cartago. I worked 6 months as a cashier at a corner store, helped the Red Cross in campaigns, I can use Excel and speak intermediate English.</string>
+    <string name="ai_cv_free_text_hint">You can dictate it with the keyboard microphone.</string>
+    <string name="ai_cv_free_text_short">Tell us a bit more so the AI has enough to build your CV.</string>
+    <string name="ai_cv_template">Template</string>
+    <string name="ai_cv_generate">Generate my CV</string>
+    <string name="ai_cv_generating">Building your CV…</string>
+    <string name="ai_cv_wait">It can take a couple of minutes. Do not close this screen.</string>
     <!-- "Usar mi ubicación" del perfil (data/location/DeviceLocationProvider.kt) -->
     <string name="profile_location_use">Use my location</string>
     <string name="profile_location_locating">Finding your location…</string>
