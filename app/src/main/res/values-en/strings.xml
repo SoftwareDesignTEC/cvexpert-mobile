@@ -521,4 +521,9 @@
     <string name="cv_example_skill">E.g.: Excel</string>
     <string name="cv_example_category">E.g.: Office tools</string>
     <string name="cv_example_language">E.g.: English</string>
+    <!-- "Usar mi ubicación" del perfil (data/location/DeviceLocationProvider.kt) -->
+    <string name="profile_location_use">Use my location</string>
+    <string name="profile_location_locating">Finding your location…</string>
+    <string name="profile_location_unavailable">We couldn\'t get your location. Check that location is on or type it in.</string>
+    <string name="profile_location_denied">No location permission. You can type it in.</string>
 </resources>
