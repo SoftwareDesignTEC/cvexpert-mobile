@@ -69,8 +69,8 @@ android {
         targetSdk = 35
         // Se sube en cada hito etiquetado. versionCode siempre crece: Firebase y Play
         // rechazan una subida con un número igual o menor al anterior.
-        versionCode = 19
-        versionName = "0.8.8"
+        versionCode = 20
+        versionName = "0.8.9"
 
         // Se inyectan como constantes en BuildConfig.
         buildConfigField("String", "APIM_BASE_URL", "\"${configValue("APIM_BASE_URL")}\"")
@@ -149,6 +149,7 @@ dependencies {
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.googleid)
+    implementation(libs.play.services.auth)
 
     // El BOM alinea las versiones de todo Compose; por eso las libs de abajo no llevan versión.
     implementation(platform(libs.androidx.compose.bom))
