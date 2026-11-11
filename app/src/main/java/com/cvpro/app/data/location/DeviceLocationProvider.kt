@@ -113,20 +113,27 @@ class DeviceLocationProvider @Inject constructor(
     }
 
     /**
-     * "Grecia, Alajuela": cantón o ciudad y provincia, sin "Provincia de" y sin repetir
-     * ("Cartago, Cartago" queda "Cartago"). Es el mismo formato de las ofertas.
+     * "Ciudad Quesada, San Carlos, Alajuela": ciudad o distrito, cantón y provincia, sin
+     * "Provincia de" y sin repetir ("Grecia, Grecia, Alajuela" queda "Grecia, Alajuela").
+     *
+     * El Geocoder no trae el cantón en Costa Rica, así que sale de [CostaRicaCantons]; si la
+     * ciudad no está en esa tabla es porque se llama igual que su cantón.
      */
     private fun placeName(address: Address): String? {
-        val parts = listOfNotNull(address.locality ?: address.subAdminArea, address.adminArea)
-            .map { it.replace(PROVINCE_PREFIX, "").trim() }
+        val province = address.adminArea?.replace(PROVINCE_PREFIX, "")?.trim().orEmpty()
+        val city = (address.locality ?: address.subLocality).orEmpty().trim()
+        val canton = address.subAdminArea?.replace(CANTON_PREFIX, "")?.trim()
+            ?: CostaRicaCantons.cantonOf(city, province)
+        val parts = listOfNotNull(city, canton, province)
             .filter { it.isNotEmpty() }
-            .distinct()
+            .distinctBy { it.lowercase(Locale.ROOT) }
         return parts.joinToString(", ").ifEmpty { null }
     }
 
     private companion object {
         const val LOCATION_TIMEOUT_MS = 8_000L
         val PROVINCE_PREFIX = Regex("(?i)^provincia de\\s+")
+        val CANTON_PREFIX = Regex("(?i)^cant[oó]n( de)?\\s+")
         /** Un solo hilo basta: el callback solo despierta a la corrutina. */
         val executor = Executors.newSingleThreadExecutor()
     }
