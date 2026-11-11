@@ -563,4 +563,4 @@ private fun JobsPreview(darkTheme: Boolean) {
 }
 
 /** Ofertas que se ven antes de tocar "Ver más ofertas". */
-private const val INITIAL_OFFERS = 3
+private const val INITIAL_OFFERS = 5

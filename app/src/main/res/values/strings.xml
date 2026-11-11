@@ -77,6 +77,10 @@
     <string name="cv_experience_type_volunteer">Voluntariado</string>
     <string name="cv_experience_type_school_project">Proyecto escolar</string>
     <string name="cv_experience_type_informal">Trabajo informal</string>
+    <string name="cv_ai_generate">Generar con IA</string>
+    <string name="cv_ai_generate_bio_hint">La IA escribe tu perfil con lo que ya tiene tu currículum.</string>
+    <string name="cv_ai_generate_description_hint">Escribe el puesto y la IA redacta la descripción por ti.</string>
+    <string name="cv_editor_company_optional">Opcional en voluntariados, proyectos y trabajos informales.</string>
     <string name="cv_ai_improve">Mejorar con IA</string>
     <string name="cv_ai_improving">Redactando…</string>
     <string name="cv_ai_improve_hint">Escribe una descripción breve y la IA la redacta de forma profesional.</string>
@@ -193,7 +197,7 @@
     <string name="home_cv_edit">Ver/Editar</string>
     <string name="home_cv_download">Descargar</string>
     <string name="create_cv_ai_title">Crea tu currículum con IA</string>
-    <string name="create_cv_ai_steps">1. Elige una plantilla. 2. Escribe tus experiencias en pocas palabras. 3. Toca \"Mejorar con IA\" y la IA las redacta de forma profesional. También sirve para voluntariados, proyectos del colegio o trabajos informales.</string>
+    <string name="create_cv_ai_steps">Cuéntale a la IA tu experiencia con tus palabras (o díctala) y arma tu currículum completo. También puedes elegir una plantilla y usar \"Mejorar con IA\" en el editor.</string>
     <string name="create_cv_ai_action">Elegir plantilla</string>
     <string name="home_skills_title">Análisis de Habilidades</string>
     <string name="home_skills_subtitle">Comparación ordinal con requisitos del mercado</string>
@@ -529,4 +533,16 @@
     <string name="cv_example_skill">Ej.: Excel</string>
     <string name="cv_example_category">Ej.: Ofimática</string>
     <string name="cv_example_language">Ej.: Inglés</string>
+    <!-- Modo IA (ui/screens/cvs/AiCvSheet.kt) -->
+    <string name="create_cv_ai_write">Escribir con IA</string>
+    <string name="ai_cv_title">Crea tu currículum con IA</string>
+    <string name="ai_cv_subtitle">Cuéntanos con tus palabras qué has hecho: estudios, trabajos, voluntariados, proyectos y lo que sabes hacer. La IA arma tu currículum completo y después lo revisas en el editor.</string>
+    <string name="ai_cv_free_text">Tu experiencia</string>
+    <string name="ai_cv_free_text_example">Ej.: Estoy en quinto año del Liceo de Cartago. Trabajé 6 meses de cajero en una pulpería, ayudé en la Cruz Roja en campañas, sé usar Excel y hablo inglés intermedio.</string>
+    <string name="ai_cv_free_text_hint">Puedes dictarlo con el micrófono del teclado.</string>
+    <string name="ai_cv_free_text_short">Cuéntanos un poco más para que la IA tenga de dónde armar tu currículum.</string>
+    <string name="ai_cv_template">Plantilla</string>
+    <string name="ai_cv_generate">Generar mi currículum</string>
+    <string name="ai_cv_generating">Armando tu currículum…</string>
+    <string name="ai_cv_wait">Puede tardar hasta un minuto. No cierres esta pantalla.</string>
 </resources>

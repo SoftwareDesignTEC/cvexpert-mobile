@@ -138,15 +138,20 @@ object NetworkModule {
     // porque un modelo de lenguaje suele demorar varios segundos.
     private const val AI_TIMEOUT_SECONDS = 60L
 
+    // Modo IA: arma un CV entero de una vez, tarda más que redactar un texto suelto. Coincide
+    // con el límite de 120 s del APIM para las rutas de IA.
+    private const val AI_CV_TIMEOUT_SECONDS = 120L
+
     /**
      * Le da más tiempo de espera solo a las rutas de IA del servicio de CVs (/cvs/ai/...).
      * Así no hace falta un segundo cliente HTTP, y el resto de la app sigue cortando a los
      * 20 segundos para mostrar el error rápido.
      */
     private val aiTimeoutInterceptor = Interceptor { chain ->
-        val isAi = chain.request().url.encodedPath.contains("/cvs/ai/")
-        if (isAi) {
-            chain.withReadTimeout(AI_TIMEOUT_SECONDS.toInt(), TimeUnit.SECONDS)
+        val path = chain.request().url.encodedPath
+        if (path.contains("/cvs/ai/")) {
+            val seconds = if (path.endsWith("/generate-cv")) AI_CV_TIMEOUT_SECONDS else AI_TIMEOUT_SECONDS
+            chain.withReadTimeout(seconds.toInt(), TimeUnit.SECONDS)
                 .proceed(chain.request())
         } else {
             chain.proceed(chain.request())

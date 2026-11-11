@@ -1,5 +1,7 @@
 package com.cvpro.app.domain.repository
 
+import com.cvpro.app.domain.model.AiTextField
+import com.cvpro.app.domain.model.Cv
 import com.cvpro.app.domain.model.NonLaborExperience
 import com.cvpro.app.domain.model.TranslatedExperience
 import com.cvpro.app.domain.model.WorkExperience
@@ -20,4 +22,22 @@ interface CvAiRepository {
      * trabajo informal a lenguaje de CV.
      */
     suspend fun translateExperience(experience: NonLaborExperience): TranslatedExperience
+
+    /**
+     * Escribe desde cero un texto del CV ([field]) con lo que ya se sabe ([context]). No guarda
+     * nada: el editor lo muestra y el usuario decide si lo deja.
+     */
+    suspend fun generateText(field: AiTextField, context: String): String
+
+    /**
+     * Modo IA: arma y guarda un CV completo a partir de lo que el usuario contó en [freeText].
+     * Devuelve el CV ya creado, listo para abrir en el editor.
+     */
+    suspend fun generateCv(
+        title: String,
+        templateId: String,
+        fullName: String,
+        phone: String?,
+        freeText: String,
+    ): Cv
 }

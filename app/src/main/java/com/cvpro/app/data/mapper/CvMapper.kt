@@ -156,7 +156,9 @@ private fun JobModality.toApiValue(): String = when (this) {
 
 private fun WorkExperience.toDto() = WorkExperienceDto(
     id = id.takeIf { it.isNotBlank() },
-    company = company,
+    // La empresa solo es obligatoria en empleos formales; en un voluntariado o un proyecto
+    // puede no haber, y el contrato la espera en null, no como texto vacío.
+    company = company.trim().ifBlank { null },
     position = position,
     startDate = startDate.toJson(),
     endDate = endDate.toJson(),

@@ -64,6 +64,7 @@ import com.cvpro.app.ui.components.RadarSeries
 import com.cvpro.app.ui.components.RemoteImage
 import com.cvpro.app.ui.components.VersionLabel
 import com.cvpro.app.ui.components.outlinedOnCardColors
+import com.cvpro.app.ui.screens.cvs.AiCvSheet
 import com.cvpro.app.ui.theme.CvProTheme
 import com.cvpro.app.ui.theme.extraColors
 
@@ -131,6 +132,17 @@ fun HomeContent(
     modifier: Modifier = Modifier,
 ) {
     var detailCv by remember { mutableStateOf<Cv?>(null) }
+    // Modo IA abierto. Cuando crea el CV, se va a Mis Currículums, que lo abre en el editor.
+    var showAiCv by remember { mutableStateOf(false) }
+    if (showAiCv) {
+        AiCvSheet(
+            onDismiss = { showAiCv = false },
+            onCreated = {
+                showAiCv = false
+                onCvsClick()
+            },
+        )
+    }
 
     detailCv?.let { cv -> CvDetailSheet(cv = cv, onDismiss = { detailCv = null }) }
 
@@ -149,7 +161,7 @@ fun HomeContent(
             onDownloadClick = onDownloadCv,
         )
 
-        CreateCvSection(onTemplatesClick = onTemplatesClick)
+        CreateCvSection(onTemplatesClick = onTemplatesClick, onAiClick = { showAiCv = true })
 
         SkillsSection(analysis = uiState.skillsGap, onSeeAreasClick = onSkillsGapClick)
 
@@ -315,6 +327,7 @@ private fun RecentCvCard(
 @Composable
 private fun CreateCvSection(
     onTemplatesClick: () -> Unit,
+    onAiClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Surface(
@@ -342,11 +355,22 @@ private fun CreateCvSection(
                 color = MaterialTheme.colorScheme.onSurface,
                 modifier = Modifier.padding(top = 6.dp),
             )
+            // Dos caminos: que la IA arme todo desde lo que cuentas, o elegir una plantilla y
+            // llenarla con ayuda de "Mejorar con IA" en el editor.
             Button(
-                onClick = onTemplatesClick,
+                onClick = onAiClick,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 12.dp),
+            ) {
+                Text(stringResource(R.string.create_cv_ai_write))
+            }
+            OutlinedButton(
+                onClick = onTemplatesClick,
+                colors = outlinedOnCardColors(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
             ) {
                 Text(stringResource(R.string.create_cv_ai_action))
             }

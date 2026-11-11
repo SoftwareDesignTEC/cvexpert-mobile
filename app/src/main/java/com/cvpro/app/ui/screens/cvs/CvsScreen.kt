@@ -28,6 +28,7 @@ import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -55,6 +56,7 @@ import com.cvpro.app.ui.components.CvEditorSheet
 import com.cvpro.app.ui.components.EmptyState
 import com.cvpro.app.ui.components.PagePreview
 import com.cvpro.app.ui.components.RemoteImage
+import com.cvpro.app.ui.components.outlinedOnCardColors
 import com.cvpro.app.ui.theme.CvProTheme
 
 
@@ -211,12 +213,15 @@ fun CvsScreen(
         onTemplatesClick = onTemplatesClick,
         cvToOpen = cvToOpen,
         onCvOpened = viewModel::onCvOpened,
+        onAiCvCreated = viewModel::onScreenShown,
         aiState = aiState,
         aiActions = CvAiActions(
             onExpand = aiViewModel::expand,
             onTranslate = aiViewModel::translate,
             onResultConsumed = aiViewModel::onResultConsumed,
             onTranslateClosed = aiViewModel::onTranslateClosed,
+            onGenerateBio = aiViewModel::generateBio,
+            onGenerateDescription = aiViewModel::generateDescription,
         ),
         onEditorChanged = aiViewModel::reset,
         modifier = modifier,
@@ -246,7 +251,20 @@ fun CvsContent(
     onEditorChanged: () -> Unit = {},
     cvToOpen: Cv? = null,
     onCvOpened: () -> Unit = {},
+    onAiCvCreated: () -> Unit = {},
 ) {
+    // Modo IA abierto. Al crear el CV se recarga la lista, que lo abre en el editor.
+    var showAiCv by remember { mutableStateOf(false) }
+    if (showAiCv) {
+        AiCvSheet(
+            onDismiss = { showAiCv = false },
+            onCreated = {
+                showAiCv = false
+                onAiCvCreated()
+            },
+        )
+    }
+
     // Currículum abierto en el editor, o null si no hay ninguno.
     var editingCv by remember { mutableStateOf<Cv?>(null) }
 
@@ -314,6 +332,7 @@ fun CvsContent(
 
         CreateCvBanner(
             onTemplatesClick = onTemplatesClick,
+            onAiClick = { showAiCv = true },
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
         )
 
@@ -392,6 +411,7 @@ private fun CvsHeader(
 @Composable
 private fun CreateCvBanner(
     onTemplatesClick: () -> Unit,
+    onAiClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Surface(
@@ -419,11 +439,22 @@ private fun CreateCvBanner(
                 color = MaterialTheme.colorScheme.surface,
                 modifier = Modifier.padding(top = 6.dp),
             )
+            // Dos caminos: que la IA arme todo desde lo que cuentas, o elegir una plantilla y
+            // llenarla con ayuda de "Mejorar con IA" en el editor.
             Button(
-                onClick = onTemplatesClick,
+                onClick = onAiClick,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 12.dp),
+            ) {
+                Text(stringResource(R.string.create_cv_ai_write))
+            }
+            OutlinedButton(
+                onClick = onTemplatesClick,
+                colors = outlinedOnCardColors(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
             ) {
                 Text(stringResource(R.string.create_cv_ai_action))
             }
