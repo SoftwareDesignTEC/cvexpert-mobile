@@ -1,5 +1,7 @@
 package com.cvpro.app.ui.screens.login
 
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,6 +11,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -38,6 +41,15 @@ fun LoginRoute(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val context = LocalContext.current
+
+    // Plan C: si Credential Manager no respondió, se abre la pantalla clásica de Google y su
+    // resultado vuelve al ViewModel.
+    val classicLauncher = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) {
+        viewModel.onClassicSignInResult(it.data)
+    }
+    LaunchedEffect(uiState.classicSignInRequested) {
+        if (uiState.classicSignInRequested) classicLauncher.launch(viewModel.classicSignInIntent(context))
+    }
 
     LoginScreen(
         uiState = uiState,
