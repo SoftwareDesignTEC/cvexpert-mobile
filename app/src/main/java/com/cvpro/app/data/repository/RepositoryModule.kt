@@ -2,6 +2,7 @@ package com.cvpro.app.data.repository
 
 import com.cvpro.app.domain.repository.AuthRepository
 import com.cvpro.app.domain.repository.JobOfferRepository
+import com.cvpro.app.domain.repository.JobSkillsGapRepository
 import com.cvpro.app.domain.repository.SettingsRepository
 import com.cvpro.app.domain.repository.SkillsGapRepository
 import dagger.Binds
@@ -25,6 +26,9 @@ import com.cvpro.app.domain.repository.SettingsContentRepository
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
+    @Binds
+    @Singleton
+    abstract fun bindJobSkillsGapRepository(impl: ApiJobSkillsGapRepository): JobSkillsGapRepository
 
     @Binds
     @Singleton

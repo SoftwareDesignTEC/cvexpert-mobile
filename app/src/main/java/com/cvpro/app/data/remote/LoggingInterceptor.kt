@@ -20,6 +20,9 @@ class LoggingInterceptor @Inject constructor() : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         val response = chain.proceed(chain.request())
         if (!BuildConfig.DEBUG) return response
+        if (chain.request().url.encodedPath.endsWith("/skills-gap/recommendations") ||
+            chain.request().url.encodedPath.endsWith("/skills-gap/evaluate")
+        ) return response
 
         // peekBody lee el cuerpo sin consumirlo: Retrofit lo sigue necesitando después.
         val body = response.peekBody(MAX_LOG_BYTES).string()

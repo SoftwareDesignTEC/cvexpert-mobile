@@ -55,7 +55,9 @@ fun CvProNavGraph(
                 onSkillsGapClick = { navController.navigateToDestination(CvProDestination.SKILLS_GAP) },
             )
         }
-        composable(CvProDestination.JOBS.route) { JobsScreen() }
+        composable(CvProDestination.JOBS.route) {
+            JobsScreen(onCvsClick = { navController.navigateToDestination(CvProDestination.CVS) })
+        }
         composable(CvProDestination.SKILLS_GAP.route) { SkillsGapScreen() }
         composable(CvProDestination.TEMPLATES.route) { TemplatesScreen() }
         composable(CvProDestination.APPLICATIONS.route) { ApplicationsScreen() }

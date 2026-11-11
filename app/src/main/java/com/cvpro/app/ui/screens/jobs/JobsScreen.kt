@@ -47,6 +47,7 @@ import com.cvpro.app.ui.components.outlinedOnCardColors
 import com.cvpro.app.R
 import com.cvpro.app.domain.model.JobModality
 import com.cvpro.app.domain.model.JobOffer
+import com.cvpro.app.ui.screens.skillsgap.JobSkillsGapSheet
 import com.cvpro.app.ui.components.CompatibilityRing
 import com.cvpro.app.ui.components.EmptyState
 import com.cvpro.app.ui.theme.CvProTheme
@@ -56,6 +57,7 @@ import com.cvpro.app.ui.theme.CvProTheme
 fun JobsScreen(
     modifier: Modifier = Modifier,
     viewModel: JobsViewModel = hiltViewModel(),
+    onCvsClick: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -66,6 +68,7 @@ fun JobsScreen(
         onRetryClick = viewModel::onRetryClick,
         onLoadMore = viewModel::onLoadMore,
         modifier = modifier,
+        onCvsClick = onCvsClick,
     )
 }
 
@@ -83,9 +86,18 @@ fun JobsContent(
     onRetryClick: () -> Unit,
     onLoadMore: () -> Unit,
     modifier: Modifier = Modifier,
+    onCvsClick: () -> Unit = {},
 ) {
     // Oferta abierta en el detalle, o null si la hoja está cerrada.
     var detailOffer by remember { mutableStateOf<JobOffer?>(null) }
+    var analysisOffer by remember { mutableStateOf<JobOffer?>(null) }
+
+    analysisOffer?.let { offer ->
+        JobSkillsGapSheet(offer, onDismiss = { analysisOffer = null }, onCorrectCv = {
+            analysisOffer = null
+            onCvsClick()
+        })
+    }
 
     detailOffer?.let { offer ->
         JobOfferDetailSheet(offer = offer, onDismiss = { detailOffer = null })
@@ -127,7 +139,8 @@ fun JobsContent(
                 modifier = Modifier.fillMaxSize(),
             ) {
                 items(items = uiState.visibleOffers, key = { it.id }) { offer ->
-                    JobCard(offer = offer, onDetailsClick = { detailOffer = offer })
+                    JobCard(offer = offer, onDetailsClick = { detailOffer = offer },
+                        onAnalyzeClick = { analysisOffer = offer })
                 }
 
                 if (uiState.hasMore) {
@@ -228,6 +241,7 @@ private fun JobsFilters(
 private fun JobCard(
     offer: JobOffer,
     onDetailsClick: () -> Unit,
+    onAnalyzeClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Surface(
@@ -303,6 +317,9 @@ private fun JobCard(
                     .padding(top = 12.dp),
             ) {
                 Text(stringResource(R.string.jobs_details))
+            }
+            OutlinedButton(onClick = onAnalyzeClick, modifier = Modifier.fillMaxWidth()) {
+                Text(stringResource(R.string.job_gap_analyze))
             }
         }
     }
