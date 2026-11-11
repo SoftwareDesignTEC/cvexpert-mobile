@@ -529,4 +529,9 @@
     <string name="cv_example_skill">Ej.: Excel</string>
     <string name="cv_example_category">Ej.: Ofimática</string>
     <string name="cv_example_language">Ej.: Inglés</string>
+    <!-- "Usar mi ubicación" del perfil (data/location/DeviceLocationProvider.kt) -->
+    <string name="profile_location_use">Usar mi ubicación</string>
+    <string name="profile_location_locating">Buscando tu ubicación…</string>
+    <string name="profile_location_unavailable">No pudimos obtener tu ubicación. Revisa que la ubicación del teléfono esté activa o escríbela a mano.</string>
+    <string name="profile_location_denied">Sin permiso de ubicación. Puedes escribirla a mano.</string>
 </resources>
