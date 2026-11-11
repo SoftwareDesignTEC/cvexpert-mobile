@@ -72,5 +72,11 @@ sealed interface SignInResult {
     /** Falta el Web client ID en la configuración del build. */
     data object MissingConfiguration : SignInResult
 
+    /**
+     * Google no abrió el selector de cuentas a tiempo (Servicios de Google Play viejos o que no
+     * responden). Antes la app se quedaba esperando para siempre.
+     */
+    data object GoogleNotResponding : SignInResult
+
     data class Failure(val cause: Throwable) : SignInResult
 }

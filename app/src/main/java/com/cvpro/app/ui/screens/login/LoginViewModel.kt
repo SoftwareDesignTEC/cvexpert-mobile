@@ -60,6 +60,7 @@ class LoginViewModel @Inject constructor(
                 is SignInResult.Success, SignInResult.Cancelled -> LoginUiState()
                 SignInResult.NoGoogleAccount -> LoginUiState(errorMessage = R.string.login_error_no_account)
                 SignInResult.MissingConfiguration -> LoginUiState(errorMessage = R.string.login_error_configuration)
+                SignInResult.GoogleNotResponding -> LoginUiState(errorMessage = R.string.login_error_google_not_responding)
                 is SignInResult.Failure -> LoginUiState(errorMessage = R.string.login_error_generic)
             }
         }
