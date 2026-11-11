@@ -537,4 +537,9 @@
     <string name="ai_cv_generate">Generate my CV</string>
     <string name="ai_cv_generating">Building your CV…</string>
     <string name="ai_cv_wait">It can take a couple of minutes. Do not close this screen.</string>
+    <!-- "Usar mi ubicación" del perfil (data/location/DeviceLocationProvider.kt) -->
+    <string name="profile_location_use">Use my location</string>
+    <string name="profile_location_locating">Finding your location…</string>
+    <string name="profile_location_unavailable">We couldn\'t get your location. Check that location is on or type it in.</string>
+    <string name="profile_location_denied">No location permission. You can type it in.</string>
 </resources>

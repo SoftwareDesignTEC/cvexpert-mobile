@@ -545,4 +545,9 @@
     <string name="ai_cv_generate">Generar mi currículum</string>
     <string name="ai_cv_generating">Armando tu currículum…</string>
     <string name="ai_cv_wait">Puede tardar un par de minutos. No cierres esta pantalla.</string>
+    <!-- "Usar mi ubicación" del perfil (data/location/DeviceLocationProvider.kt) -->
+    <string name="profile_location_use">Usar mi ubicación</string>
+    <string name="profile_location_locating">Buscando tu ubicación…</string>
+    <string name="profile_location_unavailable">No pudimos obtener tu ubicación. Revisa que la ubicación del teléfono esté activa o escríbela a mano.</string>
+    <string name="profile_location_denied">Sin permiso de ubicación. Puedes escribirla a mano.</string>
 </resources>

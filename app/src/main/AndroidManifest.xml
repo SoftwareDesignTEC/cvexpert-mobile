@@ -6,6 +6,9 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- Para saber si hay conexión: lo muestra el indicador de la barra superior. -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <!-- Ubicación aproximada (red/wifi) para "Usar mi ubicación" en el perfil. No se pide la
+         precisa: para llenar ciudad y provincia no hace falta el GPS. -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
 
     <application
         android:name=".CvApplication"
