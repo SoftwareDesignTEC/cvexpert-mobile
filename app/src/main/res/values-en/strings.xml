@@ -15,6 +15,7 @@
     <string name="login_retry">Try again</string>
     <string name="login_error_no_account">We couldn\'t find a Google account on this phone. Add one in Settings and try again.</string>
     <string name="login_error_configuration">Sign-in is not set up in this version of the app.</string>
+    <string name="login_error_google_not_responding">Google did not respond. Update \"Google Play services\" from the Play Store, check that there is a Google account on the phone and try again.</string>
     <string name="login_session_expired">Your session expired. Please sign in again.</string>
     <string name="login_error_generic">Sign-in failed. Check your connection and try again.</string>
 

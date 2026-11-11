@@ -4,6 +4,7 @@ import android.content.Context
 import android.util.Log
 import androidx.credentials.ClearCredentialStateRequest
 import androidx.credentials.CredentialManager
+import androidx.credentials.CredentialOption
 import androidx.credentials.CustomCredential
 import androidx.credentials.GetCredentialRequest
 import androidx.credentials.exceptions.ClearCredentialException
@@ -11,19 +12,21 @@ import androidx.credentials.exceptions.GetCredentialCancellationException
 import androidx.credentials.exceptions.GetCredentialException
 import androidx.credentials.exceptions.NoCredentialException
 import com.cvpro.app.BuildConfig
+import com.cvpro.app.data.auth.IdTokenClaims
 import com.cvpro.app.domain.model.User
 import com.cvpro.app.domain.repository.AuthRepository
 import com.cvpro.app.domain.repository.SignInResult
 import com.google.android.libraries.identity.googleid.GetGoogleIdOption
-import com.cvpro.app.data.auth.IdTokenClaims
+import com.google.android.libraries.identity.googleid.GetSignInWithGoogleOption
 import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
 import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import dagger.hilt.android.qualifiers.ApplicationContext
+import javax.inject.Inject
+import javax.inject.Singleton
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import javax.inject.Inject
-import javax.inject.Singleton
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Login nativo con Google usando Credential Manager.
@@ -69,12 +72,24 @@ class GoogleAuthRepository @Inject constructor(
             .setAutoSelectEnabled(true)
             .build()
 
-        val request = GetCredentialRequest.Builder()
-            .addCredentialOption(googleIdOption)
-            .build()
+        // Plan B: el botón oficial "Sign in with Google", que abre el selector completo de cuentas.
+        // Se usa si el primer intento no encuentra cuentas o se queda colgado: en algunos teléfonos
+        // la hoja de abajo de GetGoogleIdOption nunca aparece.
+        val signInWithGoogleOption = GetSignInWithGoogleOption.Builder(webClientId).build()
 
         return try {
-            val credential = credentialManager.getCredential(activityContext, request).credential
+            val first = withTimeoutOrNull(FIRST_TRY_TIMEOUT_MS) {
+                try {
+                    credentialManager.getCredential(activityContext, request(googleIdOption)).credential
+                } catch (e: NoCredentialException) {
+                    null
+                }
+            }
+            val credential = first
+                ?: withTimeoutOrNull(FALLBACK_TIMEOUT_MS) {
+                    credentialManager.getCredential(activityContext, request(signInWithGoogleOption)).credential
+                }
+                ?: return SignInResult.GoogleNotResponding
             if (credential is CustomCredential &&
                 credential.type == GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
             ) {
@@ -106,6 +121,9 @@ class GoogleAuthRepository @Inject constructor(
             SignInResult.Failure(e)
         }
     }
+
+    private fun request(option: CredentialOption): GetCredentialRequest =
+        GetCredentialRequest.Builder().addCredentialOption(option).build()
 
     /**
      * El token venció o el APIM lo rechazó.
@@ -143,6 +161,15 @@ class GoogleAuthRepository @Inject constructor(
     }
 
     private companion object {
+        /**
+         * Lo que se espera a que Google muestre las cuentas. Si en ese tiempo no aparece nada,
+         * no es que el usuario tarde en elegir: es que la hoja nunca se abrió.
+         */
+        const val FIRST_TRY_TIMEOUT_MS = 30_000L
+
+        /** El selector completo da más tiempo: ahí el usuario sí puede estar eligiendo o escribiendo. */
+        const val FALLBACK_TIMEOUT_MS = 90_000L
+
         const val TAG = "GoogleAuthRepository"
     }
 }
