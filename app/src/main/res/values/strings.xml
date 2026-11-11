@@ -143,9 +143,6 @@
     <string name="cv_editor_saving">Guardando…</string>
     <string name="cv_editor_cancel">Cancelar</string>
     <string name="coming_soon_badge">Próximamente</string>
-    <string name="coming_soon_ai_badge">En el editor</string>
-    <string name="coming_soon_ai_title">Generación con IA</string>
-    <string name="coming_soon_ai_message">Elige una plantilla para crear tu currículum. En el editor, escribe tus experiencias en pocas palabras y toca \"Mejorar con IA\", o usa \"Agregar experiencia no laboral\" para un voluntariado, proyecto escolar o trabajo informal.</string>
     <string name="coming_soon_pdf_title">Exportar a PDF</string>
     <string name="coming_soon_pdf_message">La descarga del currículum en PDF llega en la siguiente fase, junto con el editor.</string>
     <string name="coming_soon_use_title">Usar esta plantilla</string>
@@ -163,6 +160,7 @@
     <string name="templates_download">Descargar</string>
     <string name="templates_count">%1$d plantillas</string>
     <string name="templates_preview">Vista previa</string>
+    <string name="templates_preview_close">Cerrar</string>
     <string name="templates_use">Usar esta plantilla</string>
     <string name="templates_premium">Premium</string>
     <string name="templates_show_all">Ver todas (%1$d más)</string>
@@ -176,9 +174,6 @@
     <!-- Mis Currículums -->
     <string name="cvs_eyebrow">TU ESPACIO PROFESIONAL</string>
     <string name="cvs_search_placeholder">Buscar Currículum</string>
-    <string name="cvs_create_subtitle">Elige cómo quieres comenzar tu próxima oportunidad.</string>
-    <string name="cvs_create_ai">Modo IA</string>
-    <string name="cvs_create_offline">Offline / Plantilla</string>
     <string name="cvs_delete">Eliminar</string>
     <string name="cvs_delete_title">¿Eliminar este currículum?</string>
     <string name="cvs_delete_message">Se va a borrar \"%1$s\". Esta acción no se puede deshacer.</string>
@@ -197,10 +192,9 @@
     <string name="home_cv_updated_at">Modificado %1$s</string>
     <string name="home_cv_edit">Ver/Editar</string>
     <string name="home_cv_download">Descargar</string>
-    <string name="home_create_cv_title">Crear Nuevo Currículum</string>
-    <string name="home_create_cv_subtitle">Empieza desde cero o usa una plantilla</string>
-    <string name="home_create_cv_ai">IA</string>
-    <string name="home_create_cv_offline">Offline</string>
+    <string name="create_cv_ai_title">Crea tu currículum con IA</string>
+    <string name="create_cv_ai_steps">1. Elige una plantilla. 2. Escribe tus experiencias en pocas palabras. 3. Toca \"Mejorar con IA\" y la IA las redacta de forma profesional. También sirve para voluntariados, proyectos del colegio o trabajos informales.</string>
+    <string name="create_cv_ai_action">Elegir plantilla</string>
     <string name="home_skills_title">Análisis de Habilidades</string>
     <string name="home_skills_subtitle">Comparación ordinal con requisitos del mercado</string>
     <string name="home_skills_empty">Todavía no hay análisis disponible.</string>
@@ -286,6 +280,7 @@
     <string name="jobs_requirements_title">Requisitos principales</string>
     <string name="jobs_skills_title">Habilidades que piden</string>
     <string name="jobs_details">Ver Detalles</string>
+    <string name="jobs_show_more">Ver más ofertas (%1$d)</string>
     <string name="jobs_apply">Postularme</string>
     <string name="jobs_applied">Ya te postulaste</string>
     <string name="jobs_apply_success">Te postulaste a \"%1$s\". Síguela en Mis Postulaciones.</string>
@@ -518,4 +513,20 @@
     <string name="sample_cv_skill3">Trabajo en equipo</string>
     <string name="sample_cv_language1">Español</string>
     <string name="sample_cv_language2">Inglés</string>
+    <!-- Ejemplos en gris de los campos del editor de CV (FormTextField placeholder). -->
+    <string name="cv_example_title">Ej.: Currículum para servicio al cliente</string>
+    <string name="cv_example_name">Ej.: Ana Rodríguez Mora</string>
+    <string name="cv_example_email">Ej.: ana@correo.com</string>
+    <string name="cv_example_phone">Ej.: 88888888</string>
+    <string name="cv_example_location">Ej.: Cartago, Costa Rica</string>
+    <string name="cv_example_bio">Ej.: Estudiante de último año, responsable y con ganas de aprender.</string>
+    <string name="cv_example_position">Ej.: Cajero</string>
+    <string name="cv_example_company">Ej.: Supermercado La Esquina</string>
+    <string name="cv_example_description">Ej.: Atendí clientes, manejé la caja e hice el cierre diario.</string>
+    <string name="cv_example_degree">Ej.: Bachillerato en Educación Media</string>
+    <string name="cv_example_institution">Ej.: Liceo de Cartago</string>
+    <string name="cv_example_field">Ej.: Ciencias</string>
+    <string name="cv_example_skill">Ej.: Excel</string>
+    <string name="cv_example_category">Ej.: Ofimática</string>
+    <string name="cv_example_language">Ej.: Inglés</string>
 </resources>

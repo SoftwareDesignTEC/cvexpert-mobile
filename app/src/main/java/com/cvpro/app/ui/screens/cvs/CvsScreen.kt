@@ -1,15 +1,15 @@
 package com.cvpro.app.ui.screens.cvs
 
+import android.content.Intent
 import android.graphics.Bitmap
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.ui.graphics.Color
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -17,19 +17,22 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import android.content.Intent
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,6 +40,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -47,8 +51,6 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cvpro.app.R
 import com.cvpro.app.domain.model.Cv
-import androidx.annotation.StringRes
-import com.cvpro.app.ui.components.ComingSoonSheet
 import com.cvpro.app.ui.components.CvEditorSheet
 import com.cvpro.app.ui.components.EmptyState
 import com.cvpro.app.ui.components.PagePreview
@@ -259,7 +261,6 @@ fun CvsContent(
     // Al abrir o cerrar el editor la IA vuelve a cero: una respuesta que llegue tarde no
     // tiene que caer en otro currículum.
     LaunchedEffect(editingCv?.id) { onEditorChanged() }
-    var comingSoon by remember { mutableStateOf<ComingSoon?>(null) }
     // Currículum que el usuario pidió borrar, a la espera de que confirme.
     var cvToDelete by remember { mutableStateOf<Cv?>(null) }
 
@@ -280,14 +281,6 @@ fun CvsContent(
             editingCv = null
             onSaveHandled()
         }
-    }
-    comingSoon?.let { aviso ->
-        ComingSoonSheet(
-            title = stringResource(aviso.titleRes),
-            message = stringResource(aviso.messageRes),
-            badge = stringResource(aviso.badgeRes),
-            onDismiss = { comingSoon = null },
-        )
     }
 
     cvToDelete?.let { cv ->
@@ -320,8 +313,7 @@ fun CvsContent(
         CvsHeader(query = uiState.query, onQueryChange = onQueryChange)
 
         CreateCvBanner(
-            onOfflineClick = onTemplatesClick,
-            onAiClick = { comingSoon = ComingSoon.AI },
+            onTemplatesClick = onTemplatesClick,
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
         )
 
@@ -389,11 +381,17 @@ private fun CvsHeader(
     )
 }
 
-/** Banda oscura con los dos caminos para crear un currículum. */
+/**
+ * Recuadro para crear un currículum.
+ *
+ * Antes tenía dos botones, "IA" y "Offline", y el de IA solo abría un aviso que decía que había
+ * que elegir una plantilla. Como la IA es lo esencial de la app, ahora el recuadro lo dice de
+ * entrada (cómo se usa) y tiene una sola acción: elegir la plantilla. La IA se usa después,
+ * en el editor, con "Mejorar con IA".
+ */
 @Composable
 private fun CreateCvBanner(
-    onOfflineClick: () -> Unit,
-    onAiClick: () -> Unit,
+    onTemplatesClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Surface(
@@ -402,36 +400,32 @@ private fun CreateCvBanner(
         modifier = modifier.fillMaxWidth(),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Outlined.AutoAwesome,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+                Text(
+                    text = stringResource(R.string.create_cv_ai_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.surface,
+                    modifier = Modifier.padding(start = 8.dp),
+                )
+            }
             Text(
-                text = stringResource(R.string.home_create_cv_title),
-                style = MaterialTheme.typography.titleMedium,
+                text = stringResource(R.string.create_cv_ai_steps),
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.surface,
+                modifier = Modifier.padding(top = 6.dp),
             )
-            Text(
-                text = stringResource(R.string.cvs_create_subtitle),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.surface,
-            )
-
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.padding(top = 12.dp),
+            Button(
+                onClick = onTemplatesClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp),
             ) {
-                Button(
-                    onClick = onAiClick,
-                    modifier = Modifier.weight(1f),
-                ) {
-                    Text(stringResource(R.string.cvs_create_ai))
-                }
-                Button(
-                    onClick = onOfflineClick,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    ),
-                    modifier = Modifier.weight(1f),
-                ) {
-                    Text(stringResource(R.string.cvs_create_offline))
-                }
+                Text(stringResource(R.string.create_cv_ai_action))
             }
         }
     }
@@ -596,11 +590,3 @@ private fun CvsPreview(darkTheme: Boolean) {
 
 }
 
-/** Los avisos de funciones que llegan en la Fase II. */
-private enum class ComingSoon(
-    @param:StringRes val titleRes: Int,
-    @param:StringRes val messageRes: Int,
-    @param:StringRes val badgeRes: Int,
-) {
-    AI(R.string.coming_soon_ai_title, R.string.coming_soon_ai_message, R.string.coming_soon_ai_badge),
-}

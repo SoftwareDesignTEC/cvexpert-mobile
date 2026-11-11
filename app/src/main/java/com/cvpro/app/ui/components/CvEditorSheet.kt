@@ -2,6 +2,8 @@ package com.cvpro.app.ui.components
 
 import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -37,6 +39,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -58,6 +61,7 @@ import com.cvpro.app.domain.model.SkillLevel
 import com.cvpro.app.domain.model.WorkExperience
 import com.cvpro.app.domain.model.toCvDay
 import com.cvpro.app.ui.screens.cvs.CvAiActions
+import kotlinx.coroutines.launch
 import com.cvpro.app.ui.screens.cvs.CvAiResult
 import com.cvpro.app.ui.screens.cvs.CvAiUiState
 
@@ -142,6 +146,22 @@ fun CvEditorSheet(
     val hasErrors = listOf(titleError, emailError, nameError, phoneError).any { it != null } ||
         missingStartDate
 
+    // Cada campo que puede fallar se registra con una clave. Al guardar con errores, la hoja se
+    // desplaza sola al primero, para que el usuario no tenga que buscar qué falta.
+    val scope = rememberCoroutineScope()
+    val requesters = remember(cv.id) { mutableMapOf<String, BringIntoViewRequester>() }
+    fun requester(key: String) = requesters.getOrPut(key) { BringIntoViewRequester() }
+    fun firstErrorKey(): String? = when {
+        titleError != null -> KEY_TITLE
+        nameError != null -> KEY_NAME
+        emailError != null -> KEY_EMAIL
+        phoneError != null -> KEY_PHONE
+        else -> draft.workExperiences.indexOfFirst { it.startDate == null }.takeIf { it >= 0 }
+            ?.let { "$KEY_EXPERIENCE$it" }
+            ?: draft.education.indexOfFirst { it.startDate == null }.takeIf { it >= 0 }
+                ?.let { "$KEY_EDUCATION$it" }
+    }
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
@@ -165,7 +185,10 @@ fun CvEditorSheet(
                 onValueChange = { draft = draft.copy(title = it) },
                 label = stringResource(R.string.cv_editor_cv_title),
                 errorMessage = titleError.messageOrNull(showErrors),
-                modifier = Modifier.padding(top = 12.dp),
+                placeholder = stringResource(R.string.cv_example_title),
+                modifier = Modifier
+                    .padding(top = 12.dp)
+                    .bringIntoViewRequester(requester(KEY_TITLE)),
             )
 
             // ----- Información personal -----
@@ -178,6 +201,8 @@ fun CvEditorSheet(
                 },
                 label = stringResource(R.string.cv_editor_name),
                 errorMessage = nameError.messageOrNull(showErrors),
+                placeholder = stringResource(R.string.cv_example_name),
+                modifier = Modifier.bringIntoViewRequester(requester(KEY_NAME)),
             )
             FormTextField(
                 value = draft.personalInfo.email,
@@ -187,6 +212,8 @@ fun CvEditorSheet(
                 label = stringResource(R.string.cv_editor_email),
                 errorMessage = emailError.messageOrNull(showErrors),
                 keyboardType = KeyboardType.Email,
+                placeholder = stringResource(R.string.cv_example_email),
+                modifier = Modifier.bringIntoViewRequester(requester(KEY_EMAIL)),
             )
             FormTextField(
                 value = draft.personalInfo.phone.orEmpty(),
@@ -198,6 +225,8 @@ fun CvEditorSheet(
                 label = stringResource(R.string.cv_editor_phone),
                 errorMessage = phoneError.messageOrNull(showErrors),
                 keyboardType = KeyboardType.Phone,
+                placeholder = stringResource(R.string.cv_example_phone),
+                modifier = Modifier.bringIntoViewRequester(requester(KEY_PHONE)),
             )
             FormTextField(
                 value = draft.personalInfo.location,
@@ -205,6 +234,7 @@ fun CvEditorSheet(
                     draft = draft.copy(personalInfo = draft.personalInfo.copy(location = it))
                 },
                 label = stringResource(R.string.cv_editor_location),
+                placeholder = stringResource(R.string.cv_example_location),
             )
             FormTextField(
                 value = draft.personalInfo.bio.orEmpty(),
@@ -216,6 +246,7 @@ fun CvEditorSheet(
                 label = stringResource(R.string.cv_editor_bio),
                 singleLine = false,
                 imeAction = ImeAction.Default,
+                placeholder = stringResource(R.string.cv_example_bio),
             )
 
             // ----- Experiencia laboral -----
@@ -243,11 +274,13 @@ fun CvEditorSheet(
                         value = experience.position,
                         onValueChange = { update(experience.copy(position = it)) },
                         label = stringResource(R.string.cv_editor_position),
+                        placeholder = stringResource(R.string.cv_example_position),
                     )
                     FormTextField(
                         value = experience.company,
                         onValueChange = { update(experience.copy(company = it)) },
                         label = stringResource(R.string.cv_editor_company),
+                        placeholder = stringResource(R.string.cv_example_company),
                     )
                     PeriodFields(
                         startDate = experience.startDate,
@@ -256,7 +289,13 @@ fun CvEditorSheet(
                         showErrors = showErrors,
                         onStartChange = { update(experience.copy(startDate = it)) },
                         onEndChange = { update(experience.copy(endDate = it)) },
-                        onCurrentChange = { update(experience.copy(current = it)) },
+                        // Marcar "Sigue vigente" y borrar la fecha de fin van en el mismo cambio.
+                        // Antes eran dos seguidos y el segundo partía de la copia vieja, así que
+                        // deshacía el primero y la casilla nunca quedaba marcada.
+                        onCurrentChange = {
+                            update(experience.copy(current = it, endDate = if (it) null else experience.endDate))
+                        },
+                        startModifier = Modifier.bringIntoViewRequester(requester("$KEY_EXPERIENCE$index")),
                     )
                     FormTextField(
                         value = experience.description,
@@ -268,6 +307,7 @@ fun CvEditorSheet(
                         label = stringResource(R.string.cv_editor_description),
                         singleLine = false,
                         imeAction = ImeAction.Default,
+                        placeholder = stringResource(R.string.cv_example_description),
                     )
                     AiImproveRow(
                         isLoading = aiState.expandingIndex == index,
@@ -312,16 +352,19 @@ fun CvEditorSheet(
                         value = study.degree,
                         onValueChange = { update(study.copy(degree = it)) },
                         label = stringResource(R.string.cv_editor_degree),
+                        placeholder = stringResource(R.string.cv_example_degree),
                     )
                     FormTextField(
                         value = study.institution,
                         onValueChange = { update(study.copy(institution = it)) },
                         label = stringResource(R.string.cv_editor_institution),
+                        placeholder = stringResource(R.string.cv_example_institution),
                     )
                     FormTextField(
                         value = study.field,
                         onValueChange = { update(study.copy(field = it)) },
                         label = stringResource(R.string.cv_editor_field),
+                        placeholder = stringResource(R.string.cv_example_field),
                     )
                     PeriodFields(
                         startDate = study.startDate,
@@ -330,7 +373,10 @@ fun CvEditorSheet(
                         showErrors = showErrors,
                         onStartChange = { update(study.copy(startDate = it)) },
                         onEndChange = { update(study.copy(endDate = it)) },
-                        onCurrentChange = { update(study.copy(current = it)) },
+                        onCurrentChange = {
+                            update(study.copy(current = it, endDate = if (it) null else study.endDate))
+                        },
+                        startModifier = Modifier.bringIntoViewRequester(requester("$KEY_EDUCATION$index")),
                     )
                 }
             }
@@ -355,6 +401,7 @@ fun CvEditorSheet(
                         value = skill.name,
                         onValueChange = { update(skill.copy(name = it)) },
                         label = stringResource(R.string.cv_editor_skill_name),
+                        placeholder = stringResource(R.string.cv_example_skill),
                     )
                     LevelField(
                         value = skill.level,
@@ -365,6 +412,7 @@ fun CvEditorSheet(
                         value = skill.category,
                         onValueChange = { update(skill.copy(category = it)) },
                         label = stringResource(R.string.cv_editor_category),
+                        placeholder = stringResource(R.string.cv_example_category),
                     )
                 }
             }
@@ -389,6 +437,7 @@ fun CvEditorSheet(
                         value = language.name,
                         onValueChange = { update(language.copy(name = it)) },
                         label = stringResource(R.string.cv_editor_language),
+                        placeholder = stringResource(R.string.cv_example_language),
                     )
                     LevelField(
                         value = language.level,
@@ -421,7 +470,12 @@ fun CvEditorSheet(
                 Button(
                     onClick = {
                         showErrors = true
-                        if (!hasErrors) onSave(draft)
+                        if (!hasErrors) {
+                            onSave(draft)
+                        } else {
+                            // Lleva al primer campo con error en vez de dejar al usuario buscándolo.
+                            firstErrorKey()?.let { key -> scope.launch { requester(key).bringIntoView() } }
+                        }
                     },
                     enabled = !isSaving,
                     modifier = Modifier.weight(1f),
@@ -506,6 +560,7 @@ private fun PeriodFields(
     onEndChange: (Long?) -> Unit,
     onCurrentChange: (Boolean) -> Unit,
     modifier: Modifier = Modifier,
+    startModifier: Modifier = Modifier,
 ) {
     Column(modifier = modifier) {
         // "Desde" es obligatorio (ver missingStartDate en el editor).
@@ -513,6 +568,7 @@ private fun PeriodFields(
             value = startDate,
             onValueChange = onStartChange,
             label = stringResource(R.string.cv_editor_start),
+            modifier = startModifier,
             errorMessage = if (showErrors && startDate == null) {
                 stringResource(R.string.validation_required)
             } else {
@@ -532,10 +588,8 @@ private fun PeriodFields(
         Row(verticalAlignment = Alignment.CenterVertically) {
             Checkbox(
                 checked = current,
-                onCheckedChange = { marcado ->
-                    onCurrentChange(marcado)
-                    if (marcado) onEndChange(null)
-                },
+                // Quien llama borra la fecha de fin en el mismo cambio (ver onCurrentChange).
+                onCheckedChange = onCurrentChange,
             )
             Text(
                 text = stringResource(R.string.cv_editor_current),
@@ -891,3 +945,11 @@ private fun emptyLanguage() = Language(id = "", name = "", level = LanguageLevel
 @Composable
 private fun Int?.messageOrNull(show: Boolean): String? =
     if (show && this != null) stringResource(this) else null
+
+/** Claves de los campos que pueden fallar, para desplazarse al primero con error. */
+private const val KEY_TITLE = "title"
+private const val KEY_NAME = "name"
+private const val KEY_EMAIL = "email"
+private const val KEY_PHONE = "phone"
+private const val KEY_EXPERIENCE = "experience-"
+private const val KEY_EDUCATION = "education-"

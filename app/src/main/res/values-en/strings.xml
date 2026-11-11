@@ -145,9 +145,6 @@
     <string name="cv_editor_saving">Saving…</string>
     <string name="cv_editor_cancel">Cancel</string>
     <string name="coming_soon_badge">Coming soon</string>
-    <string name="coming_soon_ai_badge">In the editor</string>
-    <string name="coming_soon_ai_title">AI generation</string>
-    <string name="coming_soon_ai_message">Pick a template to create your CV. In the editor, describe your experience in a few words and tap \"Improve with AI\", or use \"Add non-work experience\" for volunteering, a school project or informal work.</string>
     <string name="coming_soon_pdf_title">Export to PDF</string>
     <string name="coming_soon_pdf_message">Downloading your CV as a PDF comes in the next phase, together with the editor.</string>
     <string name="coming_soon_use_title">Use this template</string>
@@ -164,6 +161,7 @@
     <string name="templates_store_section">Template store</string>
     <string name="templates_download">Download</string>
     <string name="templates_count">%1$d templates</string>
+    <string name="templates_preview_close">Close</string>
     <string name="templates_preview">Preview</string>
     <string name="templates_use">Use this template</string>
     <string name="templates_premium">Premium</string>
@@ -178,9 +176,6 @@
     <!-- Mis Currículums -->
     <string name="cvs_eyebrow">YOUR PROFESSIONAL SPACE</string>
     <string name="cvs_search_placeholder">Search CVs</string>
-    <string name="cvs_create_subtitle">Choose how you want to start your next opportunity.</string>
-    <string name="cvs_create_ai">AI mode</string>
-    <string name="cvs_create_offline">Offline / Template</string>
     <string name="cvs_delete">Delete</string>
     <string name="cvs_delete_title">Delete this CV?</string>
     <string name="cvs_delete_message">\"%1$s\" will be deleted. This can\'t be undone.</string>
@@ -199,10 +194,9 @@
     <string name="home_cv_updated_at">Modified %1$s</string>
     <string name="home_cv_edit">View/Edit</string>
     <string name="home_cv_download">Download</string>
-    <string name="home_create_cv_title">Create New CV</string>
-    <string name="home_create_cv_subtitle">Start from scratch or use a template</string>
-    <string name="home_create_cv_ai">AI</string>
-    <string name="home_create_cv_offline">Offline</string>
+    <string name="create_cv_ai_title">Create your CV with AI</string>
+    <string name="create_cv_ai_steps">1. Pick a template. 2. Describe your experience in a few words. 3. Tap \"Improve with AI\" and the AI writes it professionally. It also works for volunteering, school projects or informal work.</string>
+    <string name="create_cv_ai_action">Pick a template</string>
     <string name="home_skills_title">Skills Analysis</string>
     <string name="home_skills_subtitle">Ordinal comparison with market requirements</string>
     <string name="home_skills_empty">No analysis available yet.</string>
@@ -288,6 +282,7 @@
     <string name="jobs_skills_title">Skills they ask for</string>
     <string name="jobs_requirements_title">Main requirements</string>
     <string name="jobs_details">See Details</string>
+    <string name="jobs_show_more">See more offers (%1$d)</string>
     <string name="jobs_apply">Apply</string>
     <string name="jobs_applied">Applied</string>
     <string name="jobs_apply_success">You applied to \"%1$s\". Track it in My Applications.</string>
@@ -510,4 +505,20 @@
     <string name="sample_cv_skill3">Teamwork</string>
     <string name="sample_cv_language1">Spanish</string>
     <string name="sample_cv_language2">English</string>
+    <!-- Gray examples for the CV editor fields (FormTextField placeholder). -->
+    <string name="cv_example_title">E.g.: Customer service CV</string>
+    <string name="cv_example_name">E.g.: Ana Rodríguez Mora</string>
+    <string name="cv_example_email">E.g.: ana@email.com</string>
+    <string name="cv_example_phone">E.g.: 88888888</string>
+    <string name="cv_example_location">E.g.: Cartago, Costa Rica</string>
+    <string name="cv_example_bio">E.g.: Final-year student, responsible and eager to learn.</string>
+    <string name="cv_example_position">E.g.: Cashier</string>
+    <string name="cv_example_company">E.g.: La Esquina Supermarket</string>
+    <string name="cv_example_description">E.g.: Served customers, handled the register and did the daily closing.</string>
+    <string name="cv_example_degree">E.g.: High School Diploma</string>
+    <string name="cv_example_institution">E.g.: Liceo de Cartago</string>
+    <string name="cv_example_field">E.g.: Science</string>
+    <string name="cv_example_skill">E.g.: Excel</string>
+    <string name="cv_example_category">E.g.: Office tools</string>
+    <string name="cv_example_language">E.g.: English</string>
 </resources>
