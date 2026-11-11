@@ -23,6 +23,7 @@ data class SkillsGapAnalysis(
 data class CourseRecommendation(
     val id: String, val title: String, val platform: String, val url: String,
     val logoUrl: String?, val duration: String?,
+    val isPaid: Boolean? = null, val skills: List<String> = emptyList(),
 )
 data class SkillInput(val skillName: String, val level: String?)
 enum class SkillsGapFailure {

@@ -31,6 +31,7 @@ data class JobOfferDto(
     val sector: String? = null,
     val description: String? = null,
     val requirements: List<String>? = null,
+    val skills: List<String>? = null,
     val salary: SalaryDto? = null,
 
     @SerializedName(value = "matchScore", alternate = ["compatibility"])

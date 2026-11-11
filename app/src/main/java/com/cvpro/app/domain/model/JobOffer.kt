@@ -24,6 +24,7 @@ data class JobOffer(
     val matchScore: Int?,
     /** Fecha de publicación, ya lista para mostrar. */
     val postedAt: String,
+    val skills: List<String> = emptyList(),
 )
 
 /** Rango salarial de una oferta, con los mismos campos del contrato de la web. */

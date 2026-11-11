@@ -414,7 +414,7 @@ private fun CoursesCard(
 }
 
 @Composable
-private fun CourseCard(
+internal fun CourseCard(
     course: CourseRecommendation,
     modifier: Modifier = Modifier,
 ) {
