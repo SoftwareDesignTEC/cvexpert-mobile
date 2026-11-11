@@ -125,6 +125,11 @@ fun JobsContent(
         )
     }
 
+    // Cuántas ofertas se muestran: al principio solo INITIAL_OFFERS. Vuelve a empezar si cambia
+    // el filtro o la búsqueda.
+    var showAll by remember(uiState.selectedFilter, uiState.query) { mutableStateOf(false) }
+    val shownOffers = if (showAll) uiState.visibleOffers else uiState.visibleOffers.take(INITIAL_OFFERS)
+
     Column(modifier = modifier.fillMaxSize()) {
         JobsHeader(
             query = uiState.query,
@@ -168,7 +173,7 @@ fun JobsContent(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.fillMaxSize(),
             ) {
-                items(items = uiState.visibleOffers, key = { it.id }) { offer ->
+                items(items = shownOffers, key = { it.id }) { offer ->
                     JobCard(
                         offer = offer,
                         applyState = uiState.applyStateOf(offer),
@@ -177,7 +182,22 @@ fun JobsContent(
                     )
                 }
 
-                if (uiState.hasMore) {
+                // Primero se ven unas pocas; el resto, a pedido. Con todas de una la lista
+                // quedaba muy larga ("chorreada", según la retroalimentación del equipo).
+                val hidden = uiState.visibleOffers.size - shownOffers.size
+                if (hidden > 0) {
+                    item {
+                        OutlinedButton(
+                            onClick = { showAll = true },
+                            colors = outlinedOnCardColors(),
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(stringResource(R.string.jobs_show_more, hidden))
+                        }
+                    }
+                }
+
+                if (showAll && uiState.hasMore) {
                     item {
                         // Antes la página siguiente se pedía sola al llegar al pie y la
                         // lista no terminaba nunca. Ahora la pide el usuario: ve cuántas
@@ -541,3 +561,6 @@ private fun JobsPreview(darkTheme: Boolean) {
         }
     }
 }
+
+/** Ofertas que se ven antes de tocar "Ver más ofertas". */
+private const val INITIAL_OFFERS = 3

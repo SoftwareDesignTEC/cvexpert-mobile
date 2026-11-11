@@ -1,14 +1,16 @@
 package com.cvpro.app.ui.screens.templates
 
-import android.graphics.Bitmap
 import android.content.Intent
+import android.graphics.Bitmap
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -18,13 +20,17 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Description
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -41,17 +47,16 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Description
-import androidx.compose.material3.Icon
-import com.cvpro.app.ui.components.PagePreview
-import com.cvpro.app.ui.components.RemoteImage
 import com.cvpro.app.R
 import com.cvpro.app.domain.model.CvTemplate
 import com.cvpro.app.ui.components.EmptyState
 import com.cvpro.app.ui.components.LocalSnackbarHostState
+import com.cvpro.app.ui.components.PagePreview
+import com.cvpro.app.ui.components.RemoteImage
 import com.cvpro.app.ui.components.outlinedOnCardColors
 import com.cvpro.app.ui.theme.CvProTheme
 
@@ -123,6 +128,14 @@ fun TemplatesContent(
     // Cada sección arranca mostrando solo las primeras y se despliega con "Ver todas".
     var offlineExpanded by remember { mutableStateOf(false) }
     var storeExpanded by remember { mutableStateOf(false) }
+    // Plantilla abierta en grande (al tocar su vista previa), o null.
+    var enlarged by remember { mutableStateOf<CvTemplate?>(null) }
+
+    enlarged?.let { template ->
+        uiState.previews[template.id]?.let { page ->
+            EnlargedPreview(title = template.name, page = page, onDismiss = { enlarged = null })
+        }
+    }
 
     Column(modifier = modifier.fillMaxSize()) {
         TemplatesHeader(count = uiState.templates.size)
@@ -170,6 +183,7 @@ fun TemplatesContent(
                                 isInStore = false,
                                 isBusy = uiState.busyTemplateId == template.id,
                                 onActionClick = { onUseTemplate(template) },
+                                onPreviewClick = { enlarged = template },
                             )
                         }
                         if (offline.size > PREVIEW_COUNT) {
@@ -200,6 +214,7 @@ fun TemplatesContent(
                                 isInStore = true,
                                 isBusy = uiState.busyTemplateId == template.id,
                                 onActionClick = { onDownloadTemplate(template) },
+                                onPreviewClick = { enlarged = template },
                             )
                         }
                         if (store.size > PREVIEW_COUNT) {
@@ -305,6 +320,7 @@ private fun TemplateCard(
     isBusy: Boolean,
     onActionClick: () -> Unit,
     modifier: Modifier = Modifier,
+    onPreviewClick: () -> Unit = {},
 ) {
     Surface(
         color = MaterialTheme.colorScheme.surface,
@@ -312,7 +328,12 @@ private fun TemplateCard(
         modifier = modifier.fillMaxWidth(),
     ) {
         Row(modifier = Modifier.padding(10.dp)) {
-            TemplatePreview(previewUrl = template.previewUrl, page = preview)
+            TemplatePreview(
+                previewUrl = template.previewUrl,
+                page = preview,
+                // Solo se puede agrandar cuando ya está dibujada.
+                modifier = if (preview != null) Modifier.clickable(onClick = onPreviewClick) else Modifier,
+            )
 
             Spacer(modifier = Modifier.width(12.dp))
 
@@ -385,6 +406,44 @@ private fun TemplateCard(
 }
 
 /** Vista previa de la plantilla, con su etiqueta encima como en el diseño. */
+/**
+ * La hoja de la plantilla a pantalla completa, para leerla bien. En la tarjeta se ve chica.
+ * Se cierra tocando afuera, con "Atrás" o con el botón.
+ */
+@Composable
+private fun EnlargedPreview(
+    title: String,
+    page: Bitmap,
+    onDismiss: () -> Unit,
+) {
+    Dialog(onDismissRequest = onDismiss, properties = DialogProperties(usePlatformDefaultWidth = false)) {
+        Surface(
+            color = MaterialTheme.colorScheme.surface,
+            shape = RoundedCornerShape(12.dp),
+            modifier = Modifier.padding(16.dp),
+        ) {
+            Column(modifier = Modifier.padding(12.dp)) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(bottom = 8.dp),
+                )
+                PagePreview(
+                    page = page,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .aspectRatio(page.width.toFloat() / page.height)
+                        .clip(RoundedCornerShape(6.dp)),
+                )
+                TextButton(onClick = onDismiss, modifier = Modifier.align(Alignment.End)) {
+                    Text(stringResource(R.string.templates_preview_close))
+                }
+            }
+        }
+    }
+}
+
 @Composable
 private fun TemplatePreview(
     previewUrl: String,
