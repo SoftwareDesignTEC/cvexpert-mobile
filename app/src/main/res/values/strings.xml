@@ -544,5 +544,5 @@
     <string name="ai_cv_template">Plantilla</string>
     <string name="ai_cv_generate">Generar mi currículum</string>
     <string name="ai_cv_generating">Armando tu currículum…</string>
-    <string name="ai_cv_wait">Puede tardar hasta un minuto. No cierres esta pantalla.</string>
+    <string name="ai_cv_wait">Puede tardar un par de minutos. No cierres esta pantalla.</string>
 </resources>

@@ -536,5 +536,5 @@
     <string name="ai_cv_template">Template</string>
     <string name="ai_cv_generate">Generate my CV</string>
     <string name="ai_cv_generating">Building your CV…</string>
-    <string name="ai_cv_wait">It can take up to a minute. Do not close this screen.</string>
+    <string name="ai_cv_wait">It can take a couple of minutes. Do not close this screen.</string>
 </resources>
