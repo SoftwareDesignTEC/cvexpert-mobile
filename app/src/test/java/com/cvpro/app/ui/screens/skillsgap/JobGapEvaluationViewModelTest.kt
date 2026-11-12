@@ -21,7 +21,7 @@ class JobGapEvaluationViewModelTest {
     @Test fun `selection is explicit and detail rather than list CV reaches evaluation`() = runTest(dispatcher) {
         val cvs = EvaluationCvs()
         val evaluations = EvaluationRepository()
-        val vm = JobSkillsGapViewModel(cvs, evaluations)
+        val vm = JobSkillsGapViewModel(cvs, evaluations, com.cvpro.app.data.testJobOffers())
         vm.open(evaluationOffer()); advanceUntilIdle()
         assertNull(vm.uiState.value.selectedCvId)
         vm.analyze(evaluationOnly = true); advanceUntilIdle()
@@ -37,7 +37,7 @@ class JobGapEvaluationViewModelTest {
     @Test fun `double taps and repeated open while loading produce only one request`() = runTest(dispatcher) {
         val cvs = EvaluationCvs()
         val evaluations = EvaluationRepository()
-        val vm = JobSkillsGapViewModel(cvs, evaluations)
+        val vm = JobSkillsGapViewModel(cvs, evaluations, com.cvpro.app.data.testJobOffers())
         vm.open(evaluationOffer()); vm.open(evaluationOffer()); vm.loadCvs(); advanceUntilIdle()
         assertEquals(1, cvs.listCalls)
         vm.selectCv("cv1"); vm.selectCv("cv1"); advanceUntilIdle()
@@ -48,7 +48,7 @@ class JobGapEvaluationViewModelTest {
 
     @Test fun `changing CV clears results and ignores a late uncooperative evaluation`() = runTest(dispatcher) {
         val evaluations = EvaluationRepository()
-        val vm = JobSkillsGapViewModel(EvaluationCvs(), evaluations)
+        val vm = JobSkillsGapViewModel(EvaluationCvs(), evaluations, com.cvpro.app.data.testJobOffers())
         vm.open(evaluationOffer()); advanceUntilIdle()
         vm.selectCv("cv1"); advanceUntilIdle()
         val delayed = CompletableDeferred<JobSkillsGapAnalysis>()
@@ -64,7 +64,7 @@ class JobGapEvaluationViewModelTest {
 
     @Test fun `changing offer ignores stale completion and close cancels all displayed state`() = runTest(dispatcher) {
         val evaluations = EvaluationRepository()
-        val vm = JobSkillsGapViewModel(EvaluationCvs(), evaluations)
+        val vm = JobSkillsGapViewModel(EvaluationCvs(), evaluations, com.cvpro.app.data.testJobOffers())
         vm.open(evaluationOffer()); advanceUntilIdle()
         vm.selectCv("cv1"); advanceUntilIdle()
         val delayed = CompletableDeferred<JobSkillsGapAnalysis>()
@@ -82,7 +82,7 @@ class JobGapEvaluationViewModelTest {
     @Test fun `failed detail cannot become empty CV and retry loads selected ID`() = runTest(dispatcher) {
         val cvs = EvaluationCvs().apply { detailError = IOException("confidential") }
         val evaluations = EvaluationRepository()
-        val vm = JobSkillsGapViewModel(cvs, evaluations)
+        val vm = JobSkillsGapViewModel(cvs, evaluations, com.cvpro.app.data.testJobOffers())
         vm.open(evaluationOffer()); advanceUntilIdle()
         vm.selectCv("cv1"); advanceUntilIdle()
         vm.analyze(evaluationOnly = true); advanceUntilIdle()
@@ -96,7 +96,7 @@ class JobGapEvaluationViewModelTest {
 
     @Test fun `list error retry and no CV state are recoverable without arbitrary selection`() = runTest(dispatcher) {
         val cvs = EvaluationCvs().apply { listError = IOException() }
-        val vm = JobSkillsGapViewModel(cvs, EvaluationRepository())
+        val vm = JobSkillsGapViewModel(cvs, EvaluationRepository(), com.cvpro.app.data.testJobOffers())
         vm.open(evaluationOffer()); advanceUntilIdle()
         assertNotNull(vm.uiState.value.errorMessage)
         cvs.listError = null
@@ -110,7 +110,7 @@ class JobGapEvaluationViewModelTest {
 
     @Test fun `all evaluation failures show curated messages and allow retry`() = runTest(dispatcher) {
         val evaluations = EvaluationRepository()
-        val vm = JobSkillsGapViewModel(EvaluationCvs(), evaluations)
+        val vm = JobSkillsGapViewModel(EvaluationCvs(), evaluations, com.cvpro.app.data.testJobOffers())
         vm.open(evaluationOffer()); advanceUntilIdle()
         vm.selectCv("cv1"); advanceUntilIdle()
         for ((failure, message) in listOf(JobSkillsGapFailure.INVALID_CV to R.string.job_gap_invalid_cv,

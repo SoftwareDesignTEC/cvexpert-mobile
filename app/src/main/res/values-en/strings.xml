@@ -550,7 +550,7 @@
     <string name="profile_location_locating">Finding your location…</string>
     <string name="profile_location_unavailable">We couldn\'t get your location. Check that location is on or type it in.</string>
     <string name="profile_location_denied">No location permission. You can type it in.</string>
-    <string name="skills_gap_disabled">Skills gap analysis is awaiting service activation. Other features remain available.</string>
+    <string name="skills_gap_disabled">Market comparison is unavailable in this version. You can analyze a job in the other tab.</string>
     <string name="skills_gap_select_cv">Select a CV to analyze its skills</string>
     <string name="skills_gap_more_cvs">Load more CVs</string>
     <string name="skills_gap_no_cvs">No CVs loaded. You can create one in My CVs.</string>

@@ -48,6 +48,7 @@ jobs:
         run: |
           ./gradlew --no-daemon \
             assembleDebug \
+            assembleDebugAndroidTest \
             assembleRelease \
             testDebugUnitTest \
             testReleaseUnitTest \

@@ -28,3 +28,8 @@ internal const val jobGapResponse = """
   }]
 }
 """
+
+internal fun testJobOffers() = object : com.cvpro.app.domain.repository.JobOfferRepository {
+    override suspend fun getOffers(page: Int, pageSize: Int, query: String): PagedResult<JobOffer> =
+        error("A preselected offer must not fetch a list of offers")
+}
