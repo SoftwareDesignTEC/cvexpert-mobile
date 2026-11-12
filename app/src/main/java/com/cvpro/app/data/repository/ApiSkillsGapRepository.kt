@@ -24,7 +24,7 @@ class ApiSkillsGapRepository internal constructor(
     override suspend fun getAnalysis(page: Int): SkillsGapAnalysis {
         requireEnabled()
         val response = api.getSkillsGap(page, 100)
-        response.checkStatus()
+        response.checkStatus(isRead = true)
         if (response.headers()["X-Data-Mode"] != "reference")
             throw SkillsGapException(SkillsGapFailure.INCOMPATIBLE_RESPONSE)
         val result = response.body()?.toDomain()
@@ -44,12 +44,16 @@ class ApiSkillsGapRepository internal constructor(
         if (response.code() != 204) throw SkillsGapException(SkillsGapFailure.INCOMPATIBLE_RESPONSE)
     }
 }
-private fun Response<*>.checkStatus() {
+private fun Response<*>.checkStatus(isRead: Boolean = false) {
     if (isSuccessful) return
-    errorBody()?.close()
+    val errorCode = errorBody()?.use {
+        if (isRead && code() == 409) try {
+            com.google.gson.Gson().fromJson(it.charStream(), com.google.gson.JsonObject::class.java)?.get("error")?.asString
+        } catch (_: RuntimeException) { null } else null
+    }
     throw SkillsGapException(when (code()) {
         401 -> SkillsGapFailure.UNAUTHORIZED
-        409 -> SkillsGapFailure.INPUT_REQUIRED
+        409 -> if (isRead && errorCode == "SKILLS_INPUT_REQUIRED") SkillsGapFailure.INPUT_REQUIRED else SkillsGapFailure.UNAVAILABLE
         400, 413 -> SkillsGapFailure.INVALID_INPUT
         else -> SkillsGapFailure.UNAVAILABLE
     })

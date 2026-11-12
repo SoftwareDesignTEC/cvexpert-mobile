@@ -5,9 +5,13 @@ import androidx.lifecycle.viewModelScope
 import com.cvpro.app.domain.model.Cv
 import com.cvpro.app.domain.model.JobOffer
 import com.cvpro.app.domain.model.SkillsGapAnalysis
+import android.graphics.Bitmap
 import android.net.Uri
 import com.cvpro.app.data.pdf.CvPdfGenerator
+import com.cvpro.app.data.pdf.CvPreviewRenderer
 import com.cvpro.app.domain.repository.CvRepository
+import com.cvpro.app.domain.repository.TemplateRepository
+import com.cvpro.app.domain.repository.layoutFor
 import com.cvpro.app.domain.repository.JobOfferRepository
 import com.cvpro.app.domain.repository.SkillsGapRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -27,6 +31,8 @@ import javax.inject.Inject
  */
 data class HomeUiState(
     val recentCvs: List<Cv> = emptyList(),
+    /** Primera hoja de cada CV reciente ya dibujada, por id. */
+    val cvPreviews: Map<String, Bitmap> = emptyMap(),
     val skillsGap: SkillsGapAnalysis? = null,
     val recommendedOffers: List<JobOffer> = emptyList(),
     val isLoading: Boolean = false,
@@ -39,6 +45,8 @@ class HomeViewModel @Inject constructor(
     private val skillsGapRepository: SkillsGapRepository,
     private val jobOfferRepository: JobOfferRepository,
     private val pdfGenerator: CvPdfGenerator,
+    private val templateRepository: TemplateRepository,
+    private val previewRenderer: CvPreviewRenderer,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(HomeUiState())
@@ -48,7 +56,11 @@ class HomeViewModel @Inject constructor(
     private val _generatedPdf = MutableStateFlow<Uri?>(null)
     val generatedPdf: StateFlow<Uri?> = _generatedPdf.asStateFlow()
 
-    init { load() }
+    /**
+     * Se llama cada vez que el panel aparece. El menú restaura el ViewModel al volver, y si
+     * cargara solo al crearse no mostraría un CV recién creado ni una postulación nueva.
+     */
+    fun onScreenShown() = load(showLoader = _uiState.value.recentCvs.isEmpty())
 
     fun retry() = load()
 
@@ -62,7 +74,7 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isGeneratingPdf = true) }
             try {
-                _generatedPdf.value = pdfGenerator.generate(cv)
+                _generatedPdf.value = pdfGenerator.generate(cv, templateRepository.layoutFor(cv))
             } finally {
                 _uiState.update { it.copy(isGeneratingPdf = false) }
             }
@@ -80,9 +92,9 @@ class HomeViewModel @Inject constructor(
      * Con `async` las tres llamadas salen en paralelo en vez de una tras otra, así el panel
      * tarda lo que la más lenta y no la suma de las tres.
      */
-    private fun load() {
+    private fun load(showLoader: Boolean = true) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true) }
+            _uiState.update { it.copy(isLoading = showLoader) }
 
             val cvs = async { runCatching { cvRepository.getCvs(1, SECTION_SIZE, "").items } }
             val gap = async { runCatching { skillsGapRepository.getAnalysis() } }
@@ -96,6 +108,9 @@ class HomeViewModel @Inject constructor(
                     isLoading = false,
                 )
             }
+
+            val previews = previewRenderer.previewsFor(_uiState.value.recentCvs)
+            _uiState.update { it.copy(cvPreviews = previews) }
         }
     }
 

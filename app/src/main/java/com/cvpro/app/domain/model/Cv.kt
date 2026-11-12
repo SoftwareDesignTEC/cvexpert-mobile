@@ -18,14 +18,21 @@ data class Cv(
     val education: List<Education>,
     val skills: List<Skill>,
     val languages: List<Language>,
+    val certifications: List<Certification>,
 )
+
+/*
+ * Las fechas de experiencia, estudios y certificaciones son epoch milisegundos UTC, igual que
+ * en el contrato del servicio de CVs (ver CvDates.kt para cómo se muestran). Son null cuando
+ * el servicio no manda una fecha que se pueda leer o el usuario todavía no la eligió.
+ */
 
 data class WorkExperience(
     val id: String,
     val company: String,
     val position: String,
-    val startDate: String,
-    val endDate: String?,
+    val startDate: Long?,
+    val endDate: Long?,
     val current: Boolean,
     val description: String,
     val type: String,
@@ -36,8 +43,8 @@ data class Education(
     val institution: String,
     val degree: String,
     val field: String,
-    val startDate: String,
-    val endDate: String?,
+    val startDate: Long?,
+    val endDate: Long?,
     val current: Boolean,
 )
 
@@ -52,4 +59,14 @@ data class Language(
     val id: String,
     val name: String,
     val level: String,
+)
+
+/** Certificación o curso con constancia. Es un agregado de la Fase II y es opcional en el CV. */
+data class Certification(
+    val id: String,
+    val name: String,
+    val issuer: String,
+    val issuedAt: Long?,
+    val expiresAt: Long?,
+    val credentialUrl: String?,
 )

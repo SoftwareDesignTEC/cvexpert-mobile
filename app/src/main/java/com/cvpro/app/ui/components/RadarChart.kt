@@ -120,6 +120,9 @@ private fun DrawScope.drawRadarSeries(center: Offset, radius: Float, series: Rad
     series.values.forEachIndexed { index, value ->
         val distance = radius * (value.coerceIn(1, 4) / 4f)
         val point = radarPoint(center, distance, index, series.values.size)
+        if (series.values.size < 3) {
+            drawCircle(color = series.color, radius = 3.dp.toPx(), center = point)
+        }
         if (index == 0) path.moveTo(point.x, point.y) else path.lineTo(point.x, point.y)
     }
     path.close()

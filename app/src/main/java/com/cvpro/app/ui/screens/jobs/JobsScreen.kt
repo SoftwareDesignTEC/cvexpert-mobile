@@ -27,6 +27,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,12 +37,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalResources
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cvpro.app.ui.components.ApplyButton
+import com.cvpro.app.ui.components.ApplyState
+import com.cvpro.app.ui.components.LocalSnackbarHostState
 import com.cvpro.app.ui.components.RemoteImage
 import com.cvpro.app.ui.components.outlinedOnCardColors
 import com.cvpro.app.R
@@ -60,6 +66,27 @@ fun JobsScreen(
     onCvsClick: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    // El Scaffold de la raíz comparte un único snackbar, igual que en Plantillas.
+    val snackbarHostState = LocalSnackbarHostState.current
+    val resources = LocalResources.current
+
+    // Después de registrar la postulación a una oferta real, se abre su página para terminarla.
+    val uriHandler = LocalUriHandler.current
+    LaunchedEffect(uiState.urlToOpen) {
+        val url = uiState.urlToOpen ?: return@LaunchedEffect
+        runCatching { uriHandler.openUri(url) }
+        viewModel.onUrlOpened()
+    }
+
+    // Cada vez que se entra se revisa a qué ofertas ya se postuló el usuario.
+    LaunchedEffect(Unit) { viewModel.onScreenShown() }
+
+    // El resultado de postularse se avisa abajo y se limpia solo.
+    LaunchedEffect(uiState.message) {
+        val mensaje = uiState.message ?: return@LaunchedEffect
+        snackbarHostState.showSnackbar(resources.getString(mensaje.res, *mensaje.args.toTypedArray()))
+        viewModel.onMessageShown()
+    }
 
     JobsContent(
         uiState = uiState,
@@ -67,6 +94,7 @@ fun JobsScreen(
         onFilterChange = viewModel::onFilterChange,
         onRetryClick = viewModel::onRetryClick,
         onLoadMore = viewModel::onLoadMore,
+        onApply = viewModel::onApply,
         modifier = modifier,
         onCvsClick = onCvsClick,
     )
@@ -85,23 +113,32 @@ fun JobsContent(
     onFilterChange: (JobsFilter) -> Unit,
     onRetryClick: () -> Unit,
     onLoadMore: () -> Unit,
+    onApply: (JobOffer) -> Unit,
     modifier: Modifier = Modifier,
     onCvsClick: () -> Unit = {},
 ) {
     // Oferta abierta en el detalle, o null si la hoja está cerrada.
     var detailOffer by remember { mutableStateOf<JobOffer?>(null) }
-    var analysisOffer by remember { mutableStateOf<JobOffer?>(null) }
+    var gapOffer by remember { mutableStateOf<JobOffer?>(null) }
 
-    analysisOffer?.let { offer ->
-        JobSkillsGapSheet(offer, onDismiss = { analysisOffer = null }, onCorrectCv = {
-            analysisOffer = null
-            onCvsClick()
-        })
+    gapOffer?.let { offer ->
+        JobSkillsGapSheet(offer = offer, onDismiss = { gapOffer = null }, onCorrectCv = { gapOffer = null; onCvsClick() })
     }
 
     detailOffer?.let { offer ->
-        JobOfferDetailSheet(offer = offer, onDismiss = { detailOffer = null })
+        JobOfferDetailSheet(
+            offer = offer,
+            onDismiss = { detailOffer = null },
+            applyState = uiState.applyStateOf(offer),
+            onApply = { onApply(offer) },
+            onAnalyzeGap = { detailOffer = null; gapOffer = offer },
+        )
     }
+
+    // Cuántas ofertas se muestran: al principio solo INITIAL_OFFERS. Vuelve a empezar si cambia
+    // el filtro o la búsqueda.
+    var showAll by remember(uiState.selectedFilter, uiState.query) { mutableStateOf(false) }
+    val shownOffers = if (showAll) uiState.visibleOffers else uiState.visibleOffers.take(INITIAL_OFFERS)
 
     Column(modifier = modifier.fillMaxSize()) {
         JobsHeader(
@@ -130,7 +167,15 @@ fun JobsContent(
 
             uiState.isEmpty -> EmptyState(
                 title = stringResource(R.string.jobs_empty_title),
-                message = stringResource(R.string.jobs_empty_message),
+                // Si hay ofertas pero ninguna pasa el filtro rápido, el problema no es la
+                // búsqueda: se dice que pruebe con otro filtro.
+                message = stringResource(
+                    if (uiState.offers.isNotEmpty() && uiState.selectedFilter != JobsFilter.RECOMMENDED) {
+                        R.string.jobs_empty_filter_message
+                    } else {
+                        R.string.jobs_empty_message
+                    },
+                ),
             )
 
             else -> LazyColumn(
@@ -138,12 +183,31 @@ fun JobsContent(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
                 modifier = Modifier.fillMaxSize(),
             ) {
-                items(items = uiState.visibleOffers, key = { it.id }) { offer ->
-                    JobCard(offer = offer, onDetailsClick = { detailOffer = offer },
-                        onAnalyzeClick = { analysisOffer = offer })
+                items(items = shownOffers, key = { it.id }) { offer ->
+                    JobCard(
+                        offer = offer,
+                        applyState = uiState.applyStateOf(offer),
+                        onDetailsClick = { detailOffer = offer },
+                        onApplyClick = { onApply(offer) },
+                    )
                 }
 
-                if (uiState.hasMore) {
+                // Primero se ven unas pocas; el resto, a pedido. Con todas de una la lista
+                // quedaba muy larga ("chorreada", según la retroalimentación del equipo).
+                val hidden = uiState.visibleOffers.size - shownOffers.size
+                if (hidden > 0) {
+                    item {
+                        OutlinedButton(
+                            onClick = { showAll = true },
+                            colors = outlinedOnCardColors(),
+                            modifier = Modifier.fillMaxWidth(),
+                        ) {
+                            Text(stringResource(R.string.jobs_show_more, hidden))
+                        }
+                    }
+                }
+
+                if (showAll && uiState.hasMore) {
                     item {
                         // Antes la página siguiente se pedía sola al llegar al pie y la
                         // lista no terminaba nunca. Ahora la pide el usuario: ve cuántas
@@ -233,15 +297,23 @@ private fun JobsFilters(
     }
 }
 
+/** Estado del botón "Postularme" de una oferta. */
+private fun JobsUiState.applyStateOf(offer: JobOffer): ApplyState = when (offer.id) {
+    applyingOfferId -> ApplyState.SENDING
+    in appliedOfferIds -> ApplyState.APPLIED
+    else -> ApplyState.AVAILABLE
+}
+
 /**
  * Tarjeta de una oferta: el logo y los datos arriba, el anillo de compatibilidad, los
- * requisitos, y el botón de detalle abajo.
+ * requisitos, y abajo los botones de detalle y de postularse.
  */
 @Composable
 private fun JobCard(
     offer: JobOffer,
+    applyState: ApplyState,
     onDetailsClick: () -> Unit,
-    onAnalyzeClick: () -> Unit,
+    onApplyClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Surface(
@@ -295,31 +367,53 @@ private fun JobCard(
                 }
             }
 
-            if (offer.requirements.isNotEmpty()) {
+            // Las ofertas reales casi nunca traen requisitos aparte, pero sí las habilidades que
+            // el servicio saca del texto: si no hay requisitos, se muestran esas.
+            val (summaryTitle, summary) = when {
+                offer.requirements.isNotEmpty() ->
+                    R.string.jobs_requirements_title to offer.requirements.joinToString(", ")
+                offer.skills.isNotEmpty() ->
+                    R.string.jobs_skills_title to offer.skills.joinToString(", ")
+                else -> null to ""
+            }
+            if (summaryTitle != null) {
                 Text(
-                    text = stringResource(R.string.jobs_requirements_title),
+                    text = stringResource(summaryTitle),
                     style = MaterialTheme.typography.labelLarge,
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.padding(top = 12.dp),
                 )
+                // Dos renglones como mucho: los requisitos reales pueden ser oraciones largas.
                 Text(
-                    text = offer.requirements.joinToString(", "),
+                    text = summary,
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.padding(top = 2.dp),
                 )
             }
 
-            Button(
-                onClick = onDetailsClick,
+            // Detalle y postularse lado a lado. Postularse es la acción principal, por eso
+            // va con el botón relleno y el detalle con el delineado.
+            Row(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 12.dp),
             ) {
-                Text(stringResource(R.string.jobs_details))
-            }
-            OutlinedButton(onClick = onAnalyzeClick, modifier = Modifier.fillMaxWidth()) {
-                Text(stringResource(R.string.job_gap_analyze))
+                OutlinedButton(
+                    onClick = onDetailsClick,
+                    colors = outlinedOnCardColors(),
+                    modifier = Modifier.weight(1f),
+                ) {
+                    Text(stringResource(R.string.jobs_details), maxLines = 1)
+                }
+                ApplyButton(
+                    state = applyState,
+                    onClick = onApplyClick,
+                    modifier = Modifier.weight(1f),
+                )
             }
         }
     }
@@ -472,7 +566,11 @@ private fun JobsPreview(darkTheme: Boolean) {
                 onFilterChange = {},
                 onRetryClick = {},
                 onLoadMore = {},
+                onApply = {},
             )
         }
     }
 }
+
+/** Ofertas que se ven antes de tocar "Ver más ofertas". */
+private const val INITIAL_OFFERS = 5

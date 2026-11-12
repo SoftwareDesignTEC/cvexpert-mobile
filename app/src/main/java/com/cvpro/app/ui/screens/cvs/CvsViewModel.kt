@@ -1,12 +1,21 @@
 package com.cvpro.app.ui.screens.cvs
 
+import android.graphics.Bitmap
+import android.net.Uri
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import android.net.Uri
 import com.cvpro.app.data.pdf.CvPdfGenerator
+import com.cvpro.app.data.pdf.CvPreviewRenderer
 import com.cvpro.app.domain.model.Cv
 import com.cvpro.app.domain.repository.CvRepository
+import com.cvpro.app.domain.repository.TemplateRepository
+import com.cvpro.app.domain.repository.layoutFor
+import com.cvpro.app.domain.model.titleToSave
+import com.cvpro.app.ui.components.toUserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -14,23 +23,31 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 data class CvsUiState(
     val cvs: List<Cv> = emptyList(),
     val query: String = "",
     val isLoading: Boolean = false,
     val isGeneratingPdf: Boolean = false,
-    val error: String? = null,
+    @param:StringRes val error: Int? = null,
     val deletingId: String? = null,
     val isSaving: Boolean = false,
+    /** Primera hoja de cada CV ya dibujada, por id. Las que faltan usan el dibujo simple. */
+    val previews: Map<String, Bitmap> = emptyMap(),
 )
 
 @HiltViewModel
 class CvsViewModel @Inject constructor(
     private val repository: CvRepository,
     private val pdfGenerator: CvPdfGenerator,
+    private val templateRepository: TemplateRepository,
+    private val pendingCvEditor: PendingCvEditor,
+    private val previewRenderer: CvPreviewRenderer,
 ) : ViewModel() {
+
+    /** Currículum que hay que abrir en el editor (recién creado desde Plantillas). */
+    private val _cvToOpen = MutableStateFlow<Cv?>(null)
+    val cvToOpen: StateFlow<Cv?> = _cvToOpen.asStateFlow()
 
     // Dónde quedó el último PDF generado. La pantalla lo abre y después lo limpia.
     private val _generatedPdf = MutableStateFlow<Uri?>(null)
@@ -46,11 +63,11 @@ class CvsViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isGeneratingPdf = true, error = null) }
             try {
-                _generatedPdf.value = pdfGenerator.generate(cv)
+                _generatedPdf.value = pdfGenerator.generate(cv, templateRepository.layoutFor(cv))
                 _uiState.update { it.copy(isGeneratingPdf = false) }
             } catch (exception: Exception) {
                 _uiState.update {
-                    it.copy(isGeneratingPdf = false, error = exception.message)
+                    it.copy(isGeneratingPdf = false, error = exception.toUserMessage())
                 }
             }
         }
@@ -67,8 +84,27 @@ class CvsViewModel @Inject constructor(
     /** Espera de la búsqueda, para no pedirle al servicio en cada tecla. */
     private var searchJob: Job? = null
 
-    init {
-        loadCvs()
+    /**
+     * Se llama cada vez que la pantalla aparece, no solo la primera.
+     *
+     * El menú guarda el estado de cada pantalla al salir y lo recupera al volver, así que el
+     * ViewModel sobrevive. Si cargara solo al crearse, un CV recién creado desde Plantillas
+     * no aparecería en la lista. El indicador de carga solo sale si todavía no hay nada que
+     * mostrar, para que la lista no parpadee cada vez que se entra.
+     */
+    fun onScreenShown() {
+        loadCvs(showLoader = _uiState.value.cvs.isEmpty())
+        val id = pendingCvEditor.take() ?: return
+        viewModelScope.launch {
+            // Se pide por id y no se busca en la lista: el CV nuevo puede no estar en la
+            // primera página. Si falla, el usuario igual lo ve en la lista.
+            runCatching { repository.getCvById(id) }.onSuccess { _cvToOpen.value = it }
+        }
+    }
+
+    /** La pantalla avisa que ya abrió el editor, para no abrirlo otra vez al repintarse. */
+    fun onCvOpened() {
+        _cvToOpen.value = null
     }
 
     fun retry() {
@@ -112,7 +148,7 @@ class CvsViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         deletingId = null,
-                        error = exception.message ?: "Error al eliminar el CV",
+                        error = exception.toUserMessage(),
                     )
                 }
             }
@@ -130,7 +166,7 @@ class CvsViewModel @Inject constructor(
             _uiState.update { it.copy(isSaving = true, error = null) }
 
             try {
-                val saved = repository.updateCv(cv)
+                val saved = repository.updateCv(cv.copy(title = titleFor(cv)))
 
                 _uiState.update { state ->
                     state.copy(
@@ -139,15 +175,40 @@ class CvsViewModel @Inject constructor(
                     )
                 }
                 _savedCv.value = saved
+                refreshPreviews()
             } catch (exception: Exception) {
                 _uiState.update {
                     it.copy(
                         isSaving = false,
-                        error = exception.message ?: "Error al guardar el CV",
+                        error = exception.toUserMessage(),
                     )
                 }
             }
         }
+    }
+
+    /**
+     * Título con que se guarda: si el usuario no escribió uno propio, el automático
+     * "Nombre – puesto" con lo que tiene ahora el CV (ver CvTitle.kt).
+     */
+    private suspend fun titleFor(cv: Cv): String {
+        val original = _uiState.value.cvs.firstOrNull { it.id == cv.id } ?: return cv.title
+        // El nombre de la plantilla hace falta para reconocer los CV viejos, que se crearon
+        // con ese título. Si no se puede pedir, se guarda el título tal cual.
+        val templateName = try {
+            templateRepository.getTemplate(cv.templateId)?.name.orEmpty()
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            return cv.title
+        }
+        return cv.titleToSave(original, templateName)
+    }
+
+    /** Dibuja la vista previa de los CV de la lista (las ya dibujadas salen del caché). */
+    private suspend fun refreshPreviews() {
+        val previews = previewRenderer.previewsFor(_uiState.value.cvs)
+        _uiState.update { it.copy(previews = previews) }
     }
 
     /** Avisa que el guardado terminó bien, para que la pantalla cierre el editor. */
@@ -158,11 +219,11 @@ class CvsViewModel @Inject constructor(
         _savedCv.value = null
     }
 
-    private fun loadCvs() {
+    private fun loadCvs(showLoader: Boolean = true) {
         viewModelScope.launch {
             _uiState.update {
                 it.copy(
-                    isLoading = true,
+                    isLoading = showLoader,
                     error = null,
                 )
             }
@@ -181,12 +242,13 @@ class CvsViewModel @Inject constructor(
                         error = null,
                     )
                 }
+                refreshPreviews()
             } catch (exception: Exception) {
                 _uiState.update {
                     it.copy(
                         cvs = emptyList(),
                         isLoading = false,
-                        error = exception.message ?: "Error al cargar los CV",
+                        error = exception.toUserMessage(),
                     )
                 }
             }

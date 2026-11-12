@@ -1,14 +1,15 @@
 package com.cvpro.app.ui.screens.cvs
 
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.ui.graphics.Color
+import android.content.Intent
+import android.graphics.Bitmap
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -16,19 +17,23 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import android.content.Intent
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -36,6 +41,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -46,11 +52,11 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cvpro.app.R
 import com.cvpro.app.domain.model.Cv
-import androidx.annotation.StringRes
-import com.cvpro.app.ui.components.ComingSoonSheet
 import com.cvpro.app.ui.components.CvEditorSheet
 import com.cvpro.app.ui.components.EmptyState
+import com.cvpro.app.ui.components.PagePreview
 import com.cvpro.app.ui.components.RemoteImage
+import com.cvpro.app.ui.components.outlinedOnCardColors
 import com.cvpro.app.ui.theme.CvProTheme
 
 
@@ -63,8 +69,14 @@ import com.cvpro.app.ui.theme.CvProTheme
 @Composable
 private fun CvPreview(
     cv: Cv,
+    page: Bitmap?,
     modifier: Modifier = Modifier,
 ) {
+    // Primero la hoja real dibujada con su plantilla; si todavía no está, lo de antes.
+    if (page != null) {
+        PagePreview(page = page, modifier = modifier)
+        return
+    }
     RemoteImage(
         url = cv.previewUrl,
         contentDescription = null,
@@ -165,11 +177,17 @@ fun CvsScreen(
     onTemplatesClick: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: CvsViewModel = hiltViewModel(),
+    aiViewModel: CvAiViewModel = hiltViewModel(),
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val aiState by aiViewModel.uiState.collectAsStateWithLifecycle()
     val generatedPdf by viewModel.generatedPdf.collectAsStateWithLifecycle()
     val savedCv by viewModel.savedCv.collectAsStateWithLifecycle()
+    val cvToOpen by viewModel.cvToOpen.collectAsStateWithLifecycle()
     val context = LocalContext.current
+
+    // Cada vez que se entra a la pantalla se recarga la lista (ver onScreenShown).
+    LaunchedEffect(Unit) { viewModel.onScreenShown() }
 
     // Apenas el PDF está listo se abre con el visor que tenga el usuario, y se avisa al
     // ViewModel para que no vuelva a abrirse cada vez que la pantalla se repinta.
@@ -193,6 +211,19 @@ fun CvsScreen(
         onSaveCv = viewModel::saveCv,
         onSaveHandled = viewModel::onSaveHandled,
         onTemplatesClick = onTemplatesClick,
+        cvToOpen = cvToOpen,
+        onCvOpened = viewModel::onCvOpened,
+        onAiCvCreated = viewModel::onScreenShown,
+        aiState = aiState,
+        aiActions = CvAiActions(
+            onExpand = aiViewModel::expand,
+            onTranslate = aiViewModel::translate,
+            onResultConsumed = aiViewModel::onResultConsumed,
+            onTranslateClosed = aiViewModel::onTranslateClosed,
+            onGenerateBio = aiViewModel::generateBio,
+            onGenerateDescription = aiViewModel::generateDescription,
+        ),
+        onEditorChanged = aiViewModel::reset,
         modifier = modifier,
     )
 }
@@ -215,10 +246,39 @@ fun CvsContent(
     onSaveHandled: () -> Unit,
     onTemplatesClick: () -> Unit,
     modifier: Modifier = Modifier,
+    aiState: CvAiUiState = CvAiUiState(),
+    aiActions: CvAiActions = CvAiActions(),
+    onEditorChanged: () -> Unit = {},
+    cvToOpen: Cv? = null,
+    onCvOpened: () -> Unit = {},
+    onAiCvCreated: () -> Unit = {},
 ) {
+    // Modo IA abierto. Al crear el CV se recarga la lista, que lo abre en el editor.
+    var showAiCv by remember { mutableStateOf(false) }
+    if (showAiCv) {
+        AiCvSheet(
+            onDismiss = { showAiCv = false },
+            onCreated = {
+                showAiCv = false
+                onAiCvCreated()
+            },
+        )
+    }
+
     // Currículum abierto en el editor, o null si no hay ninguno.
     var editingCv by remember { mutableStateOf<Cv?>(null) }
-    var comingSoon by remember { mutableStateOf<ComingSoon?>(null) }
+
+    // CV recién creado desde Plantillas: se abre solo en el editor para empezar a llenarlo.
+    LaunchedEffect(cvToOpen) {
+        if (cvToOpen != null) {
+            editingCv = cvToOpen
+            onCvOpened()
+        }
+    }
+
+    // Al abrir o cerrar el editor la IA vuelve a cero: una respuesta que llegue tarde no
+    // tiene que caer en otro currículum.
+    LaunchedEffect(editingCv?.id) { onEditorChanged() }
     // Currículum que el usuario pidió borrar, a la espera de que confirme.
     var cvToDelete by remember { mutableStateOf<Cv?>(null) }
 
@@ -228,6 +288,8 @@ fun CvsContent(
             isSaving = uiState.isSaving,
             onSave = onSaveCv,
             onDismiss = { editingCv = null },
+            aiState = aiState,
+            aiActions = aiActions,
         )
     }
 
@@ -237,13 +299,6 @@ fun CvsContent(
             editingCv = null
             onSaveHandled()
         }
-    }
-    comingSoon?.let { aviso ->
-        ComingSoonSheet(
-            title = stringResource(aviso.titleRes),
-            message = stringResource(aviso.messageRes),
-            onDismiss = { comingSoon = null },
-        )
     }
 
     cvToDelete?.let { cv ->
@@ -276,8 +331,8 @@ fun CvsContent(
         CvsHeader(query = uiState.query, onQueryChange = onQueryChange)
 
         CreateCvBanner(
-            onOfflineClick = onTemplatesClick,
-            onAiClick = { comingSoon = ComingSoon.AI },
+            onTemplatesClick = onTemplatesClick,
+            onAiClick = { showAiCv = true },
             modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
         )
 
@@ -289,7 +344,7 @@ fun CvsContent(
                 CircularProgressIndicator()
             }
 
-            uiState.error != null -> CvsError(message = uiState.error, onRetry = onRetry)
+            uiState.error != null -> CvsError(message = stringResource(uiState.error), onRetry = onRetry)
 
             uiState.cvs.isEmpty() -> EmptyState(
                 title = stringResource(R.string.cvs_empty_title),
@@ -308,6 +363,7 @@ fun CvsContent(
                 items(items = uiState.cvs, key = { it.id }) { cv ->
                     CvCard(
                         cv = cv,
+                        preview = uiState.previews[cv.id],
                         isDeleting = uiState.deletingId == cv.id,
                         onDeleteClick = { cvToDelete = cv },
                         onCvClick = { editingCv = it },
@@ -344,10 +400,17 @@ private fun CvsHeader(
     )
 }
 
-/** Banda oscura con los dos caminos para crear un currículum. */
+/**
+ * Recuadro para crear un currículum.
+ *
+ * Antes tenía dos botones, "IA" y "Offline", y el de IA solo abría un aviso que decía que había
+ * que elegir una plantilla. Como la IA es lo esencial de la app, ahora el recuadro lo dice de
+ * entrada (cómo se usa) y tiene una sola acción: elegir la plantilla. La IA se usa después,
+ * en el editor, con "Mejorar con IA".
+ */
 @Composable
 private fun CreateCvBanner(
-    onOfflineClick: () -> Unit,
+    onTemplatesClick: () -> Unit,
     onAiClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -357,36 +420,43 @@ private fun CreateCvBanner(
         modifier = modifier.fillMaxWidth(),
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Outlined.AutoAwesome,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+                Text(
+                    text = stringResource(R.string.create_cv_ai_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.surface,
+                    modifier = Modifier.padding(start = 8.dp),
+                )
+            }
             Text(
-                text = stringResource(R.string.home_create_cv_title),
-                style = MaterialTheme.typography.titleMedium,
+                text = stringResource(R.string.create_cv_ai_steps),
+                style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.surface,
+                modifier = Modifier.padding(top = 6.dp),
             )
-            Text(
-                text = stringResource(R.string.cvs_create_subtitle),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.surface,
-            )
-
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.padding(top = 12.dp),
+            // Dos caminos: que la IA arme todo desde lo que cuentas, o elegir una plantilla y
+            // llenarla con ayuda de "Mejorar con IA" en el editor.
+            Button(
+                onClick = onAiClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp),
             ) {
-                Button(
-                    onClick = onAiClick,
-                    modifier = Modifier.weight(1f),
-                ) {
-                    Text(stringResource(R.string.cvs_create_ai))
-                }
-                Button(
-                    onClick = onOfflineClick,
-                    colors = ButtonDefaults.buttonColors(
-                        containerColor = MaterialTheme.colorScheme.onSurfaceVariant,
-                    ),
-                    modifier = Modifier.weight(1f),
-                ) {
-                    Text(stringResource(R.string.cvs_create_offline))
-                }
+                Text(stringResource(R.string.create_cv_ai_write))
+            }
+            OutlinedButton(
+                onClick = onTemplatesClick,
+                colors = outlinedOnCardColors(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+            ) {
+                Text(stringResource(R.string.create_cv_ai_action))
             }
         }
     }
@@ -396,6 +466,7 @@ private fun CreateCvBanner(
 @Composable
 private fun CvCard(
     cv: Cv,
+    preview: Bitmap?,
     isDeleting: Boolean,
     onDeleteClick: () -> Unit,
     onCvClick: (Cv) -> Unit,
@@ -411,6 +482,7 @@ private fun CvCard(
             // del diseño.
             CvPreview(
                 cv = cv,
+                page = preview,
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(170.dp),
@@ -549,10 +621,3 @@ private fun CvsPreview(darkTheme: Boolean) {
 
 }
 
-/** Los avisos de funciones que llegan en la Fase II. */
-private enum class ComingSoon(
-    @param:StringRes val titleRes: Int,
-    @param:StringRes val messageRes: Int,
-) {
-    AI(R.string.coming_soon_ai_title, R.string.coming_soon_ai_message),
-}

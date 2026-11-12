@@ -31,6 +31,7 @@ data class JobOfferDto(
     val sector: String? = null,
     val description: String? = null,
     val requirements: List<String>? = null,
+    /** Habilidades que pide la oferta. En las reales las saca el servicio del texto. */
     val skills: List<String>? = null,
     val salary: SalaryDto? = null,
 
@@ -39,6 +40,9 @@ data class JobOfferDto(
 
     @SerializedName(value = "postedAt", alternate = ["createdAt"])
     val postedAt: JsonElement? = null,
+
+    /** Página donde se postula de verdad. Solo la traen las ofertas reales importadas. */
+    val applyUrl: String? = null,
 )
 
 data class SalaryDto(

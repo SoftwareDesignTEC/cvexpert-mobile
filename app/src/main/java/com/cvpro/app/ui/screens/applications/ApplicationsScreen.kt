@@ -1,36 +1,47 @@
 package com.cvpro.app.ui.screens.applications
 
-import androidx.compose.ui.layout.ContentScale
-import com.cvpro.app.ui.components.RemoteImage
-import com.cvpro.app.ui.components.outlinedOnCardColors
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -38,6 +49,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
@@ -51,22 +64,11 @@ import com.cvpro.app.domain.model.ApplicationStatus
 import com.cvpro.app.domain.model.JobApplication
 import com.cvpro.app.domain.model.JobModality
 import com.cvpro.app.ui.components.JobApplicationDetailSheet
+import com.cvpro.app.ui.components.LocalSnackbarHostState
+import com.cvpro.app.ui.components.RemoteImage
+import com.cvpro.app.ui.components.outlinedOnCardColors
 import com.cvpro.app.ui.theme.CvProTheme
 import com.cvpro.app.ui.theme.extraColors
-
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.foundation.clickable
-
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ExpandLess
-import androidx.compose.material.icons.filled.ExpandMore
-import androidx.compose.material.icons.filled.MoreVert
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.foundation.layout.heightIn
 
 /** Rastreador de postulaciones con estado. */
 @Composable
@@ -76,9 +78,22 @@ fun ApplicationsScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    // Cada vez que se entra al tablero se recarga (ver onScreenShown).
+    LaunchedEffect(Unit) { viewModel.onScreenShown() }
+
+    // El resultado de retirar una postulación se avisa en el snackbar compartido.
+    val snackbarHostState = LocalSnackbarHostState.current
+    val resources = LocalResources.current
+    LaunchedEffect(uiState.message) {
+        val mensaje = uiState.message ?: return@LaunchedEffect
+        snackbarHostState.showSnackbar(resources.getString(mensaje.res, *mensaje.args.toTypedArray()))
+        viewModel.onMessageShown()
+    }
+
     ApplicationsTracker(
         uiState = uiState,
         onStatusChange = viewModel::onStatusChange,
+        onWithdraw = viewModel::onWithdraw,
         onRetry = viewModel::retry,
         modifier = modifier,
     )
@@ -97,7 +112,32 @@ fun ApplicationsTracker(
     onStatusChange: (JobApplication, ApplicationStatus) -> Unit,
     onRetry: () -> Unit,
     modifier: Modifier = Modifier,
+    onWithdraw: (JobApplication) -> Unit = {},
 ) {
+    // Postulación que el usuario pidió retirar, a la espera de que confirme.
+    var toWithdraw by remember { mutableStateOf<JobApplication?>(null) }
+
+    toWithdraw?.let { application ->
+        AlertDialog(
+            onDismissRequest = { toWithdraw = null },
+            title = { Text(stringResource(R.string.applications_withdraw_title)) },
+            text = { Text(stringResource(R.string.applications_withdraw_message, application.jobTitle)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onWithdraw(application)
+                        toWithdraw = null
+                    },
+                ) { Text(stringResource(R.string.applications_withdraw_confirm)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { toWithdraw = null }) {
+                    Text(stringResource(R.string.cv_editor_cancel))
+                }
+            },
+        )
+    }
+
     var detailApplication by remember {
         mutableStateOf<JobApplication?>(null)
     }
@@ -110,6 +150,10 @@ fun ApplicationsTracker(
             },
             onStatusChange = { newStatus ->
                 onStatusChange(application, newStatus)
+                detailApplication = null
+            },
+            onWithdraw = {
+                toWithdraw = application
                 detailApplication = null
             },
         )
@@ -134,7 +178,7 @@ fun ApplicationsTracker(
 
             uiState.error != null -> {
                 ApplicationsError(
-                    message = uiState.error,
+                    message = stringResource(uiState.error),
                     onRetry = onRetry,
                 )
             }

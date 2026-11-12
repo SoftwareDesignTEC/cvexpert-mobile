@@ -65,6 +65,7 @@ import androidx.core.net.toUri
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cvpro.app.R
+import com.cvpro.app.domain.repository.AppLanguage
 import com.cvpro.app.ui.screens.alerts.JobAlertsDialog
 import com.cvpro.app.ui.components.toLocalDate
 import com.cvpro.app.ui.components.toLocalDateTime
@@ -165,6 +166,7 @@ fun SettingsScreen(
     SettingsContent(
         uiState = uiState,
         onThemeSelected = viewModel::onThemeSelected,
+        onLanguageSelected = viewModel::onLanguageSelected,
         onNotificationChange = viewModel::onNotificationChange,
         onSessionsClick = viewModel::loadSessions,
         onPrivacyClick = viewModel::loadPrivacyPolicy,
@@ -184,6 +186,7 @@ fun SettingsContent(
     uiState: SettingsUiState,
     onThemeSelected: (ThemePreference) -> Unit,
     onNotificationChange: (NotificationType, Boolean) -> Unit,
+    onLanguageSelected: (AppLanguage) -> Unit = {},
     onSessionsClick: () -> Unit = {},
     onPrivacyClick: () -> Unit = {},
     onTermsClick: () -> Unit = {},
@@ -385,18 +388,51 @@ fun SettingsContent(
                 )
             }
 
-            /*
-             * Estos valores sí pueden permanecer fijos porque actualmente
-             * la aplicación solo maneja español y la zona horaria definida.
-             */
-            ReadOnlyPreference(
-                label = stringResource(
+            // Idioma: igual que el tema, una opción por renglón. En Android 12 o anterior el
+            // sistema no permite idioma por app, así que ahí solo se informa.
+            Text(
+                text = stringResource(
                     R.string.settings_system_language
                 ),
-                value = stringResource(
-                    R.string.settings_system_language_value
-                ),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(top = 16.dp),
             )
+
+            if (uiState.canChangeLanguage) {
+                Text(
+                    text = stringResource(
+                        R.string.settings_language_description
+                    ),
+                    style = MaterialTheme.typography.labelSmall,
+                    color =
+                        MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+
+                AppLanguage.entries.forEach { language ->
+                    ThemeOptionRow(
+                        label = stringResource(
+                            language.labelRes()
+                        ),
+                        selected =
+                            language == uiState.language,
+                        onSelect = {
+                            onLanguageSelected(language)
+                        },
+                    )
+                }
+            } else {
+                Text(
+                    text = stringResource(
+                        R.string.settings_language_unsupported
+                    ),
+                    style = MaterialTheme.typography.labelSmall,
+                    color =
+                        MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
+            // La zona horaria sí queda fija: las fechas se muestran en la del teléfono.
 
             ReadOnlyPreference(
                 label = stringResource(
@@ -451,7 +487,7 @@ fun SettingsContent(
             SessionsDialog(
                 sessions = uiState.sessions,
                 isLoading = uiState.isLoadingSessions,
-                error = uiState.error,
+                error = uiState.error?.let { stringResource(it) },
                 onDismiss = {
                     openDialog = null
                 },
@@ -465,7 +501,7 @@ fun SettingsContent(
                 ),
                 document = uiState.privacyPolicy,
                 isLoading = uiState.isLoadingLegal,
-                error = uiState.error,
+                error = uiState.error?.let { stringResource(it) },
                 onDismiss = {
                     openDialog = null
                 },
@@ -479,7 +515,7 @@ fun SettingsContent(
                 ),
                 document = uiState.terms,
                 isLoading = uiState.isLoadingLegal,
-                error = uiState.error,
+                error = uiState.error?.let { stringResource(it) },
                 onDismiss = {
                     openDialog = null
                 },
@@ -1342,4 +1378,14 @@ private fun SettingsPreviewDark() {
             )
         }
     }
+}
+
+/**
+ * Nombre de cada opción de idioma. "Español" y "English" van siempre en su propio idioma, así
+ * quien no entiende el idioma actual igual encuentra el suyo.
+ */
+private fun AppLanguage.labelRes(): Int = when (this) {
+    AppLanguage.SYSTEM -> R.string.settings_language_system
+    AppLanguage.SPANISH -> R.string.settings_language_spanish
+    AppLanguage.ENGLISH -> R.string.settings_language_english
 }

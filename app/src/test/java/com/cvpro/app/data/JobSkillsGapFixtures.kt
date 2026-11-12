@@ -6,12 +6,12 @@ internal fun jobGapCv(id: String = "cv1", level: String = "advanced") = Cv(
     id, "private-user", "CV de prueba", "template", "", "", null,
     UserProfile("private-user", "Nombre privado", "private@example.org", null, "", null, null,
         emptyList(), emptyList(), emptyList()),
-    emptyList(), emptyList(), listOf(Skill("skill1", "Python", level, "technical")), emptyList(),
+    emptyList(), emptyList(), listOf(Skill("skill1", "Python", level, "technical")), emptyList(), emptyList(),
 )
 
 internal fun jobGapOffer(id: String = "job1", skills: List<String> = listOf("Python", "SQL")) = JobOffer(
-    id, "Oferta de prueba", "Empresa", null, "Costa Rica", JobModality.REMOTE, "", "", "",
-    listOf("Texto que no debe convertirse en habilidades"), null, 99, "", skills,
+    id, "Oferta de prueba", "Empresa", null, "Costa Rica", JobModality.REMOTE, "", "", "Descripción sin nivel explícito",
+    listOf("Texto que no debe convertirse en habilidades"), null, 99, "", skills = skills,
 )
 
 internal const val jobGapResponse = """

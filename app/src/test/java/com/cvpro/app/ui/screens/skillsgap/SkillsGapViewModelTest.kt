@@ -131,7 +131,7 @@ private class FakeCvs : CvRepository {
     var listError: Exception? = null
     private val cv = Cv("cv1", "user", "My CV", "template", "", "", null,
         UserProfile("user", "Name", "email", null, "", null, null, emptyList(), emptyList(), emptyList()),
-        emptyList(), emptyList(), listOf(Skill("1", "SQL", "beginner", ""), Skill("2", "Python", "NEW", "")), emptyList())
+        emptyList(), emptyList(), listOf(Skill("1", "SQL", "beginner", ""), Skill("2", "Python", "NEW", "")), emptyList(), emptyList())
     override suspend fun getCvs(page: Int, pageSize: Int, query: String): PagedResult<Cv> {
         calls++
         listError?.let { throw it }

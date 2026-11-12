@@ -1,6 +1,7 @@
 package com.cvpro.app.domain.repository
 
 import android.content.Context
+import android.content.Intent
 import com.cvpro.app.domain.model.User
 import kotlinx.coroutines.flow.StateFlow
 
@@ -56,6 +57,16 @@ interface AuthRepository {
      */
     suspend fun signIn(activityContext: Context): SignInResult
 
+    /**
+     * Pantalla clásica "Elige una cuenta" de Google, para cuando [signIn] devuelve
+     * [SignInResult.UseClassicSignIn]. La abre la pantalla de login, porque solo una Activity
+     * puede lanzar otra y recibir su resultado.
+     */
+    fun classicSignInIntent(activityContext: Context): Intent
+
+    /** Lee lo que devolvió la pantalla clásica de Google y abre la sesión. */
+    fun completeClassicSignIn(data: Intent?): SignInResult
+
     suspend fun signOut()
 }
 
@@ -71,6 +82,18 @@ sealed interface SignInResult {
 
     /** Falta el Web client ID en la configuración del build. */
     data object MissingConfiguration : SignInResult
+
+    /**
+     * Google no abrió el selector de cuentas a tiempo (Servicios de Google Play viejos o que no
+     * responden). Antes la app se quedaba esperando para siempre.
+     */
+    data object GoogleNotResponding : SignInResult
+
+    /**
+     * Credential Manager no respondió (pasa en teléfonos Honor con MagicOS): hay que entrar por
+     * la pantalla clásica de Google, ver [AuthRepository.classicSignInIntent].
+     */
+    data object UseClassicSignIn : SignInResult
 
     data class Failure(val cause: Throwable) : SignInResult
 }

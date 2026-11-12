@@ -5,18 +5,24 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.cvpro.app.R
@@ -38,6 +44,9 @@ fun JobOfferDetailSheet(
     offer: JobOffer,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+    applyState: ApplyState? = null,
+    onApply: () -> Unit = {},
+    onAnalyzeGap: (() -> Unit)? = null,
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -75,7 +84,7 @@ fun JobOfferDetailSheet(
                     modifier = Modifier.padding(top = 6.dp),
                 ) {
                     DetailChip(text = offer.sector)
-                    DetailChip(text = offer.type)
+                    DetailChip(text = jobTypeLabel(offer.type))
                 }
             }
 
@@ -122,10 +131,79 @@ fun JobOfferDetailSheet(
                 }
             }
 
+            if (offer.skills.isNotEmpty()) {
+                DetailField(
+                    label = stringResource(R.string.jobs_skills_title),
+                    value = offer.skills.joinToString(", "),
+                )
+            }
+
             DetailField(
                 label = stringResource(R.string.detail_posted_at),
                 value = offer.postedAt,
             )
+
+            // La oferta es real: este botón abre la publicación original en el navegador.
+            offer.applyUrl?.let { url ->
+                val uriHandler = LocalUriHandler.current
+                OutlinedButton(
+                    // runCatching: si el teléfono no tiene navegador, no se cae la app.
+                    onClick = { runCatching { uriHandler.openUri(url) } },
+                    colors = outlinedOnCardColors(),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 24.dp),
+                ) {
+                    Text(stringResource(R.string.jobs_open_original))
+                }
+            }
+
+            onAnalyzeGap?.let { analyze ->
+                OutlinedButton(onClick = analyze, modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
+                    Text(stringResource(R.string.job_gap_analyze))
+                }
+            }
+
+            // Sin applyState no hay botón: así la hoja se puede abrir desde donde no tenga
+            // sentido postularse.
+            applyState?.let { state ->
+                ApplyButton(
+                    state = state,
+                    onClick = onApply,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = if (offer.applyUrl != null) 8.dp else 24.dp),
+                )
+            }
+        }
+    }
+}
+
+/** En qué punto está la postulación del usuario a una oferta. */
+enum class ApplyState { AVAILABLE, SENDING, APPLIED }
+
+/**
+ * Botón "Postularme". Mientras se envía muestra un loader, y si el usuario ya se postuló
+ * queda apagado con "Ya te postulaste", para que no lo intente dos veces.
+ */
+@Composable
+fun ApplyButton(
+    state: ApplyState,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Button(
+        onClick = onClick,
+        enabled = state == ApplyState.AVAILABLE,
+        modifier = modifier,
+    ) {
+        when (state) {
+            ApplyState.SENDING -> CircularProgressIndicator(
+                strokeWidth = 2.dp,
+                modifier = Modifier.size(18.dp),
+            )
+            ApplyState.APPLIED -> Text(stringResource(R.string.jobs_applied), maxLines = 1)
+            ApplyState.AVAILABLE -> Text(stringResource(R.string.jobs_apply), maxLines = 1)
         }
     }
 }
@@ -143,6 +221,7 @@ fun JobApplicationDetailSheet(
     onDismiss: () -> Unit,
     onStatusChange: (ApplicationStatus) -> Unit,
     modifier: Modifier = Modifier,
+    onWithdraw: (() -> Unit)? = null,
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -194,6 +273,21 @@ fun JobApplicationDetailSheet(
                     isCurrent = status == application.status,
                     onClick = { onStatusChange(status) },
                 )
+            }
+
+            // Retirar va aparte y en rojo: borra la postulación del tablero.
+            onWithdraw?.let { withdraw ->
+                TextButton(
+                    onClick = withdraw,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 16.dp),
+                ) {
+                    Text(
+                        text = stringResource(R.string.applications_withdraw),
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
             }
         }
     }
@@ -289,6 +383,19 @@ private fun DetailField(
             color = MaterialTheme.colorScheme.onSurface,
         )
     }
+}
+
+/**
+ * "full-time" → "Tiempo completo". El servicio manda la jornada como en el contrato (en
+ * inglés); una que la app no conoce se muestra tal cual.
+ */
+@Composable
+private fun jobTypeLabel(type: String): String = when (type.lowercase()) {
+    "full-time" -> stringResource(R.string.job_type_full_time)
+    "part-time" -> stringResource(R.string.job_type_part_time)
+    "freelance" -> stringResource(R.string.job_type_freelance)
+    "internship" -> stringResource(R.string.job_type_internship)
+    else -> type
 }
 
 private fun JobModality.labelRes(): Int = when (this) {

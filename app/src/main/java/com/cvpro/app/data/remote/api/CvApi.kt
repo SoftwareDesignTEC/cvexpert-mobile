@@ -2,6 +2,13 @@ package com.cvpro.app.data.remote.api
 
 import com.cvpro.app.data.remote.dto.CreateCvRequestDto
 import com.cvpro.app.data.remote.dto.CvDto
+import com.cvpro.app.data.remote.dto.ExpandExperienceRequestDto
+import com.cvpro.app.data.remote.dto.ExpandExperienceResponseDto
+import com.cvpro.app.data.remote.dto.GenerateCvRequestDto
+import com.cvpro.app.data.remote.dto.GenerateTextRequestDto
+import com.cvpro.app.data.remote.dto.GenerateTextResponseDto
+import com.cvpro.app.data.remote.dto.TranslateExperienceRequestDto
+import com.cvpro.app.data.remote.dto.TranslateExperienceResponseDto
 import com.cvpro.app.data.remote.dto.PagedResponseDto
 import com.cvpro.app.data.remote.dto.UpdateCvRequestDto
 import retrofit2.http.Body
@@ -41,4 +48,28 @@ interface CvApi {
     suspend fun deleteCv(
         @Path("id") id: String,
     )
+
+    /** Redacta de forma profesional la descripción de una experiencia. No guarda nada. */
+    @POST("cvs/ai/expand-experience")
+    suspend fun expandExperience(
+        @Body request: ExpandExperienceRequestDto,
+    ): ExpandExperienceResponseDto
+
+    /** Pasa una experiencia no laboral a lenguaje de CV. No guarda nada. */
+    @POST("cvs/ai/translate-experience")
+    suspend fun translateExperience(
+        @Body request: TranslateExperienceRequestDto,
+    ): TranslateExperienceResponseDto
+
+    /** Escribe un perfil profesional o una descripción de experiencia. No guarda nada. */
+    @POST("cvs/ai/generate-text")
+    suspend fun generateText(
+        @Body request: GenerateTextRequestDto,
+    ): GenerateTextResponseDto
+
+    /** Modo IA: arma y guarda un CV completo a partir de lo que el usuario contó. Responde 201. */
+    @POST("cvs/ai/generate-cv")
+    suspend fun generateCv(
+        @Body request: GenerateCvRequestDto,
+    ): CvDto
 }

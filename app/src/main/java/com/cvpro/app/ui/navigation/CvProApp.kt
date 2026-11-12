@@ -10,8 +10,11 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -24,6 +27,8 @@ import androidx.navigation.compose.rememberNavController
 import com.cvpro.app.R
 import com.cvpro.app.ui.components.LocalSnackbarHostState
 import com.cvpro.app.ui.screens.login.LoginRoute
+import com.cvpro.app.ui.screens.notifications.NotificationBadgeViewModel
+import com.cvpro.app.ui.screens.notifications.NotificationsDialog
 import kotlinx.coroutines.launch
 
 /**
@@ -44,6 +49,13 @@ fun CvProApp(
         LoginRoute(modifier = modifier)
         return
     }
+
+    // Insignia de la campana. Se pide al entrar cada usuario: el ViewModel vive mientras viva la
+    // Activity, así que si alguien sale y entra otra cuenta, se vuelve a pedir.
+    val badgeViewModel: NotificationBadgeViewModel = hiltViewModel()
+    val unreadNotifications by badgeViewModel.unreadCount.collectAsStateWithLifecycle()
+    LaunchedEffect(user.id) { badgeViewModel.refresh() }
+    var showNotifications by remember { mutableStateOf(false) }
 
     val navController = rememberNavController()
     val drawerState = rememberDrawerState(DrawerValue.Closed)
@@ -124,6 +136,8 @@ fun CvProApp(
                     onProfileClick = {
                         goTo(CvProDestination.PROFILE)
                     },
+                    unreadNotifications = unreadNotifications,
+                    onNotificationsClick = { showNotifications = true },
                 )
             },
             snackbarHost = {
@@ -144,5 +158,15 @@ fun CvProApp(
                 )
             }
         }
+    }
+
+    if (showNotifications) {
+        NotificationsDialog(
+            onDismiss = {
+                showNotifications = false
+                // Al cerrar, la insignia refleja lo que se marcó como leído adentro.
+                badgeViewModel.refresh()
+            },
+        )
     }
 }

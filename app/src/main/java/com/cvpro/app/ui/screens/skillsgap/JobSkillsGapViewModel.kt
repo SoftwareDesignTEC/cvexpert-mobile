@@ -42,8 +42,10 @@ class JobSkillsGapViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(JobSkillsGapUiState())
     val uiState = _uiState.asStateFlow()
     private var operation: Job? = null
+    private var retryAction: (() -> Unit)? = null
 
     fun open(offer: JobOffer) {
+        if (_uiState.value.offer == offer) return
         operation?.cancel()
         _uiState.value = JobSkillsGapUiState(offer = offer)
         loadCvs()
@@ -51,12 +53,15 @@ class JobSkillsGapViewModel @Inject constructor(
 
     fun close() {
         operation?.cancel()
+        retryAction = null
         _uiState.value = JobSkillsGapUiState()
     }
 
     fun loadCvs() {
-        if (_uiState.value.isLoading) return
+        if (_uiState.value.isLoading || _uiState.value.offer == null ||
+            (_uiState.value.cvPage > 0 && !_uiState.value.hasMoreCvs)) return
         val page = _uiState.value.cvPage + 1
+        retryAction = ::loadCvs
         runOperation(R.string.job_gap_cv_list_error) {
             val result = cvs.getCvs(page, 20, "")
             coroutineContext.ensureActive()
@@ -68,8 +73,10 @@ class JobSkillsGapViewModel @Inject constructor(
     }
 
     fun selectCv(id: String) {
+        if (_uiState.value.isLoading && _uiState.value.selectedCvId == id) return
         if (_uiState.value.cvs.none { it.id == id }) return
         operation?.cancel()
+        retryAction = { selectCv(id) }
         _uiState.update { it.copy(
             selectedCvId = id, selectedCv = null, analysis = null, canEvaluateOnly = false,
             needsCvCorrection = false,
@@ -86,13 +93,28 @@ class JobSkillsGapViewModel @Inject constructor(
         val state = _uiState.value
         val cv = state.selectedCv ?: return
         val offer = state.offer ?: return
-        if (state.isLoading || (evaluationOnly && !state.canEvaluateOnly)) return
+        if (state.isLoading) return
+        retryAction = { analyze(evaluationOnly) }
         _uiState.update { it.copy(analysis = null, canEvaluateOnly = false, needsCvCorrection = false) }
         runOperation(R.string.job_gap_error_generic) {
             val result = gaps.analyze(cv, offer, evaluationOnly)
             coroutineContext.ensureActive()
             _uiState.update { it.copy(analysis = result) }
+            if (!evaluationOnly) {
+                // Recommendations retain their existing contract. Fetch textual levels separately.
+                // Publish courses first so an evaluation outage cannot discard available recommendations.
+                val levels = gaps.analyze(cv, offer, evaluationOnly = true)
+                coroutineContext.ensureActive()
+                if (levels.cvId != result.cvId || levels.jobId != result.jobId ||
+                    levels.matchedSkills != result.matchedSkills || levels.notDocumentedSkills != result.notDocumentedSkills)
+                    throw JobSkillsGapException(JobSkillsGapFailure.INCOMPATIBLE_RESPONSE)
+                _uiState.update { it.copy(analysis = result.copy(assessments = levels.assessments, levelAnalysis = levels.levelAnalysis)) }
+            }
         }
+    }
+
+    fun retry() {
+        if (!_uiState.value.isLoading) retryAction?.invoke()
     }
 
     private fun runOperation(@StringRes fallback: Int, work: suspend () -> Unit) {
@@ -108,7 +130,7 @@ class JobSkillsGapViewModel @Inject constructor(
                 _uiState.update { it.copy(
                     errorMessage = error.jobGapMessage(fallback),
                     canEvaluateOnly = failure == JobSkillsGapFailure.CATALOG_UNAVAILABLE,
-                    needsCvCorrection = failure == JobSkillsGapFailure.INVALID_CV_LEVEL,
+                    needsCvCorrection = failure in setOf(JobSkillsGapFailure.INVALID_CV_LEVEL, JobSkillsGapFailure.INVALID_CV),
                 ) }
             } finally {
                 if (coroutineContext[Job]?.isActive == true) _uiState.update { it.copy(isLoading = false) }
@@ -121,6 +143,9 @@ class JobSkillsGapViewModel @Inject constructor(
 private fun Exception.jobGapMessage(@StringRes fallback: Int): Int = when {
     this is JobSkillsGapException -> when (failure) {
         JobSkillsGapFailure.INVALID_CV_LEVEL -> R.string.job_gap_invalid_level
+        JobSkillsGapFailure.INVALID_CV -> R.string.job_gap_invalid_cv
+        JobSkillsGapFailure.FORBIDDEN -> R.string.job_gap_forbidden
+        JobSkillsGapFailure.TOO_LARGE -> R.string.job_gap_too_large
         JobSkillsGapFailure.INVALID_INPUT -> R.string.job_gap_invalid_input
         JobSkillsGapFailure.UNAUTHORIZED -> R.string.skills_gap_unauthorized
         JobSkillsGapFailure.ROUTE_UNAVAILABLE -> R.string.job_gap_route_unavailable

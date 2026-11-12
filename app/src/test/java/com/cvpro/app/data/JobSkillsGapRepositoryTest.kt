@@ -3,6 +3,7 @@ package com.cvpro.app.data
 import com.cvpro.app.data.mapper.toDomain
 import com.cvpro.app.data.mapper.toJobAnalysis
 import com.cvpro.app.data.mapper.toJobSkillsGapRequest
+import com.cvpro.app.data.remote.api.JobApi
 import com.cvpro.app.data.remote.api.SkillsGapApi
 import com.cvpro.app.data.remote.dto.JobOfferDto
 import com.cvpro.app.data.remote.dto.JobSkillsGapResponseDto
@@ -95,9 +96,9 @@ class JobSkillsGapRepositoryTest {
         val server = MockWebServer()
         server.start()
         try {
-            val api = Retrofit.Builder().baseUrl(server.url("/api/v1/"))
-                .addConverterFactory(GsonConverterFactory.create()).build().create(SkillsGapApi::class.java)
-            val repository = ApiJobSkillsGapRepository(api)
+            val retrofit = Retrofit.Builder().baseUrl(server.url("/api/v1/"))
+                .addConverterFactory(GsonConverterFactory.create()).build()
+            val repository = ApiJobSkillsGapRepository(retrofit.create(SkillsGapApi::class.java), retrofit.create(JobApi::class.java))
             server.enqueue(MockResponse().setBody(jobGapResponse))
             repository.analyze(jobGapCv(), jobGapOffer(), false)
             val call = server.takeRequest()
@@ -168,8 +169,9 @@ class JobSkillsGapRepositoryTest {
         val server = MockWebServer()
         server.start()
         try {
-            val repository = ApiJobSkillsGapRepository(Retrofit.Builder().baseUrl(server.url("/"))
-                .addConverterFactory(GsonConverterFactory.create()).build().create(SkillsGapApi::class.java))
+            val retrofit = Retrofit.Builder().baseUrl(server.url("/"))
+                .addConverterFactory(GsonConverterFactory.create()).build()
+            val repository = ApiJobSkillsGapRepository(retrofit.create(SkillsGapApi::class.java), retrofit.create(JobApi::class.java))
             val cv = jobGapCv().copy(skills = List(500) { Skill("", "X".repeat(200), "advanced", "") })
             try { repository.analyze(cv, jobGapOffer(), false); fail("Se esperaba límite de cuerpo") }
             catch (error: JobSkillsGapException) { assertEquals(JobSkillsGapFailure.INVALID_INPUT, error.failure) }

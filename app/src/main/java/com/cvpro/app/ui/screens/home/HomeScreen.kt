@@ -1,5 +1,8 @@
 package com.cvpro.app.ui.screens.home
 
+import android.content.Intent
+import android.graphics.Bitmap
+import androidx.annotation.StringRes
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -19,14 +22,19 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -45,26 +53,20 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.cvpro.app.ui.components.RemoteImage
 import com.cvpro.app.R
-import com.cvpro.app.ui.components.outlinedOnCardColors
 import com.cvpro.app.domain.model.Cv
 import com.cvpro.app.domain.model.JobOffer
 import com.cvpro.app.domain.model.SkillsGapAnalysis
-import androidx.annotation.StringRes
-import com.cvpro.app.ui.components.ComingSoonSheet
 import com.cvpro.app.ui.components.CvDetailSheet
+import com.cvpro.app.ui.components.PagePreview
 import com.cvpro.app.ui.components.RadarChart
 import com.cvpro.app.ui.components.RadarSeries
+import com.cvpro.app.ui.components.RemoteImage
 import com.cvpro.app.ui.components.VersionLabel
+import com.cvpro.app.ui.components.outlinedOnCardColors
+import com.cvpro.app.ui.screens.cvs.AiCvSheet
 import com.cvpro.app.ui.theme.CvProTheme
 import com.cvpro.app.ui.theme.extraColors
-
-import android.content.Intent
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
-import androidx.compose.material3.Icon
-import androidx.compose.material3.TextButton
 
 
 /** Panel Principal: la pantalla de entrada después del login. */
@@ -82,6 +84,9 @@ fun HomeScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val generatedPdf by viewModel.generatedPdf.collectAsStateWithLifecycle()
     val context = LocalContext.current
+
+    // Cada vez que se entra al panel se recarga (ver onScreenShown).
+    LaunchedEffect(Unit) { viewModel.onScreenShown() }
 
     // Apenas el PDF está listo se abre con el visor que tenga el usuario, y se avisa al
     // ViewModel para que no vuelva a abrirse cada vez que la pantalla se repinta.
@@ -127,16 +132,19 @@ fun HomeContent(
     modifier: Modifier = Modifier,
 ) {
     var detailCv by remember { mutableStateOf<Cv?>(null) }
-    var comingSoon by remember { mutableStateOf<HomeComingSoon?>(null) }
-
-    detailCv?.let { cv -> CvDetailSheet(cv = cv, onDismiss = { detailCv = null }) }
-    comingSoon?.let { aviso ->
-        ComingSoonSheet(
-            title = stringResource(aviso.titleRes),
-            message = stringResource(aviso.messageRes),
-            onDismiss = { comingSoon = null },
+    // Modo IA abierto. Cuando crea el CV, se va a Mis Currículums, que lo abre en el editor.
+    var showAiCv by remember { mutableStateOf(false) }
+    if (showAiCv) {
+        AiCvSheet(
+            onDismiss = { showAiCv = false },
+            onCreated = {
+                showAiCv = false
+                onCvsClick()
+            },
         )
     }
+
+    detailCv?.let { cv -> CvDetailSheet(cv = cv, onDismiss = { detailCv = null }) }
 
     Column(
         modifier = modifier
@@ -147,15 +155,13 @@ fun HomeContent(
     ) {
         RecentCvsSection(
             cvs = uiState.recentCvs,
+            previews = uiState.cvPreviews,
             onSeeAllClick = onCvsClick,
             onCvClick = { detailCv = it },
             onDownloadClick = onDownloadCv,
         )
 
-        CreateCvSection(
-            onOfflineClick = onTemplatesClick,
-            onAiClick = { comingSoon = HomeComingSoon.AI },
-        )
+        CreateCvSection(onTemplatesClick = onTemplatesClick, onAiClick = { showAiCv = true })
 
         SkillsSection(analysis = uiState.skillsGap, onSeeAreasClick = onSkillsGapClick)
 
@@ -176,6 +182,7 @@ fun HomeContent(
 @Composable
 private fun RecentCvsSection(
     cvs: List<Cv>,
+    previews: Map<String, Bitmap>,
     onSeeAllClick: () -> Unit,
     onCvClick: (Cv) -> Unit,
     onDownloadClick: (Cv) -> Unit,
@@ -198,6 +205,7 @@ private fun RecentCvsSection(
                 items(items = cvs, key = { it.id }) { cv ->
                     RecentCvCard(
                         cv = cv,
+                        preview = previews[cv.id],
                         onCvClick = { onCvClick(cv) },
                         onDownloadClick = { onDownloadClick(cv) },
                     )
@@ -210,6 +218,7 @@ private fun RecentCvsSection(
 @Composable
 private fun RecentCvCard(
     cv: Cv,
+    preview: Bitmap?,
     onCvClick: () -> Unit,
     onDownloadClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -219,9 +228,16 @@ private fun RecentCvCard(
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
     ) {
         Column {
-            // Imagen del currículum armado que manda el servicio. Si no llega o no carga,
-            // queda el recuadro con el rótulo, que es lo que había antes.
-            RemoteImage(
+            // Primero la hoja real del CV dibujada con su plantilla. Si todavía no está, la
+            // imagen que manda el servicio y, si tampoco, el recuadro con el rótulo.
+            if (preview != null) {
+                PagePreview(
+                    page = preview,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(110.dp),
+                )
+            } else RemoteImage(
                 url = cv.previewUrl,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
@@ -300,10 +316,17 @@ private fun RecentCvCard(
 
 // ─── Crear currículum ─────────────────────────────────────────────────────────
 
-/** Barra con los dos caminos para crear un currículum: con IA o sin conexión. */
+/**
+ * Recuadro para crear un currículum.
+ *
+ * Antes tenía dos botones, "IA" y "Offline", y el de IA solo abría un aviso que decía que había
+ * que elegir una plantilla. Como la IA es lo esencial de la app, ahora el recuadro lo dice de
+ * entrada (cómo se usa) y tiene una sola acción: elegir la plantilla. La IA se usa después,
+ * en el editor, con "Mejorar con IA".
+ */
 @Composable
 private fun CreateCvSection(
-    onOfflineClick: () -> Unit,
+    onTemplatesClick: () -> Unit,
     onAiClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -312,32 +335,44 @@ private fun CreateCvSection(
         shape = RoundedCornerShape(12.dp),
         modifier = modifier.fillMaxWidth(),
     ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            modifier = Modifier.padding(12.dp),
-        ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(R.string.home_create_cv_title),
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Outlined.AutoAwesome,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.primary,
                 )
                 Text(
-                    text = stringResource(R.string.home_create_cv_subtitle),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
+                    text = stringResource(R.string.create_cv_ai_title),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(start = 8.dp),
                 )
             }
-            Button(onClick = onAiClick, contentPadding = TIGHT_BUTTON_PADDING) {
-                Text(stringResource(R.string.home_create_cv_ai))
+            Text(
+                text = stringResource(R.string.create_cv_ai_steps),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.padding(top = 6.dp),
+            )
+            // Dos caminos: que la IA arme todo desde lo que cuentas, o elegir una plantilla y
+            // llenarla con ayuda de "Mejorar con IA" en el editor.
+            Button(
+                onClick = onAiClick,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 12.dp),
+            ) {
+                Text(stringResource(R.string.create_cv_ai_write))
             }
             OutlinedButton(
-                onClick = onOfflineClick,
+                onClick = onTemplatesClick,
                 colors = outlinedOnCardColors(),
-                contentPadding = TIGHT_BUTTON_PADDING,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
             ) {
-                Text(stringResource(R.string.home_create_cv_offline))
+                Text(stringResource(R.string.create_cv_ai_action))
             }
         }
     }
@@ -363,29 +398,30 @@ private fun SkillsSection(
 
         if (analysis == null) {
             EmptySectionText(stringResource(R.string.home_skills_empty))
-            return@SectionCard
+        } else {
+            if (analysis.marketStatus == "missing") Text(stringResource(R.string.skills_gap_market_missing))
+            if (analysis.status == "empty") Text(stringResource(R.string.skills_gap_empty))
+            if (analysis.status == "incomplete") Text(stringResource(R.string.skills_gap_incomplete))
+            if (analysis.canConfirmNoGaps) Text(stringResource(R.string.skills_gap_no_gaps))
+            if (analysis.skills.isNotEmpty()) {
+                Text(stringResource(R.string.skills_gap_ordinal_scale))
+                Text(stringResource(R.string.skills_gap_deficits_only))
+                RadarChart(
+                    labels = analysis.skills.map { it.name },
+                    series = listOf(
+                        RadarSeries(
+                            label = stringResource(R.string.skills_gap_series_user),
+                            values = analysis.skills.map { it.userLevel },
+                            color = MaterialTheme.colorScheme.primary,
+                        ),
+                    ),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(240.dp)
+                        .padding(top = 12.dp),
+                )
+            }
         }
-
-        Text(stringResource(R.string.skills_gap_ordinal_scale))
-        Text(stringResource(R.string.skills_gap_deficits_only))
-        if (analysis.marketStatus == "missing") Text(stringResource(R.string.skills_gap_market_missing))
-        if (analysis.status != "complete" || analysis.comparedSkills == 0)
-            Text(stringResource(R.string.skills_gap_incomplete))
-        if (analysis.canConfirmNoGaps) Text(stringResource(R.string.skills_gap_no_gaps))
-        if (analysis.skills.isNotEmpty()) RadarChart(
-            labels = analysis.skills.map { it.name },
-            series = listOf(
-                RadarSeries(
-                    label = stringResource(R.string.skills_gap_series_user),
-                    values = analysis.skills.map { it.userLevel },
-                    color = MaterialTheme.colorScheme.primary,
-                ),
-            ),
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(240.dp)
-                .padding(top = 12.dp),
-        )
 
         OutlinedButton(
             onClick = onSeeAreasClick,
@@ -629,12 +665,4 @@ private fun HomePreview(darkTheme: Boolean) {
             )
         }
     }
-}
-
-/** Los avisos de funciones que llegan en la Fase II. */
-private enum class HomeComingSoon(
-    @param:StringRes val titleRes: Int,
-    @param:StringRes val messageRes: Int,
-) {
-    AI(R.string.coming_soon_ai_title, R.string.coming_soon_ai_message),
 }

@@ -60,6 +60,7 @@ fun SkillsGapScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    if (uiState.inputStage != null) SkillsInputDialog(uiState, viewModel)
     SkillsGapContent(
         uiState = uiState,
         onRetryClick = viewModel::onRetryClick,
@@ -68,6 +69,7 @@ fun SkillsGapScreen(
         onMoreCvs = viewModel::onMoreCvs,
         onPage = viewModel::onPage,
         modifier = modifier,
+        onManualInput = viewModel::openInput,
     )
 }
 
@@ -80,12 +82,16 @@ fun SkillsGapContent(
     onAnalyze: () -> Unit = {},
     onMoreCvs: () -> Unit = {},
     onPage: (Int) -> Unit = {},
+    onManualInput: () -> Unit = {},
 ) {
     Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(12.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp)) {
         if (!uiState.enabled) {
             Text(stringResource(R.string.skills_gap_disabled))
             return@Column
+        }
+        OutlinedButton(onClick = onManualInput, enabled = !uiState.isLoading && (uiState.analysis != null || uiState.inputRequired)) {
+            Text(stringResource(R.string.skills_gap_input_title))
         }
         Text(stringResource(R.string.skills_gap_select_cv), style = MaterialTheme.typography.titleMedium)
         uiState.cvErrorMessage?.let { Text(stringResource(it)) }

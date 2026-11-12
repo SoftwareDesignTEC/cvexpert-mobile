@@ -1,31 +1,37 @@
 package com.cvpro.app.ui.screens.settings
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cvpro.app.domain.model.ActiveSession
+import com.cvpro.app.domain.model.HelpContact
+import com.cvpro.app.domain.model.LegalDocument
 import com.cvpro.app.domain.model.ThemePreference
+import com.cvpro.app.domain.repository.AppLanguage
+import com.cvpro.app.domain.repository.AuthRepository
+import com.cvpro.app.domain.repository.LanguageRepository
 import com.cvpro.app.domain.repository.NotificationSettings
 import com.cvpro.app.domain.repository.NotificationType
+import com.cvpro.app.domain.repository.SettingsContentRepository
 import com.cvpro.app.domain.repository.SettingsRepository
+import com.cvpro.app.ui.components.toUserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
-import javax.inject.Inject
-
-import com.cvpro.app.domain.model.ActiveSession
-import com.cvpro.app.domain.model.HelpContact
-import com.cvpro.app.domain.model.LegalDocument
-import com.cvpro.app.domain.repository.AuthRepository
-import com.cvpro.app.domain.repository.SettingsContentRepository
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 
 /** Estado de Configuración: el tema y los avisos. */
 data class SettingsUiState(
     val themePreference: ThemePreference = ThemePreference.SYSTEM,
     val notifications: NotificationSettings = NotificationSettings(),
+
+    val language: AppLanguage = AppLanguage.SYSTEM,
+    val canChangeLanguage: Boolean = false,
 
     val sessions: List<ActiveSession> = emptyList(),
     val isLoadingSessions: Boolean = false,
@@ -39,7 +45,7 @@ data class SettingsUiState(
 
     val helpContacts: List<HelpContact> = emptyList(),
 
-    val error: String? = null,
+    @param:StringRes val error: Int? = null,
 )
 
 private data class RemoteSettingsState(
@@ -55,7 +61,7 @@ private data class RemoteSettingsState(
 
     val helpContacts: List<HelpContact> = emptyList(),
 
-    val error: String? = null,
+    @param:StringRes val error: Int? = null,
 )
 
 
@@ -64,22 +70,30 @@ class SettingsViewModel @Inject constructor(
     private val settingsRepository: SettingsRepository,
     private val settingsContentRepository: SettingsContentRepository,
     private val authRepository: AuthRepository,
+    private val languageRepository: LanguageRepository,
 ) : ViewModel() {
 
     private val remoteState = MutableStateFlow(
         RemoteSettingsState()
     )
 
+    // El idioma lo guarda Android, no la app: se lee al crear el ViewModel y se actualiza al elegir.
+    private val language = MutableStateFlow(languageRepository.current())
+
     // Se combinan los dos flujos: cualquiera de los dos que cambie repinta la pantalla.
     val uiState: StateFlow<SettingsUiState> = combine(
         settingsRepository.themePreference,
         settingsRepository.notifications,
         remoteState,
-    ) { theme, notifications, remote ->
+        language,
+    ) { theme, notifications, remote, language ->
 
         SettingsUiState(
             themePreference = theme,
             notifications = notifications,
+
+            language = language,
+            canChangeLanguage = languageRepository.canChangeLanguage,
 
             sessions = remote.sessions,
             isLoadingSessions = remote.isLoadingSessions,
@@ -127,6 +141,16 @@ class SettingsViewModel @Inject constructor(
     }
 
     /**
+     * Cambia el idioma de la app. Android recrea la pantalla con los textos nuevos y, al
+     * recrearse, MainActivity le avisa a Notificaciones del idioma nuevo.
+     */
+    fun onLanguageSelected(selected: AppLanguage) {
+        if (selected == language.value) return
+        language.value = selected
+        languageRepository.set(selected)
+    }
+
+    /**
      * Guarda el tema elegido. No hace falta avisarle a la pantalla: al guardarse, el flujo
      * emite el valor nuevo y toda la app se repinta sola.
      */
@@ -164,7 +188,7 @@ class SettingsViewModel @Inject constructor(
                 remoteState.update {
                     it.copy(
                         isLoadingSessions = false,
-                        error = exception.message,
+                        error = exception.toUserMessage(),
                     )
                 }
             }
@@ -195,7 +219,7 @@ class SettingsViewModel @Inject constructor(
                 remoteState.update {
                     it.copy(
                         isLoadingLegal = false,
-                        error = exception.message,
+                        error = exception.toUserMessage(),
                     )
                 }
             }
@@ -226,7 +250,7 @@ class SettingsViewModel @Inject constructor(
                 remoteState.update {
                     it.copy(
                         isLoadingLegal = false,
-                        error = exception.message,
+                        error = exception.toUserMessage(),
                     )
                 }
             }
@@ -259,7 +283,7 @@ class SettingsViewModel @Inject constructor(
                 remoteState.update {
                     it.copy(
                         isExporting = false,
-                        error = exception.message,
+                        error = exception.toUserMessage(),
                     )
                 }
             }

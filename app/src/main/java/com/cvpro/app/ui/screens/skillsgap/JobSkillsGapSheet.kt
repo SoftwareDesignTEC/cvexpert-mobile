@@ -29,7 +29,8 @@ fun JobSkillsGapSheet(
         onDismissRequest = onDismiss,
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
     ) {
-        JobSkillsGapContent(state, viewModel::loadCvs, viewModel::selectCv,
+        val visibleState = if (state.offer == offer) state else JobSkillsGapUiState(offer = offer, isLoading = true)
+        JobSkillsGapContent(visibleState, viewModel::loadCvs, viewModel::selectCv,
             { viewModel.analyze() }, { viewModel.analyze(evaluationOnly = true) }, onCorrectCv)
     }
 }
@@ -89,7 +90,7 @@ internal fun JobSkillsGapContent(
             }
         }
         if (state.selectedCv != null) item {
-            Text(state.selectedCv.title, style = MaterialTheme.typography.titleSmall)
+            Text(stringResource(R.string.job_gap_cv_used, state.selectedCv.title), style = MaterialTheme.typography.titleSmall)
             Button(onClick = onAnalyze, enabled = !state.isLoading) {
                 Text(stringResource(R.string.job_gap_analyze))
             }
@@ -98,6 +99,7 @@ internal fun JobSkillsGapContent(
             item {
                 if (analysis.catalogStatus == null) Text(stringResource(R.string.job_gap_evaluation_only))
                 Text(stringResource(R.string.job_gap_client_data))
+                Text(stringResource(R.string.job_gap_coverage_notice))
                 if (analysis.status == JobCoverageStatus.INSUFFICIENT_INFORMATION) {
                     Text(stringResource(R.string.job_gap_insufficient))
                 } else {
@@ -115,7 +117,15 @@ internal fun JobSkillsGapContent(
                     modifier = Modifier.padding(top = 12.dp))
                 if (analysis.notDocumentedSkills.isEmpty()) Text(stringResource(R.string.job_gap_no_missing))
                 else Text(analysis.notDocumentedSkills.joinToString(", "))
+                Text(stringResource(R.string.job_gap_missing_notice))
             }
+            item {
+                Text(stringResource(R.string.job_gap_levels), style = MaterialTheme.typography.titleMedium)
+                val levels = analysis.levelAnalysis
+                Text(if (levels == null) stringResource(R.string.job_gap_no_levels)
+                    else stringResource(R.string.job_gap_summary, levels.compared, levels.below, levels.meets, levels.unknownRequired, levels.conflicts))
+            }
+            items(analysis.assessments.orEmpty()) { LevelAssessmentCard(it) }
             items(analysis.recommendations, key = { "skill:" + it.skillName }) { recommendation ->
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                     Text(stringResource(R.string.job_gap_courses_for, recommendation.skillName),
@@ -139,4 +149,39 @@ private fun String.levelLabel(): Int = when (this) {
     "intermediate" -> R.string.job_gap_level_intermediate
     "advanced" -> R.string.job_gap_level_advanced
     else -> R.string.job_gap_level_expert
+}
+
+@Composable
+private fun LevelAssessmentCard(assessment: JobLevelAssessment) {
+    OutlinedCard(modifier = Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(assessment.name, style = MaterialTheme.typography.titleSmall)
+            Text(stringResource(R.string.job_gap_cv_level, assessment.cvLevel?.let { stringResource(it.labelRes) }
+                ?: stringResource(R.string.job_gap_not_documented)))
+            Text(assessment.requiredLevel?.let { stringResource(R.string.job_gap_required_level, stringResource(it.labelRes)) }
+                ?: stringResource(R.string.job_gap_unknown))
+            Text(stringResource(when (assessment.status) {
+                "documented_skill_below_required" -> R.string.job_gap_below
+                "documented_skill_meets_required" -> R.string.job_gap_meets
+                "not_documented" -> R.string.job_gap_not_documented
+                else -> R.string.job_gap_unknown
+            }))
+            assessment.deficitSteps?.let { Text(stringResource(R.string.job_gap_deficit, it)) }
+            if (assessment.detectionStatus == "conflict") Text(stringResource(R.string.job_gap_conflict))
+            assessment.reason?.let { reason ->
+                Text(stringResource(when (reason) {
+                    "optional" -> R.string.job_gap_optional
+                    "negated" -> R.string.job_gap_negated
+                    "contradictory" -> R.string.job_gap_contradictory
+                    "ambiguous" -> R.string.job_gap_level_ambiguous
+                    else -> R.string.job_gap_no_evidence
+                }))
+            }
+            // Backend evidence is untrusted text, never HTML or executable links.
+            assessment.evidenceText?.let {
+                Text(stringResource(if (assessment.evidenceSource == "description")
+                    R.string.job_gap_evidence_description else R.string.job_gap_evidence_requirements, it))
+            }
+        }
+    }
 }

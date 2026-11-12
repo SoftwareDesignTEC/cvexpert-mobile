@@ -24,7 +24,15 @@ data class JobOffer(
     val matchScore: Int?,
     /** Fecha de publicación, ya lista para mostrar. */
     val postedAt: String,
+    /**
+     * Página de la empresa o de la bolsa de empleo donde la persona se postula de verdad. La
+     * traen las ofertas reales que el servicio de Ofertas importa de JSearch; null si no hay.
+     */
+    val applyUrl: String? = null,
+    /** Habilidades que pide (Java, Excel, Inglés...). Vacía si el servicio no manda ninguna. */
     val skills: List<String> = emptyList(),
+    /** Fecha de publicación en epoch milisegundos, para el filtro "Últimos 7 días". */
+    val postedAtMillis: Long? = null,
 )
 
 /** Rango salarial de una oferta, con los mismos campos del contrato de la web. */

@@ -1,28 +1,44 @@
 package com.cvpro.app.ui.screens.templates
 
+import android.graphics.Bitmap
 import android.net.Uri
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.cvpro.app.R
 import com.cvpro.app.data.download.TemplatePreviewDownloader
+import com.cvpro.app.data.pdf.CvPreviewRenderer
 import com.cvpro.app.domain.model.CvTemplate
+import com.cvpro.app.domain.model.UserProfile
+import com.cvpro.app.domain.model.newCvTitle
+import com.cvpro.app.domain.repository.AuthRepository
 import com.cvpro.app.domain.repository.CvRepository
+import com.cvpro.app.domain.repository.ProfileRepository
 import com.cvpro.app.domain.repository.TemplateRepository
+import com.cvpro.app.ui.components.UiMessage
+import com.cvpro.app.ui.components.toUserMessage
+import com.cvpro.app.ui.screens.cvs.PendingCvEditor
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 data class TemplatesUiState(
     val templates: List<CvTemplate> = emptyList(),
     val isLoading: Boolean = false,
-    val error: String? = null,
+    @param:StringRes val error: Int? = null,
     /** Plantilla que se está descargando o usando, para apagar su botón mientras tanto. */
     val busyTemplateId: String? = null,
     /** Aviso del resultado de la última acción: se muestra y se limpia. */
-    val message: String? = null,
+    val message: UiMessage? = null,
+    /** El CV ya se creó: la pantalla tiene que ir a Mis Currículums, donde se abre solo. */
+    val openCvs: Boolean = false,
+    /** Vista previa dibujada de cada plantilla, por id. Las que faltan usan el ícono. */
+    val previews: Map<String, Bitmap> = emptyMap(),
 )
 
 @HiltViewModel
@@ -30,6 +46,10 @@ class TemplatesViewModel @Inject constructor(
     private val repository: TemplateRepository,
     private val cvRepository: CvRepository,
     private val previewDownloader: TemplatePreviewDownloader,
+    private val authRepository: AuthRepository,
+    private val profileRepository: ProfileRepository,
+    private val pendingCvEditor: PendingCvEditor,
+    private val previewRenderer: CvPreviewRenderer,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(TemplatesUiState())
@@ -50,36 +70,68 @@ class TemplatesViewModel @Inject constructor(
     /**
      * Crea un currículum nuevo con esta plantilla.
      *
-     * Va con POST contra el servicio, igual que el resto del CRUD. Nace vacío: los datos se
-     * llenan después desde "Mis Currículums", con el editor.
+     * Va con POST contra el servicio, igual que el resto del CRUD. Nace con los datos personales
+     * del perfil (el contrato exige `personalInfo` con nombre y correo) y sin experiencias: el
+     * resto se llena después desde "Mis Currículums", con el editor.
      */
     fun onUseTemplate(template: CvTemplate) {
         viewModelScope.launch {
             _uiState.update { it.copy(busyTemplateId = template.id, error = null) }
 
             try {
+                val personalInfo = personalInfoForNewCv()
                 val cv = cvRepository.createCv(
-                    title = template.name,
+                    // "Ana Mora – Executive": al llenar las experiencias, el editor lo cambia
+                    // por el puesto (ver CvTitle.kt).
+                    title = newCvTitle(personalInfo?.name.orEmpty(), template.name),
                     templateId = template.id,
-                    // El currículum nace sin datos personales: se llenan en el editor.
-                    personalInfo = null,
+                    personalInfo = personalInfo,
                 )
 
-                _uiState.update {
-                    it.copy(
-                        busyTemplateId = null,
-                        message = "Se creó \"${cv.title}\" en Mis Currículums",
-                    )
-                }
+                // En vez de dejar al usuario en Plantillas con un aviso, se lo lleva al editor
+                // del CV nuevo para que lo llene ahí mismo.
+                pendingCvEditor.request(cv.id)
+                _uiState.update { it.copy(busyTemplateId = null, openCvs = true) }
             } catch (exception: Exception) {
                 _uiState.update {
                     it.copy(
                         busyTemplateId = null,
-                        message = exception.message ?: "No se pudo crear el currículum",
+                        message = UiMessage(exception.toUserMessage()),
                     )
                 }
             }
         }
+    }
+
+    /**
+     * Datos personales con que nace un CV: los del perfil guardado. Si el perfil no se puede
+     * leer o le falta el nombre o el correo, se completan con los de la cuenta de Google, que
+     * siempre están. Sin sesión devuelve null y el servicio responde 400, que se avisa igual.
+     */
+    private suspend fun personalInfoForNewCv(): UserProfile? {
+        val user = authRepository.currentUser.value ?: return null
+        val profile = try {
+            profileRepository.getProfile(user.id)
+        } catch (exception: CancellationException) {
+            throw exception
+        } catch (exception: Exception) {
+            null
+        }
+        return profile?.copy(
+            name = profile.name.ifBlank { user.name },
+            email = profile.email.ifBlank { user.email },
+        ) ?: UserProfile(
+            id = user.id,
+            name = user.name,
+            email = user.email,
+            phone = null,
+            location = "",
+            photoUrl = user.photoUrl,
+            bio = null,
+            types = emptyList(),
+            modalities = emptyList(),
+            sectors = emptyList(),
+        )
     }
 
     /**
@@ -93,22 +145,29 @@ class TemplatesViewModel @Inject constructor(
             _uiState.update { it.copy(busyTemplateId = template.id, error = null) }
 
             try {
-                _downloadedPreview.value = previewDownloader.download(
-                    templateName = template.name,
-                    previewUrl = template.previewUrl,
-                )
+                // Se guarda la vista previa dibujada, que es la que muestra cómo queda. Si
+                // todavía no está, se baja la del servicio como antes.
+                val drawn = _uiState.value.previews[template.id]
+                _downloadedPreview.value = if (drawn != null) {
+                    previewDownloader.save(template.name, drawn)
+                } else {
+                    previewDownloader.download(
+                        templateName = template.name,
+                        previewUrl = template.previewUrl,
+                    )
+                }
 
                 _uiState.update {
                     it.copy(
                         busyTemplateId = null,
-                        message = "Vista previa guardada en Descargas",
+                        message = UiMessage(R.string.templates_preview_saved),
                     )
                 }
             } catch (exception: Exception) {
                 _uiState.update {
                     it.copy(
                         busyTemplateId = null,
-                        message = exception.message ?: "No se pudo descargar la plantilla",
+                        message = UiMessage(exception.toUserMessage()),
                     )
                 }
             }
@@ -123,6 +182,11 @@ class TemplatesViewModel @Inject constructor(
     /** La pantalla avisa que ya mostró el aviso. */
     fun onMessageShown() {
         _uiState.update { it.copy(message = null) }
+    }
+
+    /** La pantalla ya navegó a Mis Currículums; se baja la bandera para no volver a hacerlo. */
+    fun onCvsOpened() {
+        _uiState.update { it.copy(openCvs = false) }
     }
 
     private fun loadTemplates() {
@@ -148,12 +212,17 @@ class TemplatesViewModel @Inject constructor(
                         error = null,
                     )
                 }
+
+                // Las vistas previas llegan después de la lista: así las tarjetas aparecen
+                // enseguida y la imagen se completa apenas está dibujada.
+                val previews = previewRenderer.templatePreviewsFor(result.items)
+                _uiState.update { it.copy(previews = previews) }
             } catch (exception: Exception) {
                 _uiState.update {
                     it.copy(
                         templates = emptyList(),
                         isLoading = false,
-                        error = exception.message ?: "Error al cargar las plantillas",
+                        error = exception.toUserMessage(),
                     )
                 }
             }

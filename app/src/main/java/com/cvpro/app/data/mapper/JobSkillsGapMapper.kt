@@ -5,21 +5,36 @@ import com.cvpro.app.domain.model.*
 import java.net.URI
 
 fun Cv.toJobSkillsGapRequest(offer: JobOffer): JobSkillsGapRequestDto {
-    if (skills.any { it.level !in jobSkillLevels }) {
-        throw JobSkillsGapException(JobSkillsGapFailure.INVALID_CV_LEVEL)
-    }
-    fun validText(value: String, allowBlank: Boolean = false): Boolean =
-        (allowBlank || value.isNotBlank()) && value.codePointCount(0, value.length) <= 200 &&
-            value.none { it.isISOControl() && !it.isWhitespace() }
-    if (!validText(id) || !validText(offer.id) || id.any(Char::isISOControl) ||
-        offer.id.any(Char::isISOControl) || skills.size > 500 || offer.skills.size > 200 ||
-        skills.any { !validText(it.name) } || offer.skills.any { !validText(it, allowBlank = true) }
-    ) throw JobSkillsGapException(JobSkillsGapFailure.INVALID_INPUT)
-    return JobSkillsGapRequestDto(
-        cv = JobGapCvDto(id, skills.map { JobGapCvSkillDto(it.name, it.level) }),
-        jobs = listOf(JobGapOfferDto(offer.id, offer.skills)),
-    )
+    validateJobGapInput(offer, includeText = false)
+    return JobSkillsGapRequestDto(JobGapCvDto(id, skills.map { JobGapCvSkillDto(it.name, it.level) }),
+        listOf(JobGapOfferDto(offer.id, offer.skills)))
 }
+
+fun Cv.toEvaluationRequest(offer: JobOffer): JobSkillsGapEvaluationRequestDto {
+    validateJobGapInput(offer, includeText = true)
+    return JobSkillsGapEvaluationRequestDto(JobGapCvDto(id, skills.map { JobGapCvSkillDto(it.name, it.level) }),
+        listOf(EvaluationJobDto(offer.id, offer.skills, offer.description, offer.requirements)))
+}
+
+private fun Cv.validateJobGapInput(offer: JobOffer, includeText: Boolean) {
+    if (skills.any { SkillLevel.fromApi(it.level) == null })
+        throw JobSkillsGapException(JobSkillsGapFailure.INVALID_CV_LEVEL)
+    if (skills.size > 500 || skills.any { it.name.contractBlank() || !it.name.validText(200, true) })
+        throw JobSkillsGapException(JobSkillsGapFailure.INVALID_CV)
+    if (id.contractBlank() || !id.validText(200) || offer.id.contractBlank() || !offer.id.validText(200) ||
+        offer.skills.size > 200 || offer.skills.any { !it.validText(200, true) } ||
+        (includeText && (!offer.description.validText(20_000, true) || offer.requirements.size > 100 ||
+            offer.requirements.any { !it.validText(2_000, true) })))
+        throw JobSkillsGapException(JobSkillsGapFailure.INVALID_INPUT)
+}
+
+private fun String.validText(max: Int, multiline: Boolean = false): Boolean =
+    codePointCount(0, length) <= max && codePoints().allMatch {
+        it !in 0xD800..0xDFFF && (!Character.isISOControl(it) || (multiline && it in listOf(9, 10, 13)))
+    }
+
+// ECMAScript trim (used by the backend) also treats the BOM as whitespace.
+private fun String.contractBlank(): Boolean = all { it.isWhitespace() || it == '\uFEFF' }
 
 private fun compatible(value: Boolean) {
     if (!value) throw JobSkillsGapException(JobSkillsGapFailure.INCOMPATIBLE_RESPONSE)
@@ -71,7 +86,37 @@ fun JobSkillsGapResponseDto.toJobAnalysis(cvId: String, jobId: String, evaluatio
         compatible((catalog == JobCatalogStatus.NOT_NEEDED) == missing.isEmpty())
         result.recommendations.map { it.toJobCourses() }
     }
-    return JobSkillsGapAnalysis(cvId, jobId, status, required!!, count!!, percent, matched, missing, catalog, recommendations)
+    val assessments = result.skillLevelAssessments?.map {
+        compatible(!it.name.isNullOrBlank() && it.detectionStatus in setOf("explicit", "unknown", "conflict") &&
+            it.status in setOf("documented_skill_below_required", "documented_skill_meets_required", "not_documented", "unknown_required_level") &&
+            (it.deficitSteps == null || it.deficitSteps in 0..3) &&
+            (it.reason == null || it.reason in setOf("no_explicit_evidence", "optional", "negated", "contradictory", "ambiguous")))
+        val cvLevel = it.cvLevel.level()
+        val requiredLevel = it.requiredLevel.level()
+        compatible(if (it.detectionStatus == "explicit") requiredLevel != null &&
+            it.evidenceSource in setOf("description", "requirements") && it.evidenceText != null
+            else requiredLevel == null && it.evidenceSource == null && it.evidenceText == null)
+        compatible(if (it.status == "not_documented") cvLevel == null && it.deficitSteps == null
+            else cvLevel != null)
+        compatible(if (it.status == "unknown_required_level") requiredLevel == null && it.deficitSteps == null
+            else true)
+        compatible(if (it.status!!.startsWith("documented_skill_")) requiredLevel != null &&
+            it.deficitSteps != null && (if (it.status.endsWith("below_required")) it.deficitSteps > 0 else it.deficitSteps == 0)
+            else true)
+        JobLevelAssessment(it.name!!, cvLevel, requiredLevel, it.evidenceSource, it.evidenceText,
+            it.detectionStatus!!, it.reason, it.status, it.deficitSteps)
+    }
+    val levels = result.levelAnalysis?.let {
+        compatible(it.scale == "cv-skill-v1" && listOf(it.comparedSkillsCount, it.belowRequiredCount,
+            it.meetsRequiredCount, it.notDocumentedCount, it.unknownRequiredLevelCount, it.conflictCount)
+            .all { count -> count != null && count in 0..200 })
+        JobLevelAnalysis(it.comparedSkillsCount!!, it.belowRequiredCount!!, it.meetsRequiredCount!!,
+            it.notDocumentedCount!!, it.unknownRequiredLevelCount!!, it.conflictCount!!)
+    }
+    // Both fields are intentionally absent in the legacy, coverage-only response.
+    compatible((assessments == null) == (levels == null))
+    compatible(assessments == null || assessments.size == required)
+    return JobSkillsGapAnalysis(cvId, jobId, status, required!!, count!!, percent, matched, missing, catalog, recommendations, assessments, levels)
 }
 
 private fun JobSkillCoursesDto.toJobCourses(): JobSkillCourses {
@@ -91,4 +136,10 @@ private fun JobSkillCoursesDto.toJobCourses(): JobSkillCourses {
         CourseRecommendation(it.id, it.title, it.platform, it.url, it.logoUrl,
             it.durationHours?.let { hours -> "$hours horas" }, it.isPaid, it.skills!!)
     })
+}
+
+private fun String?.level(): SkillLevel? {
+    val level = this?.let(SkillLevel::fromApi)
+    compatible(this == null || level != null)
+    return level
 }

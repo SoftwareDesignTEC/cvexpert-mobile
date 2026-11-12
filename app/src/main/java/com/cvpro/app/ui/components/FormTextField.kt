@@ -29,11 +29,15 @@ fun FormTextField(
     imeAction: ImeAction = ImeAction.Next,
     singleLine: Boolean = true,
     enabled: Boolean = true,
+    placeholder: String? = null,
 ) {
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
         label = { Text(text = label) },
+        // Ejemplo en gris dentro del campo vacío ("Ej.: Cajero"), para que se entienda qué
+        // escribir. Desaparece apenas el usuario escribe.
+        placeholder = placeholder?.let { { Text(text = it) } },
         isError = errorMessage != null,
         supportingText = {
             val message = errorMessage ?: helperText

@@ -13,7 +13,8 @@
     <string name="login_retry">Reintentar</string>
     <string name="login_error_no_account">No encontramos una cuenta de Google en este teléfono. Agrega una desde Ajustes e inténtalo de nuevo.</string>
     <string name="login_error_configuration">El inicio de sesión no está configurado en esta versión de la app.</string>
-    <string name="login_session_expired">Tu sesión expiró. Iniciá sesión de nuevo.</string>
+    <string name="login_error_google_not_responding">Google no respondió. Actualiza \"Servicios de Google Play\" desde Play Store, revisa que tengas una cuenta de Google en el teléfono e inténtalo de nuevo.</string>
+    <string name="login_session_expired">Tu sesión expiró. Inicia sesión de nuevo.</string>
     <string name="login_error_generic">No se pudo iniciar sesión. Revisa tu conexión e inténtalo de nuevo.</string>
 
     <!-- Panel Principal -->
@@ -42,7 +43,11 @@
     <string name="settings_system_title">Preferencias del Sistema</string>
     <string name="settings_system_subtitle">Personaliza CVExpert para trabajar a tu manera.</string>
     <string name="settings_system_language">Idioma</string>
-    <string name="settings_system_language_value">Español</string>
+    <string name="settings_language_description">Elige en qué idioma ves la app.</string>
+    <string name="settings_language_system">Idioma del teléfono</string>
+    <string name="settings_language_spanish">Español</string>
+    <string name="settings_language_english">English</string>
+    <string name="settings_language_unsupported">En esta versión de Android la app usa el idioma del teléfono.</string>
     <string name="settings_system_timezone">Zona Horaria</string>
     <string name="settings_system_timezone_value">Costa Rica (GMT-6)</string>
     <string name="settings_help_title">¿Necesitas ayuda?</string>
@@ -66,6 +71,42 @@
     <string name="cv_detail_languages">Idiomas</string>
     <string name="cv_detail_period">%1$s — %2$s</string>
     <string name="cv_detail_period_current">%1$s — Actual</string>
+    <string name="cv_detail_present">Actual</string>
+    <string name="cv_detail_certifications">Certificaciones</string>
+    <string name="cv_experience_type_formal">Empleo formal</string>
+    <string name="cv_experience_type_freelance">Trabajo independiente</string>
+    <string name="cv_experience_type_volunteer">Voluntariado</string>
+    <string name="cv_experience_type_school_project">Proyecto escolar</string>
+    <string name="cv_experience_type_informal">Trabajo informal</string>
+    <string name="cv_ai_generate">Generar con IA</string>
+    <string name="cv_ai_generate_bio_hint">La IA escribe tu perfil con lo que ya tiene tu currículum.</string>
+    <string name="cv_ai_generate_description_hint">Escribe el puesto y la IA redacta la descripción por ti.</string>
+    <string name="cv_editor_company_optional">Opcional en voluntariados, proyectos y trabajos informales.</string>
+    <string name="cv_ai_improve">Mejorar con IA</string>
+    <string name="cv_ai_improving">Redactando…</string>
+    <string name="cv_ai_improve_hint">Escribe una descripción breve y la IA la redacta de forma profesional.</string>
+    <string name="cv_ai_improved">Redactado con IA. Revísalo antes de guardar.</string>
+    <string name="cv_ai_undo">Deshacer</string>
+    <string name="cv_ai_add_non_labor">Agregar experiencia no laboral</string>
+    <string name="cv_ai_non_labor_title">Experiencia no laboral</string>
+    <string name="cv_ai_non_labor_intro">Cuenta con tus palabras qué hiciste y la IA lo convierte en una experiencia para tu CV.</string>
+    <string name="cv_ai_non_labor_type">Tipo</string>
+    <string name="cv_ai_non_labor_organization">Organización o lugar (opcional)</string>
+    <string name="cv_ai_non_labor_position">¿Qué hacías?</string>
+    <string name="cv_ai_non_labor_description">Cuéntalo con tus palabras</string>
+    <string name="cv_ai_translate">Traducir con IA</string>
+    <string name="cv_ai_translating">Traduciendo…</string>
+    <string name="ai_error_invalid">La IA no pudo procesar el texto. Revisa que los campos estén completos.</string>
+    <string name="ai_error_unavailable">La IA no está disponible ahora. Intenta de nuevo más tarde.</string>
+    <string name="ai_error_timeout">La IA tardó demasiado en responder. Intenta de nuevo.</string>
+    <string name="ai_error_network">No hay conexión. Revisa tu internet e intenta de nuevo.</string>
+    <string name="ai_error_generic">Algo salió mal con la IA. Intenta de nuevo.</string>
+    <!-- Errores generales de las pantallas (ui/components/UserMessages.kt). -->
+    <string name="error_invalid">Algunos datos no son válidos. Revísalos e intenta de nuevo.</string>
+    <string name="error_unavailable">El servicio no está disponible ahora. Intenta de nuevo más tarde.</string>
+    <string name="error_network">No hay conexión. Revisa tu internet e intenta de nuevo.</string>
+    <string name="error_generic">Algo salió mal. Intenta de nuevo.</string>
+    <string name="templates_preview_saved">Vista previa guardada en Descargas</string>
 
     <!-- Editor de currículum -->
     <string name="cv_editor_title">Editar currículum</string>
@@ -77,8 +118,18 @@
     <string name="cv_editor_bio">Resumen</string>
     <string name="cv_editor_position">Puesto</string>
     <string name="cv_editor_company">Empresa</string>
-    <string name="cv_editor_start">Desde (AAAA-MM-DD)</string>
-    <string name="cv_editor_end">Hasta (AAAA-MM-DD)</string>
+    <string name="cv_editor_start">Desde</string>
+    <string name="cv_editor_end">Hasta</string>
+    <string name="cv_editor_pick_date">Elegir fecha</string>
+    <string name="cv_editor_pick_level">Elegir nivel</string>
+    <!-- Niveles del contrato (Skill.level y Language.level): el servidor los manda en inglés. -->
+    <string name="cv_level_beginner">Principiante</string>
+    <string name="cv_level_intermediate">Intermedio</string>
+    <string name="cv_level_advanced">Avanzado</string>
+    <string name="cv_level_expert">Experto</string>
+    <string name="cv_level_basic">Básico</string>
+    <string name="cv_level_native">Nativo</string>
+    <string name="cv_editor_date_ok">Aceptar</string>
     <string name="cv_editor_current">Sigue vigente</string>
     <string name="cv_editor_description">Descripción</string>
     <string name="cv_editor_institution">Institución</string>
@@ -104,8 +155,6 @@
     <string name="cv_editor_saving">Guardando…</string>
     <string name="cv_editor_cancel">Cancelar</string>
     <string name="coming_soon_badge">Próximamente</string>
-    <string name="coming_soon_ai_title">Generación con IA</string>
-    <string name="coming_soon_ai_message">Vas a poder escribir tus experiencias en pocas palabras y la app las redacta por vos. Llega en la siguiente fase del proyecto.</string>
     <string name="coming_soon_pdf_title">Exportar a PDF</string>
     <string name="coming_soon_pdf_message">La descarga del currículum en PDF llega en la siguiente fase, junto con el editor.</string>
     <string name="coming_soon_use_title">Usar esta plantilla</string>
@@ -123,6 +172,7 @@
     <string name="templates_download">Descargar</string>
     <string name="templates_count">%1$d plantillas</string>
     <string name="templates_preview">Vista previa</string>
+    <string name="templates_preview_close">Cerrar</string>
     <string name="templates_use">Usar esta plantilla</string>
     <string name="templates_premium">Premium</string>
     <string name="templates_show_all">Ver todas (%1$d más)</string>
@@ -136,9 +186,6 @@
     <!-- Mis Currículums -->
     <string name="cvs_eyebrow">TU ESPACIO PROFESIONAL</string>
     <string name="cvs_search_placeholder">Buscar Currículum</string>
-    <string name="cvs_create_subtitle">Elige cómo quieres comenzar tu próxima oportunidad.</string>
-    <string name="cvs_create_ai">Modo IA</string>
-    <string name="cvs_create_offline">Offline / Plantilla</string>
     <string name="cvs_delete">Eliminar</string>
     <string name="cvs_delete_title">¿Eliminar este currículum?</string>
     <string name="cvs_delete_message">Se va a borrar \"%1$s\". Esta acción no se puede deshacer.</string>
@@ -146,21 +193,20 @@
     <string name="cvs_delete_cancel">Cancelar</string>
     <string name="cvs_deleting">Eliminando…</string>
     <string name="cvs_empty_title">Sin currículums</string>
-    <string name="cvs_empty_message">Creá tu primer currículum para empezar.</string>
+    <string name="cvs_empty_message">Crea tu primer currículum para empezar.</string>
     <string name="cvs_error_title">No se pudieron cargar los currículums</string>
 
     <!-- Panel Principal: secciones del diseño de Samuel -->
     <string name="home_recent_cvs_title">Currículums Recientes</string>
     <string name="home_recent_cvs_see_all">Ver todos</string>
-    <string name="home_recent_cvs_empty">Todavía no tenés currículums guardados.</string>
+    <string name="home_recent_cvs_empty">Todavía no tienes currículums guardados.</string>
     <string name="home_cv_preview">Vista previa</string>
     <string name="home_cv_updated_at">Modificado %1$s</string>
     <string name="home_cv_edit">Ver/Editar</string>
     <string name="home_cv_download">Descargar</string>
-    <string name="home_create_cv_title">Crear Nuevo Currículum</string>
-    <string name="home_create_cv_subtitle">Empieza desde cero o usa una plantilla</string>
-    <string name="home_create_cv_ai">IA</string>
-    <string name="home_create_cv_offline">Offline</string>
+    <string name="create_cv_ai_title">Crea tu currículum con IA</string>
+    <string name="create_cv_ai_steps">Cuéntale a la IA tu experiencia con tus palabras (o díctala) y arma tu currículum completo. También puedes elegir una plantilla y usar \"Mejorar con IA\" en el editor.</string>
+    <string name="create_cv_ai_action">Elegir plantilla</string>
     <string name="home_skills_title">Análisis de Habilidades</string>
     <string name="home_skills_subtitle">Comparación ordinal con requisitos del mercado</string>
     <string name="home_skills_empty">Todavía no hay análisis disponible.</string>
@@ -220,7 +266,7 @@
     <string name="profile_pref_availability">Disponibilidad</string>
     <string name="profile_pref_modality">Modalidad</string>
     <string name="profile_edit_preferences">Editar Preferencias</string>
-    <string name="profile_pending_notice">Revisá tus datos y guardá los cambios.</string>
+    <string name="profile_pending_notice">Revisa tus datos y guarda los cambios.</string>
     <string name="profile_field_name">Nombre completo</string>
     <string name="profile_field_email">Correo electrónico</string>
     <string name="profile_field_phone">Teléfono</string>
@@ -244,9 +290,18 @@
     <string name="jobs_match_percentage">%1$d%%</string>
     <string name="jobs_match_label">Compatibilidad</string>
     <string name="jobs_requirements_title">Requisitos principales</string>
+    <string name="jobs_skills_title">Habilidades que piden</string>
     <string name="jobs_details">Ver Detalles</string>
+    <string name="jobs_show_more">Ver más ofertas (%1$d)</string>
+    <string name="jobs_apply">Postularme</string>
+    <string name="jobs_applied">Ya te postulaste</string>
+    <string name="jobs_apply_success">Te postulaste a \"%1$s\". Síguela en Mis Postulaciones.</string>
+    <string name="jobs_apply_already">Ya te habías postulado a esta oferta.</string>
+    <string name="jobs_apply_success_external">Guardamos \"%1$s\" en Mis Postulaciones. Termina de postularte en la página de la empresa.</string>
+    <string name="jobs_open_original">Ver oferta original</string>
     <string name="jobs_empty_title">Sin resultados</string>
-    <string name="jobs_empty_message">No encontramos ofertas con esa búsqueda. Probá con otra palabra.</string>
+    <string name="jobs_empty_message">No encontramos ofertas con esa búsqueda. Prueba con otra palabra.</string>
+    <string name="jobs_empty_filter_message">No hay ofertas con este filtro por ahora. Prueba con otro.</string>
     <string name="jobs_error_network">No pudimos cargar las ofertas. Revisa tu conexión e inténtalo de nuevo.</string>
     <string name="jobs_error_generic">Algo salió mal al cargar las ofertas.</string>
     <string name="jobs_match_score">%1$d%%</string>
@@ -281,11 +336,16 @@
     <string name="applications_action_status">Estado</string>
     <string name="applications_action_details">Detalles</string>
     <string name="applications_change_status">Cambiar estado</string>
+    <string name="applications_withdraw">Retirar postulación</string>
+    <string name="applications_withdraw_title">¿Retirar postulación?</string>
+    <string name="applications_withdraw_message">Se quitará \"%1$s\" de tu tablero. Si ya te postulaste en la página de la empresa, esto no la cancela allá.</string>
+    <string name="applications_withdraw_confirm">Retirar</string>
+    <string name="applications_withdrawn">Retiraste \"%1$s\" de tu tablero.</string>
     <string name="applications_logo_description">Logo de %1$s</string>
     <string name="applications_error_title">Algo salió mal al cargar las postulaciones</string>
     <string name="applications_retry">Reintentar</string>
     <string name="applications_empty_title">Nada por acá</string>
-    <string name="applications_empty_message">No tenés postulaciones en \"%1$s\".</string>
+    <string name="applications_empty_message">No tienes postulaciones en \"%1$s\".</string>
     <string name="application_status_applied">Aplicado</string>
     <string name="application_status_in_progress">En proceso</string>
     <string name="application_status_interview">Entrevista</string>
@@ -296,25 +356,25 @@
     <string name="skills_gap_screen_title">Análisis de Brecha</string>
     <string name="skills_gap_updated">Actualizado hoy</string>
     <string name="skills_gap_comparison_eyebrow">COMPARATIVA DE MERCADO</string>
-    <string name="skills_gap_comparison_title">Tu perfil frente al objetivo</string>
+    <string name="skills_gap_comparison_title">Niveles en las habilidades con brecha</string>
     <string name="skills_gap_points_title">Puntos a Mejorar</string>
     <string name="skills_gap_points_subtitle">Habilidades por Mejorar</string>
     <string name="skills_gap_row_number">%1$d.</string>
     <string name="skills_gap_show_all">Ver todos (%1$d más)</string>
     <string name="skills_gap_show_less">Ver menos</string>
     <string name="skills_gap_courses_count">%1$d cursos</string>
-    <string name="skills_gap_course_duration">Duración: %1$s</string>
+    <string name="skills_gap_course_duration">Duración de %1$d h</string>
     <string name="skills_gap_course_open">Ver Curso</string>
     <string name="skills_gap_target">Comparado con: %1$s</string>
     <string name="skills_gap_series_user">Tus habilidades</string>
-    <string name="skills_gap_series_market">Lo que piden las ofertas</string>
+    <string name="skills_gap_series_market">Nivel requerido por el mercado</string>
     <string name="skills_gap_to_improve_title">Habilidades por mejorar</string>
-    <string name="skills_gap_no_gaps">Sin brechas calculables en las habilidades comparadas con cobertura completa.</string>
+    <string name="skills_gap_no_gaps">No se encontraron brechas en las habilidades comparadas.</string>
     <string name="skills_gap_levels">Vos %1$d · Mercado %2$d</string>
     <string name="skills_gap_amount">-%1$d</string>
     <string name="skills_gap_courses_title">Cursos para mejorar</string>
     <string name="skills_gap_course_details">%1$s · %2$s</string>
-    <string name="skills_gap_course_no_duration">Duración no indicada</string>
+    <string name="skills_gap_course_no_duration">Duración desconocida</string>
     <string name="skills_gap_course_paid">De paga</string>
     <string name="skills_gap_course_free">Gratis</string>
     <string name="skills_gap_error_network">No pudimos cargar tu análisis. Revisa tu conexión e inténtalo de nuevo.</string>
@@ -322,7 +382,7 @@
 
     <!-- Configuración -->
     <string name="settings_theme_title">Tema</string>
-    <string name="settings_theme_description">Elegí cómo querés ver la app. Tu elección se guarda en este teléfono.</string>
+    <string name="settings_theme_description">Elige cómo quieres ver la app. Tu elección se guarda en este teléfono.</string>
     <string name="settings_theme_system">Seguir el ajuste del sistema</string>
     <string name="settings_theme_light">Claro</string>
     <string name="settings_theme_dark">Oscuro</string>
@@ -399,32 +459,111 @@
     <string name="job_type_freelance">Freelance</string>
     <string name="job_type_internship">Práctica</string>
     <string name="job_type_other">Otra</string>
-    <string name="skills_gap_disabled">El análisis de brechas está pendiente de activación del servicio. Las demás funciones siguen disponibles.</string>
+    <!-- Centro de notificaciones (servicio de Notificaciones) -->
+    <string name="notifications_title">Notificaciones</string>
+    <string name="notifications_filter_all">Todas</string>
+    <string name="notifications_filter_unread">No leídas</string>
+    <string name="notifications_mark_all">Marcar todas como leídas</string>
+    <string name="notifications_load_error">No se pudieron cargar tus notificaciones.</string>
+    <string name="notifications_empty_title">Sin notificaciones</string>
+    <string name="notifications_empty_message">Cuando haya novedades de tus postulaciones u ofertas nuevas, van a aparecer acá.</string>
+    <string name="notifications_empty_unread">Ya leíste todas tus notificaciones.</string>
+    <string name="notifications_load_more">Cargar más</string>
+    <string name="notifications_unread_label">Sin leer</string>
+    <string name="notifications_error_action">No se pudo completar la acción. Inténtalo de nuevo.</string>
     <string name="skills_gap_unauthorized">Tu sesión no está autorizada. Vuelve a iniciar sesión.</string>
-    <string name="skills_gap_input_required">No hay una instantánea de habilidades. Selecciona un CV y envía sus habilidades para analizar.</string>
-    <string name="skills_gap_invalid_input">No se pudieron enviar las habilidades. Revisa nombres vacíos, espacios extremos, duplicados y el límite de 500 habilidades.</string>
-    <string name="skills_gap_incompatible">El servicio todavía no ofrece una respuesta compatible y verificable con el contrato 0.2.0.</string>
-    <string name="skills_gap_unavailable">El análisis no está disponible temporalmente. Inténtalo más tarde.</string>
+    <string name="skills_gap_input_required">Registra tus habilidades para consultar el análisis.</string>
+    <string name="skills_gap_invalid_input">Incluye de 1 a 500 habilidades con nombres de hasta 200 caracteres y sin duplicados. Si la lista es demasiado grande, reduce su tamaño.</string>
+    <string name="skills_gap_incompatible">El servicio devolvió una respuesta incompatible con el análisis de brechas.</string>
+    <string name="skills_gap_unavailable">El servicio de brechas no está disponible en este momento.</string>
+    <string name="skills_gap_previous">Anterior</string>
+    <string name="skills_gap_next">Siguiente</string>
+    <string name="skills_gap_page">Página %1$d · %2$d brechas calculables</string>
+    <string name="skills_gap_ordinal_scale">Escala ordinal de 1 (principiante) a 4 (experto).</string>
+    <string name="skills_gap_coverage">%1$d habilidades comparadas · %2$d sin resolver</string>
+    <string name="skills_gap_market_missing">Faltan requisitos de mercado para determinar las brechas.</string>
+    <string name="skills_gap_empty">No hay habilidades ni requisitos de mercado para comparar.</string>
+    <string name="skills_gap_incomplete">La cobertura es incompleta. Algunas habilidades quedaron sin comparar.</string>
+    <string name="skills_gap_empty_page">Esta página no contiene brechas. Consulta las páginas anteriores.</string>
+    <string name="skills_gap_missing_user_skill">Habilidad sin registrar</string>
+    <string name="skills_gap_disabled">El análisis de brechas está pendiente de activación del servicio. Las demás funciones siguen disponibles.</string>
     <string name="skills_gap_select_cv">Selecciona un CV para analizar sus habilidades</string>
     <string name="skills_gap_more_cvs">Cargar más CVs</string>
     <string name="skills_gap_no_cvs">No hay CVs cargados. Puedes crear uno en Mis currículums.</string>
     <string name="skills_gap_selected_cv">CV seleccionado: %1$s</string>
     <string name="skills_gap_replace_notice">Se enviarán %1$d habilidades; %2$d con nivel desconocido. Esto reemplaza tu instantánea de análisis completa con autoevaluaciones del CV. No vincula ni verifica el CV. Una lista vacía guarda una instantánea vacía.</string>
     <string name="skills_gap_analyze">Enviar habilidades y analizar</string>
-    <string name="skills_gap_previous">Anterior</string>
-    <string name="skills_gap_next">Siguiente</string>
-    <string name="skills_gap_page">Página %1$d · %2$d brechas calculables</string>
-    <string name="skills_gap_ordinal_scale">cv-skill-v1: beginner=1, intermediate=2, advanced=3, expert=4. Posiciones ordinales.</string>
-    <string name="skills_gap_coverage">%1$d habilidades comparadas · %2$d sin resolver</string>
-    <string name="skills_gap_market_missing">Faltan requisitos de mercado. No se puede confirmar ausencia de brechas.</string>
-    <string name="skills_gap_incomplete">Cobertura insuficiente o incompleta. Los resultados calculables son parciales.</string>
-    <string name="skills_gap_missing_user_skill">Habilidad ausente del usuario</string>
     <string name="skills_gap_missing_requirement">Requisito de mercado ausente</string>
     <string name="skills_gap_unknown_level">Nivel desconocido</string>
     <string name="skills_gap_unknown_scale">Escala desconocida</string>
     <string name="skills_gap_scale_mismatch">Escalas incompatibles</string>
-    <string name="skills_gap_unresolved_other">No comparable</string>
-    <string name="skills_gap_deficit_steps">%1$d pasos ordinales</string>
-    <string name="skills_gap_deficits_only">Se muestran únicamente habilidades con brecha calculable.</string>
+    <string name="skills_gap_unresolved_other">No se pudo comparar</string>
+    <string name="skills_gap_deficit_steps">Diferencia de %1$d</string>
+    <string name="skills_gap_deficits_only">El gráfico incluye las habilidades con brecha calculable.</string>
+    <string name="skills_gap_input_title">Registrar habilidades</string>
+    <string name="skills_gap_update_skills">Reemplazar habilidades</string>
+    <string name="skills_gap_review_title">Revisar la lista completa</string>
+    <string name="skills_gap_skill_name">Nombre de la habilidad</string>
+    <string name="skills_gap_review_skill">%1$s · %2$s</string>
+    <string name="skills_gap_add_skill">Agregar habilidad</string>
+    <string name="skills_gap_remove_skill">Quitar</string>
+    <string name="skills_gap_review">Revisar</string>
+    <string name="skills_gap_save_skills">Confirmar y guardar</string>
+    <string name="skills_gap_edit_draft">Volver al borrador</string>
+    <string name="skills_gap_close_editor">Cerrar</string>
+    <string name="skills_gap_write_network">No se pudo confirmar el guardado. Consulta el análisis para revisar el resultado.</string>
+    <!-- Currículum de ejemplo de las vistas previas de plantillas (data/pdf/CvPdfGenerator.kt). -->
+    <string name="sample_cv_name" translatable="false">Ana Rodríguez Mora</string>
+    <string name="sample_cv_email" translatable="false">ana.rodriguez@correo.com</string>
+    <string name="sample_cv_phone" translatable="false">8888-1234</string>
+    <string name="sample_cv_location" translatable="false">Heredia</string>
+    <string name="sample_cv_bio">Estudiante de último año con experiencia atendiendo clientes y muchas ganas de aprender.</string>
+    <string name="sample_cv_job1_position">Cajera</string>
+    <string name="sample_cv_job1_company">Supermercado El Ahorro</string>
+    <string name="sample_cv_job1_description">Atención al cliente, manejo de caja y cierre diario de ventas.</string>
+    <string name="sample_cv_job2_position">Voluntaria</string>
+    <string name="sample_cv_job2_company">Cruz Roja Costarricense</string>
+    <string name="sample_cv_job2_description">Apoyo en actividades comunitarias y campañas de primeros auxilios.</string>
+    <string name="sample_cv_degree">Bachillerato en Educación Media</string>
+    <string name="sample_cv_institution">Liceo de Heredia</string>
+    <string name="sample_cv_skill1">Servicio al cliente</string>
+    <string name="sample_cv_skill2">Excel</string>
+    <string name="sample_cv_skill3">Trabajo en equipo</string>
+    <string name="sample_cv_language1">Español</string>
+    <string name="sample_cv_language2">Inglés</string>
+    <!-- Ejemplos en gris de los campos del editor de CV (FormTextField placeholder). -->
+    <string name="cv_example_title">Ej.: Currículum para servicio al cliente</string>
+    <string name="cv_example_name">Ej.: Ana Rodríguez Mora</string>
+    <string name="cv_example_email">Ej.: ana@correo.com</string>
+    <string name="cv_example_phone">Ej.: 88888888</string>
+    <string name="cv_example_location">Ej.: Cartago, Costa Rica</string>
+    <string name="cv_example_bio">Ej.: Estudiante de último año, responsable y con ganas de aprender.</string>
+    <string name="cv_example_position">Ej.: Cajero</string>
+    <string name="cv_example_company">Ej.: Supermercado La Esquina</string>
+    <string name="cv_example_description">Ej.: Atendí clientes, manejé la caja e hice el cierre diario.</string>
+    <string name="cv_example_degree">Ej.: Bachillerato en Educación Media</string>
+    <string name="cv_example_institution">Ej.: Liceo de Cartago</string>
+    <string name="cv_example_field">Ej.: Ciencias</string>
+    <string name="cv_example_skill">Ej.: Excel</string>
+    <string name="cv_example_category">Ej.: Ofimática</string>
+    <string name="cv_example_language">Ej.: Inglés</string>
+    <!-- Modo IA (ui/screens/cvs/AiCvSheet.kt) -->
+    <string name="create_cv_ai_write">Escribir con IA</string>
+    <string name="ai_cv_title">Crea tu currículum con IA</string>
+    <string name="ai_cv_subtitle">Cuéntanos con tus palabras qué has hecho: estudios, trabajos, voluntariados, proyectos y lo que sabes hacer. La IA arma tu currículum completo y después lo revisas en el editor.</string>
+    <string name="ai_cv_free_text">Tu experiencia</string>
+    <string name="ai_cv_free_text_example">Ej.: Estoy en quinto año del Liceo de Cartago. Trabajé 6 meses de cajero en una pulpería, ayudé en la Cruz Roja en campañas, sé usar Excel y hablo inglés intermedio.</string>
+    <string name="ai_cv_free_text_hint">Puedes dictarlo con el micrófono del teclado.</string>
+    <string name="ai_cv_free_text_short">Cuéntanos un poco más para que la IA tenga de dónde armar tu currículum.</string>
+    <string name="ai_cv_template">Plantilla</string>
+    <string name="ai_cv_generate">Generar mi currículum</string>
+    <string name="ai_cv_generating">Armando tu currículum…</string>
+    <string name="ai_cv_wait">Puede tardar un par de minutos. No cierres esta pantalla.</string>
+    <!-- "Usar mi ubicación" del perfil (data/location/DeviceLocationProvider.kt) -->
+    <string name="profile_location_use">Usar mi ubicación</string>
+    <string name="profile_location_locating">Buscando tu ubicación…</string>
+    <string name="profile_location_unavailable">No pudimos obtener tu ubicación. Revisa que la ubicación del teléfono esté activa o escríbela a mano.</string>
+    <string name="profile_location_denied">Sin permiso de ubicación. Puedes escribirla a mano.</string>
     <string name="skills_gap_snapshot_notice">Resultado de la instantánea guardada del usuario. Seleccionar otro CV no cambia la instantánea hasta enviar sus habilidades.</string>
+    <string name="skills_gap_manual_replace_notice">Al confirmar, reemplazarás toda tu instantánea de habilidades para el análisis de mercado. Los niveles desconocidos se conservarán como desconocidos.</string>
 </resources>

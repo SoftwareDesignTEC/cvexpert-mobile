@@ -1,17 +1,21 @@
 package com.cvpro.app.ui.screens.applications
 
+import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cvpro.app.domain.model.ApplicationStatus
 import com.cvpro.app.domain.model.JobApplication
 import com.cvpro.app.domain.repository.ApplicationRepository
+import com.cvpro.app.R
+import com.cvpro.app.ui.components.UiMessage
+import com.cvpro.app.ui.components.toUserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 /**
  * Estado del rastreador de postulaciones.
@@ -26,7 +30,9 @@ data class ApplicationsUiState(
     val selectedStatus: ApplicationStatus = ApplicationStatus.APPLIED,
     val totalRecords: Int = 0,
     val isLoading: Boolean = false,
-    val error: String? = null,
+    @param:StringRes val error: Int? = null,
+    /** Aviso de una sola vez (retirar una postulación): se muestra y se limpia. */
+    val message: UiMessage? = null,
 ) {
     /** Postulaciones de la pestaña abierta. */
     val visibleApplications: List<JobApplication> =
@@ -41,7 +47,17 @@ class ApplicationsViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(ApplicationsUiState())
     val uiState: StateFlow<ApplicationsUiState> = _uiState.asStateFlow()
 
-    init { loadApplications() }
+    /**
+     * Se llama cada vez que la pantalla aparece, no solo la primera.
+     *
+     * El menú guarda el estado de cada pantalla al salir y lo recupera al volver, así que el
+     * ViewModel sobrevive. Si cargara solo al crearse, una postulación hecha desde Ofertas
+     * no aparecería al volver al tablero. El indicador de carga solo sale si todavía no hay
+     * nada que mostrar, para que el tablero no parpadee cada vez que se entra.
+     */
+    fun onScreenShown() {
+        loadApplications(showLoader = _uiState.value.applications.isEmpty())
+    }
 
     fun onStatusSelected(status: ApplicationStatus) {
         _uiState.update { it.copy(selectedStatus = status) }
@@ -84,14 +100,39 @@ class ApplicationsViewModel @Inject constructor(
                     )
                 }
             } catch (exception: Exception) {
-                _uiState.update { it.copy(error = exception.message) }
+                _uiState.update { it.copy(error = exception.toUserMessage()) }
             }
         }
     }
 
-    private fun loadApplications() {
+    /**
+     * Retira la postulación (DELETE /applications/{id}) y la quita del tablero. Sirve, por
+     * ejemplo, si el usuario se postuló por error o la oferta ya no existe.
+     */
+    fun onWithdraw(application: JobApplication) {
         viewModelScope.launch {
-            _uiState.update { it.copy(isLoading = true, error = null) }
+            try {
+                repository.deleteApplication(application.id)
+                _uiState.update { state ->
+                    state.copy(
+                        applications = state.applications.filterNot { it.id == application.id },
+                        totalRecords = (state.totalRecords - 1).coerceAtLeast(0),
+                        message = UiMessage(R.string.applications_withdrawn, listOf(application.jobTitle)),
+                    )
+                }
+            } catch (exception: Exception) {
+                _uiState.update { it.copy(message = UiMessage(exception.toUserMessage())) }
+            }
+        }
+    }
+
+    fun onMessageShown() {
+        _uiState.update { it.copy(message = null) }
+    }
+
+    private fun loadApplications(showLoader: Boolean = true) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = showLoader, error = null) }
 
             try {
                 val result = repository.getApplications(
@@ -113,7 +154,7 @@ class ApplicationsViewModel @Inject constructor(
                     it.copy(
                         applications = emptyList(),
                         isLoading = false,
-                        error = exception.message,
+                        error = exception.toUserMessage(),
                     )
                 }
             }

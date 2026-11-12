@@ -30,3 +30,8 @@ enum class SkillsGapFailure {
     DISABLED, UNAUTHORIZED, INPUT_REQUIRED, UNAVAILABLE, INVALID_INPUT, INCOMPATIBLE_RESPONSE,
 }
 class SkillsGapException(val failure: SkillsGapFailure) : Exception(failure.name)
+
+fun List<SkillInput>.isValidSkillsGapInput(): Boolean = size in 1..500 && distinctBy { it.skillName }.size == size && all {
+    it.skillName.isNotBlank() && it.skillName.length <= 200 && it.skillName == it.skillName.trim() && '\u0000' !in it.skillName &&
+        (it.level == null || SkillLevel.fromApi(it.level) != null)
+}

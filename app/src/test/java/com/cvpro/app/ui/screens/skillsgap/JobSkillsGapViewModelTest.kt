@@ -27,6 +27,50 @@ class JobSkillsGapViewModelTest {
     @Before fun setup() { Dispatchers.setMain(dispatcher) }
     @After fun teardown() { Dispatchers.resetMain() }
 
+    @Test fun unifiedFlowKeepsCoursesAndAddsBackendLevels() = runTest(dispatcher) {
+        val levels = com.cvpro.app.data.evaluationResult()
+        val courses = levels.copy(assessments = null, levelAnalysis = null,
+            catalogStatus = JobCatalogStatus.CONSULTED,
+            recommendations = listOf(JobSkillCourses("Docker", SkillCatalogMatch.NOT_FOUND, emptyList())))
+        val gaps = JobGapRepository().apply { result = courses; evaluationResult = levels }
+        val vm = JobSkillsGapViewModel(JobGapCvs(), gaps)
+        vm.open(jobGapOffer()); advanceUntilIdle()
+        vm.selectCv("cv1"); advanceUntilIdle()
+        vm.analyze(); vm.analyze(); advanceUntilIdle()
+        assertEquals(listOf(false, true), gaps.modes)
+        assertEquals(courses.recommendations, vm.uiState.value.analysis!!.recommendations)
+        assertEquals(1, vm.uiState.value.analysis!!.assessments!!.first().deficitSteps)
+        assertEquals(1, vm.uiState.value.analysis!!.levelAnalysis!!.below)
+        assertNull(vm.uiState.value.errorMessage)
+    }
+
+    @Test fun evaluationOutagePreservesAlreadyAvailableCourses() = runTest(dispatcher) {
+        val courses = Gson().fromJson(jobGapResponse, JobSkillsGapResponseDto::class.java).toJobAnalysis("cv1", "job1", false)
+        val gaps = JobGapRepository().apply { result = courses; evaluationFailure = JobSkillsGapFailure.UNAVAILABLE }
+        val vm = JobSkillsGapViewModel(JobGapCvs(), gaps)
+        vm.open(jobGapOffer()); advanceUntilIdle()
+        vm.selectCv("cv1"); advanceUntilIdle()
+        vm.analyze(); advanceUntilIdle()
+        assertEquals(courses.recommendations, vm.uiState.value.analysis!!.recommendations)
+        assertNull(vm.uiState.value.analysis!!.levelAnalysis)
+        assertEquals(R.string.job_gap_unavailable, vm.uiState.value.errorMessage)
+    }
+
+    @Test fun catalogueOutageStillAllowsLevelEvaluationWithoutCourses() = runTest(dispatcher) {
+        val levels = com.cvpro.app.data.evaluationResult()
+        val gaps = JobGapRepository().apply { failure = JobSkillsGapFailure.CATALOG_UNAVAILABLE; evaluationResult = levels }
+        val vm = JobSkillsGapViewModel(JobGapCvs(), gaps)
+        vm.open(jobGapOffer()); advanceUntilIdle()
+        vm.selectCv("cv1"); advanceUntilIdle()
+        vm.analyze(); advanceUntilIdle()
+        assertTrue(vm.uiState.value.canEvaluateOnly)
+        gaps.failure = null
+        vm.analyze(evaluationOnly = true); advanceUntilIdle()
+        assertEquals(levels.assessments, vm.uiState.value.analysis!!.assessments)
+        assertTrue(vm.uiState.value.analysis!!.recommendations.isEmpty())
+        assertNull(vm.uiState.value.analysis!!.catalogStatus)
+    }
+
     @Test fun selectedCvIsLoadedByIdAndItsActualSkillsReachTheRepository() = runTest(dispatcher) {
         val cvs = JobGapCvs()
         val gaps = JobGapRepository()
@@ -179,6 +223,8 @@ private class JobGapRepository : JobSkillsGapRepository {
     var receivedOffer: JobOffer? = null
     var failure: JobSkillsGapFailure? = null
     var result: JobSkillsGapAnalysis? = null
+    var evaluationResult: JobSkillsGapAnalysis? = null
+    var evaluationFailure: JobSkillsGapFailure? = null
     val modes = mutableListOf<Boolean>()
     override suspend fun analyze(cv: Cv, offer: JobOffer, evaluationOnly: Boolean): JobSkillsGapAnalysis {
         calls++
@@ -187,6 +233,10 @@ private class JobGapRepository : JobSkillsGapRepository {
         receivedCv = cv
         receivedOffer = offer
         failure?.let { throw JobSkillsGapException(it) }
+        if (evaluationOnly) {
+            evaluationFailure?.let { throw JobSkillsGapException(it) }
+            evaluationResult?.let { return it }
+        }
         result?.let { return it }
         return Gson().fromJson(jobGapResponse, JobSkillsGapResponseDto::class.java)
             .toJobAnalysis(cv.id, offer.id, evaluationOnly)

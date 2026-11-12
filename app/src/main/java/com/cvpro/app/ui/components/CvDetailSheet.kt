@@ -21,6 +21,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.cvpro.app.R
 import com.cvpro.app.domain.model.Cv
+import com.cvpro.app.domain.model.CvLevel
+import com.cvpro.app.domain.model.LanguageLevel
+import com.cvpro.app.domain.model.SkillLevel
+import com.cvpro.app.domain.model.toCvMonth
 
 /**
  * Contenido completo de un currículum.
@@ -100,7 +104,7 @@ fun CvDetailSheet(
             if (cv.skills.isNotEmpty()) {
                 CvSection(title = stringResource(R.string.cv_detail_skills)) {
                     cv.skills.forEach { skill ->
-                        CvLine("${skill.name} · ${skill.level}")
+                        CvLine(nameWithLevel(skill.name, SkillLevel.fromApi(skill.level), skill.level))
                     }
                 }
             }
@@ -108,7 +112,20 @@ fun CvDetailSheet(
             if (cv.languages.isNotEmpty()) {
                 CvSection(title = stringResource(R.string.cv_detail_languages)) {
                     cv.languages.forEach { language ->
-                        CvLine("${language.name} · ${language.level}")
+                        CvLine(nameWithLevel(language.name, LanguageLevel.fromApi(language.level), language.level))
+                    }
+                }
+            }
+
+            if (cv.certifications.isNotEmpty()) {
+                CvSection(title = stringResource(R.string.cv_detail_certifications)) {
+                    cv.certifications.forEach { cert ->
+                        CvEntry(
+                            title = cert.name,
+                            subtitle = cert.issuer,
+                            period = periodOf(cert.issuedAt, cert.expiresAt, current = false),
+                            detail = cert.credentialUrl.orEmpty(),
+                        )
                     }
                 }
             }
@@ -122,6 +139,9 @@ fun CvDetailSheet(
  * Se usa en los botones que el diseño dibuja pero la Fase I no cubre: la generación con
  * IA, la exportación a PDF y la descarga de plantillas. Abrir una pantalla que lo explica
  * es más claro que un botón que no responde.
+ *
+ * [badge] es la etiqueta de arriba: "Próximamente" por defecto. La IA ya existe dentro del
+ * editor, así que su aviso usa "En el editor" y explica dónde encontrarla.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -130,6 +150,7 @@ fun ComingSoonSheet(
     message: String,
     onDismiss: () -> Unit,
     modifier: Modifier = Modifier,
+    badge: String = stringResource(R.string.coming_soon_badge),
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -148,7 +169,7 @@ fun ComingSoonSheet(
                 shape = RoundedCornerShape(50),
             ) {
                 Text(
-                    text = stringResource(R.string.coming_soon_badge),
+                    text = badge,
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(horizontal = 14.dp, vertical = 6.dp),
@@ -245,10 +266,27 @@ private fun CvLine(
     )
 }
 
-/** "2024-01 — Actual" o "2024-01 — 2025-06", según si el puesto sigue vigente. */
+/**
+ * "Kotlin · Avanzado". El servidor manda el nivel en inglés ([level] es el enum ya reconocido,
+ * [raw] lo que llegó): si la app no lo conoce se muestra tal cual, y si no hay nivel, solo el nombre.
+ */
 @Composable
-private fun periodOf(start: String, end: String?, current: Boolean): String = when {
-    current -> stringResource(R.string.cv_detail_period_current, start)
-    end != null -> stringResource(R.string.cv_detail_period, start, end)
-    else -> start
+private fun nameWithLevel(name: String, level: CvLevel?, raw: String): String {
+    val label = level?.let { stringResource(it.labelRes) } ?: raw
+    return if (label.isBlank()) name else "$name · $label"
+}
+
+/**
+ * "06/2024 — Actual" o "06/2024 — 03/2025", según si el puesto sigue vigente. Sin fecha de
+ * fin queda solo la de inicio, y sin ninguna, vacío.
+ */
+@Composable
+private fun periodOf(start: Long?, end: Long?, current: Boolean): String {
+    val desde = start.toCvMonth()
+    return when {
+        desde.isEmpty() -> end.toCvMonth()
+        current -> stringResource(R.string.cv_detail_period_current, desde)
+        end != null -> stringResource(R.string.cv_detail_period, desde, end.toCvMonth())
+        else -> desde
+    }
 }

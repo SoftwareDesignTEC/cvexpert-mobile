@@ -2,6 +2,13 @@
 
 Esta guía prepara una prueba; no registra una ejecución E2E ni un despliegue. Se revisó el contrato de Brecha/Cursos `develop` en `3ef43f37a13e26c897812bce334dceac51fa76bc` y Android parte de `4148b00e0894eb74aef68f168a07ca62d04da14a` (merge del PR #31). El estado actual de Azure no se ha inspeccionado.
 
+La integración del PR #34 en develop usa una única `JobSkillsGapSheet`: solicita recomendaciones
+con el contrato anterior y niveles mediante evaluate con descripción/requisitos. Conserva cursos
+si falla la evaluación y permite evaluar sin cursos cuando falla el catálogo. El backend ya está
+desplegado según el contexto de la tarea; la comprobación autenticada desde Android sigue pendiente.
+Ver [arquitectura final y validación local](job-offer-skills-gap-evaluation.md). Para comprobar niveles,
+usar el backend con la extensión del PR #24 de Brecha/Cursos además de las operaciones anteriores.
+
 ## Condiciones previas y responsables
 
 | Responsable | Comprobación necesaria |

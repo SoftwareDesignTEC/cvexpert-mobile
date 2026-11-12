@@ -1,6 +1,7 @@
 package com.cvpro.app.ui.screens.login
 
 import android.content.Context
+import android.content.Intent
 import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -26,6 +27,7 @@ import javax.inject.Inject
 data class LoginUiState(
     val isLoading: Boolean = false,
     @param:StringRes val errorMessage: Int? = null,
+    val classicSignInRequested: Boolean = false,
 )
 
 @HiltViewModel
@@ -54,14 +56,30 @@ class LoginViewModel @Inject constructor(
         _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
         viewModelScope.launch {
-            val result = authRepository.signIn(activityContext)
-            _uiState.value = when (result) {
+            _uiState.value = stateFor(authRepository.signIn(activityContext))
+        }
+    }
+
+    /** La pantalla clásica de Google que hay que abrir cuando Credential Manager no responde. */
+    fun classicSignInIntent(activityContext: Context): Intent {
+        _uiState.update { it.copy(classicSignInRequested = false) }
+        return authRepository.classicSignInIntent(activityContext)
+    }
+
+    /** Volvió la pantalla clásica de Google con la cuenta elegida (o cancelada). */
+    fun onClassicSignInResult(data: Intent?) {
+        _uiState.value = stateFor(authRepository.completeClassicSignIn(data))
+    }
+
+    private fun stateFor(result: SignInResult): LoginUiState =
+            when (result) {
                 // Éxito o cancelación: se vuelve al estado inicial, sin mensaje.
                 is SignInResult.Success, SignInResult.Cancelled -> LoginUiState()
                 SignInResult.NoGoogleAccount -> LoginUiState(errorMessage = R.string.login_error_no_account)
                 SignInResult.MissingConfiguration -> LoginUiState(errorMessage = R.string.login_error_configuration)
+                SignInResult.GoogleNotResponding -> LoginUiState(errorMessage = R.string.login_error_google_not_responding)
                 is SignInResult.Failure -> LoginUiState(errorMessage = R.string.login_error_generic)
+                // Sigue cargando: la pantalla abre el login clásico de Google.
+                SignInResult.UseClassicSignIn -> LoginUiState(isLoading = true, classicSignInRequested = true)
             }
-        }
-    }
 }

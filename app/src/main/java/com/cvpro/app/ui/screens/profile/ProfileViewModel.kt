@@ -4,6 +4,7 @@ import androidx.annotation.StringRes
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cvpro.app.R
+import com.cvpro.app.data.location.DeviceLocationProvider
 import com.cvpro.app.domain.model.SkillsGapAnalysis
 import com.cvpro.app.domain.model.UserProfile
 import com.cvpro.app.domain.repository.AlertsRepository
@@ -11,7 +12,9 @@ import com.cvpro.app.domain.repository.AuthRepository
 import com.cvpro.app.domain.repository.ProfileRepository
 import com.cvpro.app.domain.repository.SkillsGapRepository
 import com.cvpro.app.ui.components.FormValidation
+import com.cvpro.app.ui.components.toUserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -20,7 +23,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
 data class ProfileUiState(
     val name: String = "",
@@ -44,7 +46,9 @@ data class ProfileUiState(
 
     val isLoading: Boolean = false,
     val isSaving: Boolean = false,
-    val error: String? = null,
+    @param:StringRes val error: Int? = null,
+    /** "Usar mi ubicación" está esperando al teléfono. */
+    val isLocating: Boolean = false,
 ) {
     val canSave: Boolean =
         name.isNotBlank() &&
@@ -60,6 +64,7 @@ class ProfileViewModel @Inject constructor(
     private val profileRepository: ProfileRepository,
     private val skillsGapRepository: SkillsGapRepository,
     private val alertsRepository: AlertsRepository,
+    private val locationProvider: DeviceLocationProvider,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(ProfileUiState())
@@ -140,7 +145,7 @@ class ProfileViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isLoading = false,
-                        error = exception.message,
+                        error = exception.toUserMessage(),
                     )
                 }
 
@@ -160,6 +165,28 @@ class ProfileViewModel @Inject constructor(
 
     fun onLocationChange(value: String) =
         _uiState.update { it.copy(location = value, locationError = null) }
+
+    /**
+     * "Usar mi ubicación": la pantalla ya pidió el permiso. Si el teléfono da la ubicación, se
+     * llena el campo ("Grecia, Alajuela"); el usuario la puede corregir antes de guardar.
+     */
+    fun onUseMyLocation() {
+        if (_uiState.value.isLocating) return
+        _uiState.update { it.copy(isLocating = true) }
+        viewModelScope.launch {
+            val place = locationProvider.currentPlace()
+            _uiState.update {
+                if (place != null) it.copy(isLocating = false, location = place, locationError = null)
+                else it.copy(isLocating = false)
+            }
+            if (place == null) _messages.send(R.string.profile_location_unavailable)
+        }
+    }
+
+    /** El usuario no dio el permiso: se le explica que puede escribirla a mano. */
+    fun onLocationPermissionDenied() {
+        viewModelScope.launch { _messages.send(R.string.profile_location_denied) }
+    }
 
     fun onSaveClick() {
         val state = _uiState.value
@@ -237,7 +264,7 @@ class ProfileViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isSaving = false,
-                        error = exception.message,
+                        error = exception.toUserMessage(),
                     )
                 }
 

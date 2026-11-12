@@ -55,7 +55,7 @@ class SkillsGapRepositoryTest {
     @Test fun httpFailuresAreTypedForBothOperations() = runTest {
         val repo = ApiSkillsGapRepository(api, true)
         for ((code, failure) in mapOf(401 to SkillsGapFailure.UNAUTHORIZED,
-            409 to SkillsGapFailure.INPUT_REQUIRED, 503 to SkillsGapFailure.UNAVAILABLE,
+            409 to SkillsGapFailure.UNAVAILABLE, 503 to SkillsGapFailure.UNAVAILABLE,
             400 to SkillsGapFailure.INVALID_INPUT, 413 to SkillsGapFailure.INVALID_INPUT,
             403 to SkillsGapFailure.UNAVAILABLE, 404 to SkillsGapFailure.UNAVAILABLE)) {
             repeat(2) { operation ->

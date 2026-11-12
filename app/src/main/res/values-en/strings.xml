@@ -7,7 +7,7 @@
 -->
 <resources>
     <string name="app_name">CVExpert</string>
-    <string name="home_tagline">Your professional résumé, no prior experience needed.</string>
+    <string name="home_tagline">Your professional CV, no prior experience needed.</string>
     <string name="version_label">Version %1$s (build %2$d)</string>
 
     <!-- Login con Google -->
@@ -15,13 +15,14 @@
     <string name="login_retry">Try again</string>
     <string name="login_error_no_account">We couldn\'t find a Google account on this phone. Add one in Settings and try again.</string>
     <string name="login_error_configuration">Sign-in is not set up in this version of the app.</string>
+    <string name="login_error_google_not_responding">Google did not respond. Update \"Google Play services\" from the Play Store, check that there is a Google account on the phone and try again.</string>
     <string name="login_session_expired">Your session expired. Please sign in again.</string>
     <string name="login_error_generic">Sign-in failed. Check your connection and try again.</string>
 
     <!-- Panel Principal -->
     <string name="home_greeting">Hi, %1$s</string>
-    <string name="home_subtitle">From here you can manage your résumés, your applications and the job offers that fit you.</string>
-    <string name="home_shortcut_templates">Create a résumé offline</string>
+    <string name="home_subtitle">From here you can manage your CVs, your applications and the job offers that fit you.</string>
+    <string name="home_shortcut_templates">Create a CV offline</string>
     <string name="home_shortcut_skills_gap">See areas to improve</string>
     <string name="home_sign_out">Sign out</string>
 
@@ -44,7 +45,11 @@
     <string name="settings_system_title">System Preferences</string>
     <string name="settings_system_subtitle">Set up CVExpert to work your way.</string>
     <string name="settings_system_language">Language</string>
-    <string name="settings_system_language_value">English</string>
+    <string name="settings_language_description">Choose the language you see the app in.</string>
+    <string name="settings_language_system">Phone language</string>
+    <string name="settings_language_spanish">Español</string>
+    <string name="settings_language_english">English</string>
+    <string name="settings_language_unsupported">On this Android version the app uses the phone language.</string>
     <string name="settings_system_timezone">Time Zone</string>
     <string name="settings_system_timezone_value">Costa Rica (GMT-6)</string>
     <string name="settings_help_title">Need help?</string>
@@ -68,10 +73,46 @@
     <string name="cv_detail_languages">Languages</string>
     <string name="cv_detail_period">%1$s — %2$s</string>
     <string name="cv_detail_period_current">%1$s — Present</string>
+    <string name="cv_detail_present">Present</string>
+    <string name="cv_detail_certifications">Certifications</string>
+    <string name="cv_experience_type_formal">Formal job</string>
+    <string name="cv_experience_type_freelance">Freelance</string>
+    <string name="cv_experience_type_volunteer">Volunteering</string>
+    <string name="cv_experience_type_school_project">School project</string>
+    <string name="cv_experience_type_informal">Informal work</string>
+    <string name="cv_ai_generate">Generate with AI</string>
+    <string name="cv_ai_generate_bio_hint">The AI writes your profile from what your CV already has.</string>
+    <string name="cv_ai_generate_description_hint">Write the position and the AI writes the description for you.</string>
+    <string name="cv_editor_company_optional">Optional for volunteering, projects and informal work.</string>
+    <string name="cv_ai_improve">Improve with AI</string>
+    <string name="cv_ai_improving">Writing…</string>
+    <string name="cv_ai_improve_hint">Write a short description and AI will rewrite it professionally.</string>
+    <string name="cv_ai_improved">Written with AI. Review it before saving.</string>
+    <string name="cv_ai_undo">Undo</string>
+    <string name="cv_ai_add_non_labor">Add non-work experience</string>
+    <string name="cv_ai_non_labor_title">Non-work experience</string>
+    <string name="cv_ai_non_labor_intro">Tell us in your own words what you did and AI will turn it into an experience for your CV.</string>
+    <string name="cv_ai_non_labor_type">Type</string>
+    <string name="cv_ai_non_labor_organization">Organization or place (optional)</string>
+    <string name="cv_ai_non_labor_position">What did you do?</string>
+    <string name="cv_ai_non_labor_description">Describe it in your own words</string>
+    <string name="cv_ai_translate">Translate with AI</string>
+    <string name="cv_ai_translating">Translating…</string>
+    <string name="ai_error_invalid">AI could not process the text. Check that all fields are filled in.</string>
+    <string name="ai_error_unavailable">AI is not available right now. Try again later.</string>
+    <!-- General screen errors (ui/components/UserMessages.kt). -->
+    <string name="error_invalid">Some details are not valid. Check them and try again.</string>
+    <string name="error_unavailable">The service is not available right now. Try again later.</string>
+    <string name="error_network">No connection. Check your internet and try again.</string>
+    <string name="error_generic">Something went wrong. Try again.</string>
+    <string name="templates_preview_saved">Preview saved to Downloads</string>
+    <string name="ai_error_timeout">AI took too long to respond. Try again.</string>
+    <string name="ai_error_network">No connection. Check your internet and try again.</string>
+    <string name="ai_error_generic">Something went wrong with AI. Try again.</string>
 
     <!-- Editor de currículum -->
-    <string name="cv_editor_title">Edit résumé</string>
-    <string name="cv_editor_cv_title">Résumé title</string>
+    <string name="cv_editor_title">Edit CV</string>
+    <string name="cv_editor_cv_title">CV title</string>
     <string name="cv_editor_name">Full name</string>
     <string name="cv_editor_email">Email</string>
     <string name="cv_editor_phone">Phone</string>
@@ -79,8 +120,18 @@
     <string name="cv_editor_bio">Summary</string>
     <string name="cv_editor_position">Position</string>
     <string name="cv_editor_company">Company</string>
-    <string name="cv_editor_start">From (YYYY-MM-DD)</string>
-    <string name="cv_editor_end">To (YYYY-MM-DD)</string>
+    <string name="cv_editor_start">From</string>
+    <string name="cv_editor_end">To</string>
+    <string name="cv_editor_pick_date">Pick a date</string>
+    <string name="cv_editor_pick_level">Pick a level</string>
+    <!-- Contract levels (Skill.level and Language.level). -->
+    <string name="cv_level_beginner">Beginner</string>
+    <string name="cv_level_intermediate">Intermediate</string>
+    <string name="cv_level_advanced">Advanced</string>
+    <string name="cv_level_expert">Expert</string>
+    <string name="cv_level_basic">Basic</string>
+    <string name="cv_level_native">Native</string>
+    <string name="cv_editor_date_ok">OK</string>
     <string name="cv_editor_current">Still ongoing</string>
     <string name="cv_editor_description">Description</string>
     <string name="cv_editor_institution">Institution</string>
@@ -106,12 +157,10 @@
     <string name="cv_editor_saving">Saving…</string>
     <string name="cv_editor_cancel">Cancel</string>
     <string name="coming_soon_badge">Coming soon</string>
-    <string name="coming_soon_ai_title">AI generation</string>
-    <string name="coming_soon_ai_message">You\'ll be able to describe your experience in a few words and the app will write it for you. Coming in the next phase of the project.</string>
     <string name="coming_soon_pdf_title">Export to PDF</string>
-    <string name="coming_soon_pdf_message">Downloading your résumé as a PDF comes in the next phase, together with the editor.</string>
+    <string name="coming_soon_pdf_message">Downloading your CV as a PDF comes in the next phase, together with the editor.</string>
     <string name="coming_soon_use_title">Use this template</string>
-    <string name="coming_soon_use_message">Choosing a template will open the editor to fill in your résumé. The editor comes in the next phase.</string>
+    <string name="coming_soon_use_message">Choosing a template will open the editor to fill in your CV. The editor comes in the next phase.</string>
     <string name="coming_soon_template_title">Download template</string>
     <string name="coming_soon_template_message">New templates will be available to download and use offline in the next phase.</string>
     <string name="coming_soon_preferences_title">Edit preferences</string>
@@ -124,6 +173,7 @@
     <string name="templates_store_section">Template store</string>
     <string name="templates_download">Download</string>
     <string name="templates_count">%1$d templates</string>
+    <string name="templates_preview_close">Close</string>
     <string name="templates_preview">Preview</string>
     <string name="templates_use">Use this template</string>
     <string name="templates_premium">Premium</string>
@@ -137,32 +187,28 @@
 
     <!-- Mis Currículums -->
     <string name="cvs_eyebrow">YOUR PROFESSIONAL SPACE</string>
-    <string name="cvs_search_placeholder">Search résumés</string>
-    <string name="cvs_create_subtitle">Choose how you want to start your next opportunity.</string>
-    <string name="cvs_create_ai">AI mode</string>
-    <string name="cvs_create_offline">Offline / Template</string>
+    <string name="cvs_search_placeholder">Search CVs</string>
     <string name="cvs_delete">Delete</string>
-    <string name="cvs_delete_title">Delete this résumé?</string>
+    <string name="cvs_delete_title">Delete this CV?</string>
     <string name="cvs_delete_message">\"%1$s\" will be deleted. This can\'t be undone.</string>
     <string name="cvs_delete_confirm">Delete</string>
     <string name="cvs_delete_cancel">Cancel</string>
     <string name="cvs_deleting">Deleting…</string>
-    <string name="cvs_empty_title">No résumés</string>
-    <string name="cvs_empty_message">Create your first résumé to get started.</string>
-    <string name="cvs_error_title">Résumés couldn\'t be loaded</string>
+    <string name="cvs_empty_title">No CVs</string>
+    <string name="cvs_empty_message">Create your first CV to get started.</string>
+    <string name="cvs_error_title">CVs couldn\'t be loaded</string>
 
     <!-- Panel Principal: secciones del diseño de Samuel -->
-    <string name="home_recent_cvs_title">Recent Résumés</string>
+    <string name="home_recent_cvs_title">Recent CVs</string>
     <string name="home_recent_cvs_see_all">See all</string>
-    <string name="home_recent_cvs_empty">You don\'t have any saved résumés yet.</string>
+    <string name="home_recent_cvs_empty">You don\'t have any saved CVs yet.</string>
     <string name="home_cv_preview">Preview</string>
     <string name="home_cv_updated_at">Modified %1$s</string>
     <string name="home_cv_edit">View/Edit</string>
     <string name="home_cv_download">Download</string>
-    <string name="home_create_cv_title">Create New Résumé</string>
-    <string name="home_create_cv_subtitle">Start from scratch or use a template</string>
-    <string name="home_create_cv_ai">AI</string>
-    <string name="home_create_cv_offline">Offline</string>
+    <string name="create_cv_ai_title">Create your CV with AI</string>
+    <string name="create_cv_ai_steps">Tell the AI about your experience in your own words (or dictate it) and it builds your full CV. You can also pick a template and use \"Improve with AI\" in the editor.</string>
+    <string name="create_cv_ai_action">Pick a template</string>
     <string name="home_skills_title">Skills Analysis</string>
     <string name="home_skills_subtitle">Ordinal comparison with market requirements</string>
     <string name="home_skills_empty">No analysis available yet.</string>
@@ -174,7 +220,7 @@
 
     <!-- Navegación: nombres de los destinos del menú -->
     <string name="destination_dashboard">Dashboard</string>
-    <string name="destination_cvs">My Résumés</string>
+    <string name="destination_cvs">My CVs</string>
     <string name="destination_profile">My Profile</string>
     <string name="destination_jobs">Job Offers</string>
     <string name="destination_skills_gap">Skills Gap Analysis</string>
@@ -245,9 +291,18 @@
     <string name="jobs_filter_recent">Last 7 days</string>
     <string name="jobs_match_percentage">%1$d%%</string>
     <string name="jobs_match_label">Match</string>
+    <string name="jobs_skills_title">Skills they ask for</string>
     <string name="jobs_requirements_title">Main requirements</string>
     <string name="jobs_details">See Details</string>
+    <string name="jobs_show_more">See more offers (%1$d)</string>
+    <string name="jobs_apply">Apply</string>
+    <string name="jobs_applied">Applied</string>
+    <string name="jobs_apply_success">You applied to \"%1$s\". Track it in My Applications.</string>
+    <string name="jobs_apply_already">You had already applied to this offer.</string>
+    <string name="jobs_apply_success_external">We saved \"%1$s\" in My Applications. Finish applying on the company page.</string>
+    <string name="jobs_open_original">See original offer</string>
     <string name="jobs_empty_title">No results</string>
+    <string name="jobs_empty_filter_message">There are no offers with this filter right now. Try another one.</string>
     <string name="jobs_empty_message">We didn\'t find offers for that search. Try another word.</string>
     <string name="jobs_error_network">We couldn\'t load the offers. Check your connection and try again.</string>
     <string name="jobs_error_generic">Something went wrong while loading the offers.</string>
@@ -282,6 +337,11 @@
     <string name="applications_show_less">See less</string>
     <string name="applications_action_status">Status</string>
     <string name="applications_action_details">Details</string>
+    <string name="applications_withdraw">Withdraw application</string>
+    <string name="applications_withdraw_title">Withdraw application?</string>
+    <string name="applications_withdraw_message">\"%1$s\" will be removed from your board. If you already applied on the company page, this does not cancel it there.</string>
+    <string name="applications_withdraw_confirm">Withdraw</string>
+    <string name="applications_withdrawn">You withdrew \"%1$s\" from your board.</string>
     <string name="applications_change_status">Change status</string>
     <string name="applications_logo_description">%1$s logo</string>
     <string name="applications_error_title">Something went wrong while loading your applications</string>
@@ -298,25 +358,25 @@
     <string name="skills_gap_screen_title">Skills Gap Analysis</string>
     <string name="skills_gap_updated">Updated today</string>
     <string name="skills_gap_comparison_eyebrow">MARKET COMPARISON</string>
-    <string name="skills_gap_comparison_title">Your profile vs. the target</string>
+    <string name="skills_gap_comparison_title">Levels for skills with a gap</string>
     <string name="skills_gap_points_title">Areas to Improve</string>
     <string name="skills_gap_points_subtitle">Skills to Improve</string>
     <string name="skills_gap_row_number">%1$d.</string>
     <string name="skills_gap_show_all">See all (%1$d more)</string>
     <string name="skills_gap_show_less">See less</string>
     <string name="skills_gap_courses_count">%1$d courses</string>
-    <string name="skills_gap_course_duration">Duration: %1$s</string>
+    <string name="skills_gap_course_duration">Duration of %1$d h</string>
     <string name="skills_gap_course_open">View Course</string>
     <string name="skills_gap_target">Compared with: %1$s</string>
     <string name="skills_gap_series_user">Your skills</string>
-    <string name="skills_gap_series_market">What offers ask for</string>
+    <string name="skills_gap_series_market">Level required by the market</string>
     <string name="skills_gap_to_improve_title">Skills to improve</string>
-    <string name="skills_gap_no_gaps">No calculable gaps among compared skills with complete coverage.</string>
+    <string name="skills_gap_no_gaps">No gaps were found in the skills compared.</string>
     <string name="skills_gap_levels">You %1$d · Market %2$d</string>
     <string name="skills_gap_amount">-%1$d</string>
     <string name="skills_gap_courses_title">Courses to improve</string>
     <string name="skills_gap_course_details">%1$s · %2$s</string>
-    <string name="skills_gap_course_no_duration">Duration not specified</string>
+    <string name="skills_gap_course_no_duration">Unknown duration</string>
     <string name="skills_gap_course_paid">Paid</string>
     <string name="skills_gap_course_free">Free</string>
     <string name="skills_gap_error_network">We couldn\'t load your analysis. Check your connection and try again.</string>
@@ -330,7 +390,7 @@
     <string name="settings_theme_dark">Dark</string>
 
     <!-- Pantallas todavía sin contenido -->
-    <string name="placeholder_cvs">Here you\'ll see your résumés, with preview, edit and download.</string>
+    <string name="placeholder_cvs">Here you\'ll see your CVs, with preview, edit and download.</string>
     <string name="placeholder_templates">Here you\'ll choose a template, even offline, or download new ones.</string>
 
     <!-- Error de perfil -->
@@ -394,32 +454,108 @@
     <string name="job_type_freelance">Freelance</string>
     <string name="job_type_internship">Internship</string>
     <string name="job_type_other">Other</string>
-    <string name="skills_gap_disabled">Skills gap analysis is awaiting service activation. Other features remain available.</string>
+
+    <!-- Centro de notificaciones (servicio de Notificaciones) -->
+    <string name="notifications_title">Notifications</string>
+    <string name="notifications_filter_all">All</string>
+    <string name="notifications_filter_unread">Unread</string>
+    <string name="notifications_mark_all">Mark all as read</string>
+    <string name="notifications_load_error">Your notifications couldn\'t be loaded.</string>
+    <string name="notifications_empty_title">No notifications</string>
+    <string name="notifications_empty_message">News about your applications and new job offers will show up here.</string>
+    <string name="notifications_empty_unread">You\'ve read all your notifications.</string>
+    <string name="notifications_load_more">Load more</string>
+    <string name="notifications_unread_label">Unread</string>
+    <string name="notifications_error_action">That couldn\'t be done. Please try again.</string>
     <string name="skills_gap_unauthorized">Your session is unauthorized. Sign in again.</string>
-    <string name="skills_gap_input_required">No skills snapshot exists. Select a CV and submit its skills for analysis.</string>
-    <string name="skills_gap_invalid_input">Could not submit skills. Check empty names, surrounding spaces, duplicates and the 500 skill limit.</string>
-    <string name="skills_gap_incompatible">The service does not yet provide a verifiable response compatible with contract 0.2.0.</string>
-    <string name="skills_gap_unavailable">Analysis is temporarily unavailable. Try again later.</string>
+    <string name="skills_gap_input_required">Enter your skills to see the analysis.</string>
+    <string name="skills_gap_invalid_input">Include 1 to 500 skills with names up to 200 characters and no duplicates. If the list is too large, reduce its size.</string>
+    <string name="skills_gap_incompatible">The service returned a response that is incompatible with skill gap analysis.</string>
+    <string name="skills_gap_unavailable">The skill gap service is currently unavailable.</string>
+    <string name="skills_gap_previous">Previous</string>
+    <string name="skills_gap_next">Next</string>
+    <string name="skills_gap_page">Page %1$d · %2$d calculable gaps</string>
+    <string name="skills_gap_ordinal_scale">Ordinal scale from 1 (beginner) to 4 (expert).</string>
+    <string name="skills_gap_coverage">%1$d skills compared · %2$d unresolved</string>
+    <string name="skills_gap_market_missing">Market requirements are missing, so gaps cannot be determined.</string>
+    <string name="skills_gap_empty">There are no skills or market requirements to compare.</string>
+    <string name="skills_gap_incomplete">Coverage is incomplete. Some skills could not be compared.</string>
+    <string name="skills_gap_empty_page">There are no gaps on this page. Check the previous pages.</string>
+    <string name="skills_gap_missing_user_skill">Skill has not been entered</string>
+    <string name="skills_gap_missing_requirement">Missing market requirement</string>
+    <string name="skills_gap_unknown_level">Unknown level</string>
+    <string name="skills_gap_unknown_scale">Unknown scale</string>
+    <string name="skills_gap_scale_mismatch">Incompatible scales</string>
+    <string name="skills_gap_unresolved_other">Could not compare</string>
+    <string name="skills_gap_deficit_steps">Gap of %1$d levels</string>
+    <string name="skills_gap_deficits_only">The chart includes skills with a calculable gap.</string>
+    <string name="skills_gap_input_title">Enter skills</string>
+    <string name="skills_gap_update_skills">Replace skills</string>
+    <string name="skills_gap_review_title">Review the full list</string>
+    <string name="skills_gap_replace_notice">Saving replaces all your skills for gap analysis. Include any skills you want to keep. This form only shows the skills you entered here. Enter names exactly as they appear in the market requirements.</string>
+    <string name="skills_gap_skill_name">Skill name</string>
+    <string name="skills_gap_review_skill">%1$s · %2$s</string>
+    <string name="skills_gap_add_skill">Add skill</string>
+    <string name="skills_gap_remove_skill">Remove</string>
+    <string name="skills_gap_review">Review</string>
+    <string name="skills_gap_save_skills">Confirm and save</string>
+    <string name="skills_gap_edit_draft">Back to draft</string>
+    <string name="skills_gap_close_editor">Close</string>
+    <string name="skills_gap_write_network">Saving could not be confirmed. Reload the analysis to check the result.</string>
+    <!-- Sample CV for template previews (data/pdf/CvPdfGenerator.kt). -->
+    <string name="sample_cv_bio">Final-year student with customer service experience and eager to learn.</string>
+    <string name="sample_cv_job1_position">Cashier</string>
+    <string name="sample_cv_job1_company">El Ahorro Supermarket</string>
+    <string name="sample_cv_job1_description">Customer service, cash handling and daily sales closing.</string>
+    <string name="sample_cv_job2_position">Volunteer</string>
+    <string name="sample_cv_job2_company">Costa Rican Red Cross</string>
+    <string name="sample_cv_job2_description">Support for community activities and first aid campaigns.</string>
+    <string name="sample_cv_degree">High School Diploma</string>
+    <string name="sample_cv_institution">Liceo de Heredia</string>
+    <string name="sample_cv_skill1">Customer service</string>
+    <string name="sample_cv_skill2">Excel</string>
+    <string name="sample_cv_skill3">Teamwork</string>
+    <string name="sample_cv_language1">Spanish</string>
+    <string name="sample_cv_language2">English</string>
+    <!-- Gray examples for the CV editor fields (FormTextField placeholder). -->
+    <string name="cv_example_title">E.g.: Customer service CV</string>
+    <string name="cv_example_name">E.g.: Ana Rodríguez Mora</string>
+    <string name="cv_example_email">E.g.: ana@email.com</string>
+    <string name="cv_example_phone">E.g.: 88888888</string>
+    <string name="cv_example_location">E.g.: Cartago, Costa Rica</string>
+    <string name="cv_example_bio">E.g.: Final-year student, responsible and eager to learn.</string>
+    <string name="cv_example_position">E.g.: Cashier</string>
+    <string name="cv_example_company">E.g.: La Esquina Supermarket</string>
+    <string name="cv_example_description">E.g.: Served customers, handled the register and did the daily closing.</string>
+    <string name="cv_example_degree">E.g.: High School Diploma</string>
+    <string name="cv_example_institution">E.g.: Liceo de Cartago</string>
+    <string name="cv_example_field">E.g.: Science</string>
+    <string name="cv_example_skill">E.g.: Excel</string>
+    <string name="cv_example_category">E.g.: Office tools</string>
+    <string name="cv_example_language">E.g.: English</string>
+    <!-- Modo IA (ui/screens/cvs/AiCvSheet.kt) -->
+    <string name="create_cv_ai_write">Write with AI</string>
+    <string name="ai_cv_title">Create your CV with AI</string>
+    <string name="ai_cv_subtitle">Tell us in your own words what you have done: studies, jobs, volunteering, projects and what you can do. The AI builds your full CV and then you review it in the editor.</string>
+    <string name="ai_cv_free_text">Your experience</string>
+    <string name="ai_cv_free_text_example">E.g.: I am in my last year at Liceo de Cartago. I worked 6 months as a cashier at a corner store, helped the Red Cross in campaigns, I can use Excel and speak intermediate English.</string>
+    <string name="ai_cv_free_text_hint">You can dictate it with the keyboard microphone.</string>
+    <string name="ai_cv_free_text_short">Tell us a bit more so the AI has enough to build your CV.</string>
+    <string name="ai_cv_template">Template</string>
+    <string name="ai_cv_generate">Generate my CV</string>
+    <string name="ai_cv_generating">Building your CV…</string>
+    <string name="ai_cv_wait">It can take a couple of minutes. Do not close this screen.</string>
+    <!-- "Usar mi ubicación" del perfil (data/location/DeviceLocationProvider.kt) -->
+    <string name="profile_location_use">Use my location</string>
+    <string name="profile_location_locating">Finding your location…</string>
+    <string name="profile_location_unavailable">We couldn\'t get your location. Check that location is on or type it in.</string>
+    <string name="profile_location_denied">No location permission. You can type it in.</string>
+    <string name="skills_gap_disabled">Skills gap analysis is awaiting service activation. Other features remain available.</string>
     <string name="skills_gap_select_cv">Select a CV to analyze its skills</string>
     <string name="skills_gap_more_cvs">Load more CVs</string>
     <string name="skills_gap_no_cvs">No CVs loaded. You can create one in My CVs.</string>
     <string name="skills_gap_selected_cv">Selected CV: %1$s</string>
-    <string name="skills_gap_replace_notice">Will submit %1$d skills; %2$d with unknown level. This replaces your complete analysis snapshot with CV self assessments. It does not link or verify the CV. An empty list saves an empty snapshot.</string>
     <string name="skills_gap_analyze">Submit skills and analyze</string>
-    <string name="skills_gap_previous">Previous</string>
-    <string name="skills_gap_next">Next</string>
-    <string name="skills_gap_page">Page %1$d · %2$d calculable gaps</string>
-    <string name="skills_gap_ordinal_scale">cv-skill-v1: beginner=1, intermediate=2, advanced=3, expert=4. Ordinal positions.</string>
-    <string name="skills_gap_coverage">%1$d skills compared · %2$d unresolved</string>
-    <string name="skills_gap_market_missing">Market requirements are missing. Absence of gaps cannot be confirmed.</string>
-    <string name="skills_gap_incomplete">Insufficient or incomplete coverage. Calculable results are partial.</string>
-    <string name="skills_gap_missing_user_skill">User skill missing</string>
-    <string name="skills_gap_missing_requirement">Market requirement missing</string>
-    <string name="skills_gap_unknown_level">Unknown level</string>
-    <string name="skills_gap_unknown_scale">Unknown scale</string>
-    <string name="skills_gap_scale_mismatch">Scale mismatch</string>
-    <string name="skills_gap_unresolved_other">Not comparable</string>
-    <string name="skills_gap_deficit_steps">%1$d ordinal steps</string>
-    <string name="skills_gap_deficits_only">Only skills with calculable deficits are shown.</string>
     <string name="skills_gap_snapshot_notice">Result from the saved user snapshot. Selecting another CV does not change the snapshot until its skills are submitted.</string>
+    <string name="skills_gap_manual_replace_notice">Confirming replaces your entire skills snapshot for market analysis. Unknown levels will remain unknown.</string>
 </resources>
