@@ -95,14 +95,14 @@ class JobSkillsGapRepositoryTest {
         val server = MockWebServer()
         server.start()
         try {
-            val api = Retrofit.Builder().baseUrl(server.url("/api/"))
+            val api = Retrofit.Builder().baseUrl(server.url("/api/v1/"))
                 .addConverterFactory(GsonConverterFactory.create()).build().create(SkillsGapApi::class.java)
             val repository = ApiJobSkillsGapRepository(api)
             server.enqueue(MockResponse().setBody(jobGapResponse))
             repository.analyze(jobGapCv(), jobGapOffer(), false)
             val call = server.takeRequest()
             assertEquals("POST", call.method)
-            assertEquals("/api/skills-gap/recommendations", call.path)
+            assertEquals("/api/v1/skills-gap/recommendations", call.path)
             val json = gson.fromJson(call.body.readUtf8(), JsonObject::class.java)
             assertEquals("job1", json["jobs"].asJsonArray[0].asJsonObject["id"].asString)
 
@@ -125,7 +125,7 @@ class JobSkillsGapRepositoryTest {
             pure["results"].asJsonArray[0].asJsonObject.remove("recommendations")
             server.enqueue(MockResponse().setBody(pure.toString()))
             repository.analyze(jobGapCv(), jobGapOffer(), true)
-            assertEquals("/api/skills-gap/evaluate", server.takeRequest().path)
+            assertEquals("/api/v1/skills-gap/evaluate", server.takeRequest().path)
         } finally { server.shutdown() }
     }
 

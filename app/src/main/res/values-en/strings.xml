@@ -88,6 +88,13 @@
     <string name="cv_editor_field">Field of study</string>
     <string name="cv_editor_skill_name">Skill</string>
     <string name="cv_editor_level">Level</string>
+    <string name="cv_skill_level_beginner">Beginner</string>
+    <string name="cv_skill_level_intermediate">Intermediate</string>
+    <string name="cv_skill_level_advanced">Advanced</string>
+    <string name="cv_skill_level_expert">Expert</string>
+    <string name="cv_skill_level_unselected">Not selected</string>
+    <string name="cv_skill_level_required">Select a level for this skill.</string>
+    <string name="cv_skill_level_invalid">This level is invalid. Select one from the list to correct it.</string>
     <string name="cv_editor_category">Category</string>
     <string name="cv_editor_language">Language</string>
     <string name="cv_editor_add_experience">Add experience</string>
