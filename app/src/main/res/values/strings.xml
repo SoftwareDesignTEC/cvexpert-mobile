@@ -154,6 +154,10 @@
     <string name="cv_editor_save">Guardar</string>
     <string name="cv_editor_saving">Guardando…</string>
     <string name="cv_editor_cancel">Cancelar</string>
+    <string name="cv_editor_discard_title">¿Descartar los cambios?</string>
+    <string name="cv_editor_discard_message">Si sales ahora, se pierde lo que cambiaste en este currículum.</string>
+    <string name="cv_editor_discard_confirm">Descartar</string>
+    <string name="cv_editor_discard_keep">Seguir editando</string>
     <string name="coming_soon_badge">Próximamente</string>
     <string name="coming_soon_pdf_title">Exportar a PDF</string>
     <string name="coming_soon_pdf_message">La descarga del currículum en PDF llega en la siguiente fase, junto con el editor.</string>

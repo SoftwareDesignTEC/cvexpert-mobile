@@ -1,5 +1,6 @@
 package com.cvpro.app.ui.components
 
+import androidx.activity.compose.BackHandler
 import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.relocation.BringIntoViewRequester
@@ -29,6 +30,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -40,6 +42,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -177,12 +180,54 @@ fun CvEditorSheet(
             ?.let { "$KEY_EDUCATION$it" }
     }
 
+    // Cerrar sin querer (un deslizón hacia abajo, tocar fuera o el botón atrás) borraba todo lo
+    // escrito. Con cambios sin guardar, la hoja no se cierra: pregunta si se quieren descartar.
+    val hasChanges by rememberUpdatedState(draft != cv)
+    var confirmDiscard by remember(cv.id) { mutableStateOf(false) }
+    val sheetState = rememberModalBottomSheetState(
+        skipPartiallyExpanded = true,
+        // Lo consulta la hoja antes de cerrarse por cualquiera de esas tres vías; false la deja
+        // abierta (vuelve a su lugar si se estaba deslizando).
+        confirmValueChange = { value ->
+            if (value == SheetValue.Hidden && hasChanges) {
+                confirmDiscard = true
+                false
+            } else {
+                true
+            }
+        },
+    )
+    fun requestClose() {
+        if (hasChanges) confirmDiscard = true else onDismiss()
+    }
+
+    if (confirmDiscard) {
+        AlertDialog(
+            onDismissRequest = { confirmDiscard = false },
+            title = { Text(stringResource(R.string.cv_editor_discard_title)) },
+            text = { Text(stringResource(R.string.cv_editor_discard_message)) },
+            confirmButton = {
+                TextButton(onClick = onDismiss) {
+                    Text(stringResource(R.string.cv_editor_discard_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { confirmDiscard = false }) {
+                    Text(stringResource(R.string.cv_editor_discard_keep))
+                }
+            },
+        )
+    }
+
     ModalBottomSheet(
         onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
+        sheetState = sheetState,
         containerColor = MaterialTheme.colorScheme.surface,
         modifier = modifier,
     ) {
+        // El botón atrás no pasa por confirmValueChange (Material 3 cierra la hoja directo), así
+        // que se intercepta acá. Se registra después que el de la hoja, por eso tiene prioridad.
+        BackHandler(enabled = hasChanges) { confirmDiscard = true }
         Column(
             modifier = Modifier
                 .verticalScroll(rememberScrollState())
@@ -514,7 +559,7 @@ fun CvEditorSheet(
                     .padding(top = 24.dp),
             ) {
                 OutlinedButton(
-                    onClick = onDismiss,
+                    onClick = ::requestClose,
                     enabled = !isSaving,
                     colors = outlinedOnCardColors(),
                     modifier = Modifier.weight(1f),

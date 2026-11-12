@@ -156,6 +156,10 @@
     <string name="cv_editor_save">Save</string>
     <string name="cv_editor_saving">Saving…</string>
     <string name="cv_editor_cancel">Cancel</string>
+    <string name="cv_editor_discard_title">Discard changes?</string>
+    <string name="cv_editor_discard_message">If you leave now, the changes to this CV will be lost.</string>
+    <string name="cv_editor_discard_confirm">Discard</string>
+    <string name="cv_editor_discard_keep">Keep editing</string>
     <string name="coming_soon_badge">Coming soon</string>
     <string name="coming_soon_pdf_title">Export to PDF</string>
     <string name="coming_soon_pdf_message">Downloading your CV as a PDF comes in the next phase, together with the editor.</string>

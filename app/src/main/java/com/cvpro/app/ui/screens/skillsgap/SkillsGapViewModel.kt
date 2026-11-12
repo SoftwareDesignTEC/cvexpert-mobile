@@ -8,6 +8,7 @@ import com.cvpro.app.data.mapper.toSkillsGapInput
 import com.cvpro.app.domain.model.*
 import com.cvpro.app.domain.repository.CvRepository
 import com.cvpro.app.domain.repository.SkillsGapRepository
+import com.google.gson.JsonParseException
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.Job
@@ -194,6 +195,7 @@ internal fun skillsGapErrorMessage(error: Exception): Int = when {
         SkillsGapFailure.UNAVAILABLE -> R.string.skills_gap_unavailable
     }
     error is HttpException && error.code() == 401 -> R.string.skills_gap_unauthorized
+    error is JsonParseException -> R.string.skills_gap_incompatible
     error is IOException -> R.string.skills_gap_error_network
     else -> R.string.skills_gap_error_generic
 }
