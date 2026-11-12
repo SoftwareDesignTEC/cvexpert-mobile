@@ -134,7 +134,7 @@ private fun JobSkillCoursesDto.toJobCourses(): JobSkillCourses {
             it.url.httpUrl() && (it.logoUrl == null || it.logoUrl.httpUrl()) &&
             (it.durationHours == null || it.durationHours >= 0) && it.isPaid != null && it.skills != null)
         CourseRecommendation(it.id, it.title, it.platform, it.url, it.logoUrl,
-            it.durationHours?.let { hours -> "$hours horas" }, it.isPaid, it.skills!!)
+            it.durationHours?.let { hours -> "$hours horas" }, it.isPaid, it.skills!!, durationHours = it.durationHours)
     })
 }
 

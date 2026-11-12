@@ -33,7 +33,7 @@ class JobSkillsGapViewModelTest {
             catalogStatus = JobCatalogStatus.CONSULTED,
             recommendations = listOf(JobSkillCourses("Docker", SkillCatalogMatch.NOT_FOUND, emptyList())))
         val gaps = JobGapRepository().apply { result = courses; evaluationResult = levels }
-        val vm = JobSkillsGapViewModel(JobGapCvs(), gaps, com.cvpro.app.data.testJobOffers())
+        val vm = JobSkillsGapViewModel(JobGapCvs(), gaps, com.cvpro.app.data.testJobOffers(), EmptyCourseRepository())
         vm.open(jobGapOffer()); advanceUntilIdle()
         vm.selectCv("cv1"); advanceUntilIdle()
         vm.analyze(); vm.analyze(); advanceUntilIdle()
@@ -47,7 +47,7 @@ class JobSkillsGapViewModelTest {
     @Test fun evaluationOutagePreservesAlreadyAvailableCourses() = runTest(dispatcher) {
         val courses = Gson().fromJson(jobGapResponse, JobSkillsGapResponseDto::class.java).toJobAnalysis("cv1", "job1", false)
         val gaps = JobGapRepository().apply { result = courses; evaluationFailure = JobSkillsGapFailure.UNAVAILABLE }
-        val vm = JobSkillsGapViewModel(JobGapCvs(), gaps, com.cvpro.app.data.testJobOffers())
+        val vm = JobSkillsGapViewModel(JobGapCvs(), gaps, com.cvpro.app.data.testJobOffers(), EmptyCourseRepository())
         vm.open(jobGapOffer()); advanceUntilIdle()
         vm.selectCv("cv1"); advanceUntilIdle()
         vm.analyze(); advanceUntilIdle()
@@ -59,7 +59,7 @@ class JobSkillsGapViewModelTest {
     @Test fun catalogueOutageStillAllowsLevelEvaluationWithoutCourses() = runTest(dispatcher) {
         val levels = com.cvpro.app.data.evaluationResult()
         val gaps = JobGapRepository().apply { failure = JobSkillsGapFailure.CATALOG_UNAVAILABLE; evaluationResult = levels }
-        val vm = JobSkillsGapViewModel(JobGapCvs(), gaps, com.cvpro.app.data.testJobOffers())
+        val vm = JobSkillsGapViewModel(JobGapCvs(), gaps, com.cvpro.app.data.testJobOffers(), EmptyCourseRepository())
         vm.open(jobGapOffer()); advanceUntilIdle()
         vm.selectCv("cv1"); advanceUntilIdle()
         vm.analyze(); advanceUntilIdle()
@@ -74,7 +74,7 @@ class JobSkillsGapViewModelTest {
     @Test fun selectedCvIsLoadedByIdAndItsActualSkillsReachTheRepository() = runTest(dispatcher) {
         val cvs = JobGapCvs()
         val gaps = JobGapRepository()
-        val vm = JobSkillsGapViewModel(cvs, gaps, com.cvpro.app.data.testJobOffers())
+        val vm = JobSkillsGapViewModel(cvs, gaps, com.cvpro.app.data.testJobOffers(), EmptyCourseRepository())
         vm.open(jobGapOffer())
         assertTrue(vm.uiState.value.isLoading)
         advanceUntilIdle()
@@ -93,7 +93,7 @@ class JobSkillsGapViewModelTest {
     @Test fun failedCvDetailDoesNotBecomeAnEmptyCvAndCanBeRetried() = runTest(dispatcher) {
         val cvs = JobGapCvs().apply { detailError = IOException() }
         val gaps = JobGapRepository()
-        val vm = JobSkillsGapViewModel(cvs, gaps, com.cvpro.app.data.testJobOffers())
+        val vm = JobSkillsGapViewModel(cvs, gaps, com.cvpro.app.data.testJobOffers(), EmptyCourseRepository())
         vm.open(jobGapOffer()); advanceUntilIdle()
         vm.selectCv("cv1"); advanceUntilIdle()
         vm.analyze(); advanceUntilIdle()
@@ -108,7 +108,7 @@ class JobSkillsGapViewModelTest {
 
     @Test fun invalidLevelAllowsCorrectionWithoutInventingARequestLevel() = runTest(dispatcher) {
         val cvs = JobGapCvs().apply { detail = jobGapCv(level = "") }
-        val vm = JobSkillsGapViewModel(cvs, JobGapRepository(), com.cvpro.app.data.testJobOffers())
+        val vm = JobSkillsGapViewModel(cvs, JobGapRepository(), com.cvpro.app.data.testJobOffers(), EmptyCourseRepository())
         vm.open(jobGapOffer()); advanceUntilIdle()
         vm.selectCv("cv1"); advanceUntilIdle()
         vm.analyze(); advanceUntilIdle()
@@ -119,7 +119,7 @@ class JobSkillsGapViewModelTest {
 
     @Test fun catalogOutageOffersExplicitPureEvaluationAndAvailabilityErrorsRemainErrors() = runTest(dispatcher) {
         val gaps = JobGapRepository().apply { failure = JobSkillsGapFailure.CATALOG_UNAVAILABLE }
-        val vm = JobSkillsGapViewModel(JobGapCvs(), gaps, com.cvpro.app.data.testJobOffers())
+        val vm = JobSkillsGapViewModel(JobGapCvs(), gaps, com.cvpro.app.data.testJobOffers(), EmptyCourseRepository())
         vm.open(jobGapOffer()); advanceUntilIdle()
         vm.selectCv("cv1"); advanceUntilIdle()
         vm.analyze(); advanceUntilIdle()
@@ -139,7 +139,7 @@ class JobSkillsGapViewModelTest {
 
     @Test fun changingSelectionCancelsPendingDetailAndClearsPreviousResults() = runTest(dispatcher) {
         val cvs = JobGapCvs()
-        val vm = JobSkillsGapViewModel(cvs, JobGapRepository(), com.cvpro.app.data.testJobOffers())
+        val vm = JobSkillsGapViewModel(cvs, JobGapRepository(), com.cvpro.app.data.testJobOffers(), EmptyCourseRepository())
         vm.open(jobGapOffer()); advanceUntilIdle()
         val delayed = CompletableDeferred<Cv>()
         cvs.pending = delayed
@@ -158,7 +158,7 @@ class JobSkillsGapViewModelTest {
 
     @Test fun emptyAndFailedCvListsAreDifferentAndPaginationIsPreserved() = runTest(dispatcher) {
         val cvs = JobGapCvs().apply { listError = IOException() }
-        val vm = JobSkillsGapViewModel(cvs, JobGapRepository(), com.cvpro.app.data.testJobOffers())
+        val vm = JobSkillsGapViewModel(cvs, JobGapRepository(), com.cvpro.app.data.testJobOffers(), EmptyCourseRepository())
         vm.open(jobGapOffer()); advanceUntilIdle()
         assertEquals(0, vm.uiState.value.cvPage)
         assertNotNull(vm.uiState.value.errorMessage)
@@ -172,7 +172,7 @@ class JobSkillsGapViewModelTest {
 
     @Test fun completeInsufficientAndNoCourseStatesRemainSuccessfulDistinctResults() = runTest(dispatcher) {
         val gaps = JobGapRepository()
-        val vm = JobSkillsGapViewModel(JobGapCvs(), gaps, com.cvpro.app.data.testJobOffers())
+        val vm = JobSkillsGapViewModel(JobGapCvs(), gaps, com.cvpro.app.data.testJobOffers(), EmptyCourseRepository())
         vm.open(jobGapOffer()); advanceUntilIdle()
         vm.selectCv("cv1"); advanceUntilIdle()
         val partial = Gson().fromJson(jobGapResponse, JobSkillsGapResponseDto::class.java)
@@ -194,6 +194,88 @@ class JobSkillsGapViewModelTest {
             assertFalse(vm.uiState.value.canEvaluateOnly)
         }
     }
+    @Test fun levelCoursesAreLazyCachedDeduplicatedAndPagedByExactSkill() = runTest(dispatcher) {
+        val courses = RecordingCourses()
+        val gaps = JobGapRepository().apply { evaluationResult = com.cvpro.app.data.evaluationResult(); result = evaluationResult!!.copy(assessments = null, levelAnalysis = null) }
+        val vm = JobSkillsGapViewModel(JobGapCvs(), gaps, com.cvpro.app.data.testJobOffers(), courses)
+        vm.open(jobGapOffer()); advanceUntilIdle(); vm.selectCv("cv1"); advanceUntilIdle(); vm.analyze(); advanceUntilIdle()
+        assertTrue(courses.calls.isEmpty())
+        val skill = vm.uiState.value.analysis!!.assessments!!.first { it.canSuggestLevelCourses() }.name
+        vm.loadLevelCourses(skill); vm.loadLevelCourses(skill); advanceUntilIdle()
+        vm.loadLevelCourses(skill); advanceUntilIdle()
+        assertEquals(listOf(Triple(1, 5, skill)), courses.calls)
+        assertEquals(1, vm.uiState.value.levelCourses[skill]!!.items.size)
+        vm.loadLevelCourses(skill, true); advanceUntilIdle()
+        assertEquals(2, courses.calls.size)
+        assertEquals(2, vm.uiState.value.levelCourses[skill]!!.page)
+        assertEquals(1, vm.uiState.value.levelCourses[skill]!!.items.size)
+        assertEquals(6L, vm.uiState.value.levelCourses[skill]!!.totalRecords)
+    }
+    @Test fun courseFailuresPreserveEvaluationAndMissingSkillRecommendationsAndRetry() = runTest(dispatcher) {
+        val courses = RecordingCourses().apply { failure = CourseException(CourseFailure.CONNECTION) }
+        val gaps = JobGapRepository().apply { evaluationResult = com.cvpro.app.data.evaluationResult(); result = evaluationResult!!.copy(assessments = null, levelAnalysis = null) }
+        val vm = JobSkillsGapViewModel(JobGapCvs(), gaps, com.cvpro.app.data.testJobOffers(), courses)
+        vm.open(jobGapOffer()); advanceUntilIdle(); vm.selectCv("cv1"); advanceUntilIdle(); vm.analyze(); advanceUntilIdle()
+        val original = vm.uiState.value.analysis!!
+        val skill = original.assessments!!.first { it.canSuggestLevelCourses() }.name
+        vm.loadLevelCourses(skill); advanceUntilIdle()
+        assertEquals(original, vm.uiState.value.analysis)
+        assertEquals(CourseFailure.CONNECTION, vm.uiState.value.levelCourses[skill]!!.error)
+        courses.failure = null
+        vm.loadLevelCourses(skill); advanceUntilIdle()
+        assertNull(vm.uiState.value.levelCourses[skill]!!.error)
+        assertEquals(listOf(1, 1), courses.calls.map { it.first })
+        assertEquals(original.recommendations, vm.uiState.value.analysis!!.recommendations)
+    }
+    @Test fun changingCvOrOfferIgnoresNonCooperativeOldCourseResponse() = runTest(dispatcher) {
+        for (changeOffer in listOf(false, true)) {
+            val courses = RecordingCourses()
+            val gaps = JobGapRepository().apply { evaluationResult = com.cvpro.app.data.evaluationResult(); result = evaluationResult!!.copy(assessments = null, levelAnalysis = null) }
+            val vm = JobSkillsGapViewModel(JobGapCvs(), gaps, object : com.cvpro.app.domain.repository.JobOfferRepository {
+                override suspend fun getOffers(page: Int, pageSize: Int, query: String) = PagedResult(listOf(jobGapOffer(), jobGapOffer("job2")), page, pageSize, 2)
+            }, courses)
+            vm.start(); advanceUntilIdle(); vm.selectCv("cv1"); advanceUntilIdle(); vm.selectOffer("job1"); vm.analyze(); advanceUntilIdle()
+            val skill = vm.uiState.value.analysis!!.assessments!!.first { it.canSuggestLevelCourses() }.name
+            val pending = CompletableDeferred<CoursePage>()
+            courses.pending = pending
+            vm.loadLevelCourses(skill); runCurrent()
+            if (changeOffer) vm.selectOffer("job2") else vm.selectCv("cv2")
+            runCurrent()
+            pending.complete(CoursePage(emptyList(), 1, 5, 0)); advanceUntilIdle()
+            assertTrue(vm.uiState.value.levelCourses.isEmpty())
+            assertNull(vm.uiState.value.analysis)
+        }
+    }
+    @Test fun sufficientUnknownConflictingAndMissingSkillsNeverQueryLevelCatalog() = runTest(dispatcher) {
+        val courses = RecordingCourses()
+        val base = com.cvpro.app.data.evaluationResult()
+        val assessment = base.assessments!!.first()
+        for (item in listOf(assessment.copy(status = "documented_skill_meets_required", deficitSteps = 0),
+            assessment.copy(detectionStatus = "unknown", requiredLevel = null), assessment.copy(detectionStatus = "conflict", requiredLevel = null, reason = "contradictory"),
+            assessment.copy(status = "not_documented", cvLevel = null))) {
+            val gaps = JobGapRepository().apply { evaluationResult = base.copy(assessments = listOf(item)); result = base.copy(assessments = null, levelAnalysis = null) }
+            val vm = JobSkillsGapViewModel(JobGapCvs(), gaps, com.cvpro.app.data.testJobOffers(), courses)
+            vm.open(jobGapOffer()); advanceUntilIdle(); vm.selectCv("cv1"); advanceUntilIdle(); vm.analyze(); advanceUntilIdle()
+            vm.loadLevelCourses(item.name); advanceUntilIdle()
+        }
+        assertTrue(courses.calls.isEmpty())
+    }
+    @Test fun levelCatalogConcurrencyIsBoundedAndQueuedRequestsCancelOnClose() = runTest(dispatcher) {
+        val courses = RecordingCourses().apply { pending = CompletableDeferred() }
+        val base = com.cvpro.app.data.evaluationResult()
+        val assessment = base.assessments!!.first { it.canSuggestLevelCourses() }
+        val names = listOf("Python", "SQL", "Docker", "Git")
+        val gaps = JobGapRepository().apply { evaluationResult = base.copy(assessments = names.map { assessment.copy(name = it) }); result = base.copy(assessments = null, levelAnalysis = null) }
+        val vm = JobSkillsGapViewModel(JobGapCvs(), gaps, com.cvpro.app.data.testJobOffers(), courses)
+        vm.open(jobGapOffer()); advanceUntilIdle(); vm.selectCv("cv1"); advanceUntilIdle(); vm.analyze(); advanceUntilIdle()
+        names.forEach { vm.loadLevelCourses(it) }; runCurrent()
+        assertEquals(2, courses.calls.size)
+        vm.close(); runCurrent()
+        courses.pending!!.complete(CoursePage(emptyList(), 1, 5, 0)); advanceUntilIdle()
+        assertTrue(vm.uiState.value.levelCourses.isEmpty())
+        assertEquals(2, courses.calls.size)
+    }
+
 }
 
 private class JobGapCvs : CvRepository {
@@ -240,5 +322,19 @@ private class JobGapRepository : JobSkillsGapRepository {
         result?.let { return it }
         return Gson().fromJson(jobGapResponse, JobSkillsGapResponseDto::class.java)
             .toJobAnalysis(cv.id, offer.id, evaluationOnly)
+    }
+}
+
+private class RecordingCourses : com.cvpro.app.domain.repository.CourseRepository {
+    val calls = mutableListOf<Triple<Int, Int, String?>>()
+    var failure: Exception? = null
+    var pending: CompletableDeferred<CoursePage>? = null
+    override suspend fun getCourses(page: Int, pageSize: Int, filters: CourseFilters): CoursePage {
+        calls += Triple(page, pageSize, filters.skillName)
+        failure?.let { throw it }
+        // Simulate a transport which returns after its caller has been cancelled.
+        pending?.let { return kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) { it.await() } }
+        val course = Course("1", "Python", "Microsoft Learn", "https://learn.microsoft.com/training/", null, null, false, listOf("Python"))
+        return CoursePage(listOf(course), page, pageSize, 6)
     }
 }

@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cvpro.app.domain.model.Cv
 import com.cvpro.app.domain.model.JobOffer
-import com.cvpro.app.domain.model.SkillsGapAnalysis
 import android.graphics.Bitmap
 import android.net.Uri
 import com.cvpro.app.data.pdf.CvPdfGenerator
@@ -13,7 +12,6 @@ import com.cvpro.app.domain.repository.CvRepository
 import com.cvpro.app.domain.repository.TemplateRepository
 import com.cvpro.app.domain.repository.layoutFor
 import com.cvpro.app.domain.repository.JobOfferRepository
-import com.cvpro.app.domain.repository.SkillsGapRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -33,7 +31,6 @@ data class HomeUiState(
     val recentCvs: List<Cv> = emptyList(),
     /** Primera hoja de cada CV reciente ya dibujada, por id. */
     val cvPreviews: Map<String, Bitmap> = emptyMap(),
-    val skillsGap: SkillsGapAnalysis? = null,
     val recommendedOffers: List<JobOffer> = emptyList(),
     val isLoading: Boolean = false,
     val isGeneratingPdf: Boolean = false,
@@ -42,7 +39,6 @@ data class HomeUiState(
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val cvRepository: CvRepository,
-    private val skillsGapRepository: SkillsGapRepository,
     private val jobOfferRepository: JobOfferRepository,
     private val pdfGenerator: CvPdfGenerator,
     private val templateRepository: TemplateRepository,
@@ -87,23 +83,21 @@ class HomeViewModel @Inject constructor(
     }
 
     /**
-     * Pide las tres secciones a la vez.
+     * Carga CVs y ofertas en paralelo.
      *
-     * Con `async` las tres llamadas salen en paralelo en vez de una tras otra, así el panel
-     * tarda lo que la más lenta y no la suma de las tres.
+     * Con `async` las llamadas salen en paralelo en vez de una tras otra, así el panel
+     * tarda lo que la más lenta y no la suma de ambas.
      */
     private fun load(showLoader: Boolean = true) {
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = showLoader) }
 
             val cvs = async { runCatching { cvRepository.getCvs(1, SECTION_SIZE, "").items } }
-            val gap = async { runCatching { skillsGapRepository.getAnalysis() } }
             val offers = async { runCatching { jobOfferRepository.getOffers(1, SECTION_SIZE, "").items } }
 
             _uiState.update {
                 it.copy(
                     recentCvs = cvs.await().getOrDefault(emptyList()),
-                    skillsGap = gap.await().getOrNull(),
                     recommendedOffers = offers.await().getOrDefault(emptyList()),
                     isLoading = false,
                 )

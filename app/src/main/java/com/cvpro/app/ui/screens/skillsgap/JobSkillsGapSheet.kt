@@ -20,6 +20,7 @@ import com.cvpro.app.domain.model.JobOffer
 @Composable
 fun JobSkillsGapSheet(
     offer: JobOffer, onDismiss: () -> Unit, onCorrectCv: () -> Unit,
+    onExploreCourses: (String?) -> Unit = {},
     viewModel: JobSkillsGapViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -30,20 +31,21 @@ fun JobSkillsGapSheet(
         val visible = if (state.offer == offer) state else JobSkillsGapUiState(offer = offer, offerLocked = true, isLoading = true)
         JobSkillsGapContent(visible, viewModel::loadCvs, viewModel::selectCv, { viewModel.analyze() },
             { viewModel.analyze(true) }, onCorrectCv, onRetry = viewModel::retry,
-            modifier = Modifier.fillMaxHeight(0.95f))
+            modifier = Modifier.fillMaxHeight(0.95f), onLoadCourses = viewModel::loadLevelCourses, onExploreCourses = onExploreCourses)
     }
 }
 
 @Composable
 internal fun JobSkillsGapOfferScreen(
     onCorrectCv: () -> Unit, modifier: Modifier = Modifier,
+    onExploreCourses: (String?) -> Unit = {},
     viewModel: JobSkillsGapViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     LaunchedEffect(Unit) { viewModel.start() }
     JobSkillsGapContent(state, viewModel::loadCvs, viewModel::selectCv, { viewModel.analyze() },
         { viewModel.analyze(true) }, onCorrectCv, modifier = modifier, onRetry = viewModel::retry,
-        onOfferQuery = viewModel::changeOfferQuery, onLoadOffers = viewModel::loadOffers, onSelectOffer = viewModel::selectOffer)
+        onOfferQuery = viewModel::changeOfferQuery, onLoadOffers = viewModel::loadOffers, onSelectOffer = viewModel::selectOffer, onLoadCourses = viewModel::loadLevelCourses, onExploreCourses = onExploreCourses)
 }
 
 @Composable
@@ -53,6 +55,7 @@ internal fun JobSkillsGapContent(
     onAnalyze: () -> Unit, onEvaluateOnly: () -> Unit, onCorrectCv: () -> Unit,
     modifier: Modifier = Modifier,
     onRetry: () -> Unit = onAnalyze,
+    onLoadCourses: (String, Boolean) -> Unit = { _, _ -> }, onExploreCourses: (String?) -> Unit = {},
     onOfferQuery: (String) -> Unit = {}, onLoadOffers: () -> Unit = {}, onSelectOffer: (String) -> Unit = {},
 ) {
     var editCv by rememberSaveable { mutableStateOf(false) }
@@ -140,7 +143,7 @@ internal fun JobSkillsGapContent(
             }
         }
         state.analysis?.let { analysis -> item(key = "result:${analysis.cvId}:${analysis.jobId}") {
-            JobGapResult(analysis)
+            JobGapResult(analysis, state.levelCourses, onLoadCourses, onExploreCourses)
         } }
     }
 }

@@ -2,6 +2,10 @@ package com.cvpro.app.ui.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import android.net.Uri
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import com.cvpro.app.ui.screens.courses.CoursesScreen
 import androidx.navigation.NavHostController
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
@@ -40,7 +44,6 @@ fun CvProNavGraph(
                 versionCode = BuildConfig.VERSION_CODE,
                 // Accesos de cada sección del panel, como en el wireframe de Samuel.
                 onTemplatesClick = { navController.navigateToDestination(CvProDestination.TEMPLATES) },
-                onSkillsGapClick = { navController.navigateToDestination(CvProDestination.SKILLS_GAP) },
                 onJobsClick = { navController.navigateToDestination(CvProDestination.JOBS) },
                 onCvsClick = { navController.navigateToDestination(CvProDestination.CVS) },
             )
@@ -51,15 +54,16 @@ fun CvProNavGraph(
             )
         }
         composable(CvProDestination.PROFILE.route) {
-            ProfileScreen(
-                onSkillsGapClick = { navController.navigateToDestination(CvProDestination.SKILLS_GAP) },
-            )
+            ProfileScreen()
         }
         composable(CvProDestination.JOBS.route) {
-            JobsScreen(onCvsClick = { navController.navigateToDestination(CvProDestination.CVS) })
+            JobsScreen(onCvsClick = { navController.navigateToDestination(CvProDestination.CVS) }, onExploreCourses = navController::openCourses)
         }
         composable(CvProDestination.SKILLS_GAP.route) {
-            SkillsGapScreen(onCvsClick = { navController.navigateToDestination(CvProDestination.CVS) })
+            SkillsGapScreen(onCvsClick = { navController.navigateToDestination(CvProDestination.CVS) }, onExploreCourses = navController::openCourses)
+        }
+        composable("cursos?skillName={skillName}", arguments = listOf(navArgument("skillName") { type = NavType.StringType; nullable = true; defaultValue = null })) { entry ->
+            CoursesScreen(skillName = entry.arguments?.getString("skillName"))
         }
         composable(CvProDestination.TEMPLATES.route) {
             TemplatesScreen(
@@ -92,4 +96,8 @@ fun NavHostController.navigateToDestination(destination: CvProDestination) {
         launchSingleTop = true
         restoreState = true
     }
+}
+
+private fun NavHostController.openCourses(skillName: String?) {
+    navigate(if (skillName == null) "cursos" else "cursos?skillName=${Uri.encode(skillName)}") { launchSingleTop = true }
 }

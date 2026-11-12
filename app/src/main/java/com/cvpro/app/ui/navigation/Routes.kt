@@ -36,6 +36,7 @@ enum class CvProDestination(
     PROFILE("perfil", R.string.destination_profile, Icons.Outlined.Person),
     JOBS("ofertas", R.string.destination_jobs, Icons.Outlined.Work),
     SKILLS_GAP("brechas", R.string.destination_skills_gap, Icons.Outlined.Analytics),
+    COURSES("cursos", R.string.destination_courses, Icons.Outlined.Description),
     TEMPLATES("plantillas", R.string.destination_templates, Icons.Outlined.Description),
     APPLICATIONS("postulaciones", R.string.destination_applications, Icons.Outlined.ViewKanban),
     SETTINGS("configuracion", R.string.destination_settings, Icons.Outlined.Settings),
@@ -46,6 +47,6 @@ enum class CvProDestination(
         val START = DASHBOARD
 
         /** Busca el destino de una ruta; null si la ruta no es de esta lista. */
-        fun fromRoute(route: String?): CvProDestination? = entries.firstOrNull { it.route == route }
+        fun fromRoute(route: String?): CvProDestination? = entries.firstOrNull { it.route == route?.substringBefore("?") }
     }
 }

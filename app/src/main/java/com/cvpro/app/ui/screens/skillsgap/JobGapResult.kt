@@ -13,12 +13,15 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.*
 import androidx.compose.ui.unit.dp
+import com.cvpro.app.ui.components.CourseCard
+import com.cvpro.app.ui.screens.courses.CourseError
 import com.cvpro.app.R
 import com.cvpro.app.domain.model.*
 import java.text.NumberFormat
 
 @Composable
-internal fun JobGapResult(analysis: JobSkillsGapAnalysis) {
+internal fun JobGapResult(analysis: JobSkillsGapAnalysis, levelCourses: Map<String, LevelCoursesState> = emptyMap(),
+    onLoadCourses: (String, Boolean) -> Unit = { _, _ -> }, onExploreCourses: (String?) -> Unit = {}) {
     val presentation = remember(analysis) { JobGapPresentation(analysis) }
     val locale = LocalConfiguration.current.locales[0]
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -60,7 +63,7 @@ internal fun JobGapResult(analysis: JobSkillsGapAnalysis) {
             }
         }
         AnalysisDetails(analysis)
-        CourseRecommendations(presentation)
+        CourseRecommendations(presentation, levelCourses, onLoadCourses, onExploreCourses)
     }
 }
 
@@ -129,11 +132,11 @@ private fun SkillPill(text: String) {
 }
 
 @Composable
-internal fun GapDisclosure(title: String, tag: String, content: @Composable () -> Unit) {
+internal fun GapDisclosure(title: String, tag: String, onExpand: () -> Unit = {}, content: @Composable () -> Unit) {
     var expanded by rememberSaveable { mutableStateOf(false) }
     val description = stringResource(if (expanded) R.string.gap_expanded else R.string.gap_collapsed)
     OutlinedCard(Modifier.fillMaxWidth()) {
-        TextButton(onClick = { expanded = !expanded }, modifier = Modifier.fillMaxWidth().testTag(tag)
+        TextButton(onClick = { expanded = !expanded; if (expanded) onExpand() }, modifier = Modifier.fillMaxWidth().testTag(tag)
             .semantics { stateDescription = description }) {
             Text(title, modifier = Modifier.weight(1f))
             Text(if (expanded) "−" else "+", modifier = Modifier.clearAndSetSemantics {})
@@ -168,20 +171,53 @@ private fun AnalysisDetails(analysis: JobSkillsGapAnalysis) {
 }
 
 @Composable
-private fun CourseRecommendations(presentation: JobGapPresentation) {
-    val independent = presentation.analysis.catalogStatus == null
-    GapDisclosure(if (independent) stringResource(R.string.gap_courses_unrequested) else
-        stringResource(R.string.gap_courses, presentation.courses.size), "gap-courses") {
-        presentation.courses.forEach { course ->
-            CourseCard(course)
-            course.isPaid?.let { Text(stringResource(if (it) R.string.job_gap_paid else R.string.job_gap_free), style = MaterialTheme.typography.labelSmall) }
-        }
-        if (presentation.withoutCourses.isNotEmpty()) {
-            Text(stringResource(R.string.gap_courses_missing_summary, presentation.withoutCourses.size), style = MaterialTheme.typography.bodyMedium)
-            GapDisclosure(stringResource(R.string.gap_courses_missing_names), "gap-course-skills") {
-                Text(presentation.withoutCourses.joinToString(", "), style = MaterialTheme.typography.bodySmall)
+private fun CourseRecommendations(
+    presentation: JobGapPresentation, levelCourses: Map<String, LevelCoursesState>,
+    onLoad: (String, Boolean) -> Unit, onExplore: (String?) -> Unit,
+) {
+    GapDisclosure(stringResource(R.string.courses_suggested), "gap-courses") {
+        val recommendations = presentation.analysis.recommendations
+        if (recommendations.isNotEmpty()) {
+            Text(stringResource(R.string.courses_missing_reason), style = MaterialTheme.typography.titleSmall)
+            // One card per ID, with every missing-skill association retained.
+            val all = recommendations.flatMap { group -> group.courses.map { it to group.skillName } }
+            val real = all.filter { isRealCourse(it.first.title, it.first.platform, it.first.url, it.first.skills) }
+            if (all.size != real.size) Text(stringResource(R.string.courses_data_defect), color = MaterialTheme.colorScheme.error)
+            real.groupBy { it.first.id }.values.forEach { entries ->
+                Text(stringResource(R.string.courses_missing_skill, entries.map { it.second }.distinct().joinToString(", ")))
+                CourseCard(entries.first().first)
             }
-        } else if (presentation.courses.isEmpty()) Text(stringResource(if (independent)
-            R.string.gap_courses_not_requested else R.string.gap_courses_not_needed))
+            val withoutCourses = recommendations.filter { group ->
+                group.courses.none { isRealCourse(it.title, it.platform, it.url, it.skills) }
+            }
+            if (withoutCourses.isNotEmpty()) {
+                GapDisclosure(stringResource(R.string.gap_courses_missing_summary, withoutCourses.size), "gap-course-skills") {
+                    Text(stringResource(R.string.courses_no_associated))
+                    withoutCourses.forEach { group ->
+                        TextButton(onClick = { onExplore(group.skillName) }) {
+                            Text(stringResource(R.string.courses_explore_skill, group.skillName))
+                        }
+                    }
+                }
+            }
+            recommendations.filterNot { it in withoutCourses }.forEach { group ->
+                TextButton(onClick = { onExplore(group.skillName) }) { Text(stringResource(R.string.courses_explore_skill, group.skillName)) }
+            }
+        } else Text(stringResource(if (presentation.analysis.catalogStatus == null) R.string.gap_courses_not_requested else R.string.gap_courses_not_needed))
+        presentation.analysis.assessments.orEmpty().filter { it.canSuggestLevelCourses() }.distinctBy { it.name }.forEach { skill ->
+            GapDisclosure(stringResource(R.string.courses_level_reason, skill.name), "level-courses:${skill.name}", onExpand = { onLoad(skill.name, false) }) {
+                Text(stringResource(R.string.courses_levels, stringResource(skill.cvLevel!!.labelRes), stringResource(skill.requiredLevel!!.labelRes)))
+                Text(stringResource(R.string.courses_level_disclaimer), style = MaterialTheme.typography.bodySmall)
+                val state = levelCourses[skill.name]
+                if (state?.loading == true) LinearProgressIndicator(Modifier.fillMaxWidth())
+                state?.error?.let { CourseError(it) { onLoad(skill.name, false) } }
+                if ((state?.excludedRecords ?: 0) > 0) Text(stringResource(R.string.courses_data_defect), color = MaterialTheme.colorScheme.error)
+                state?.items?.forEach { CourseCard(it) }
+                if (state != null && state.page > 0 && !state.loading && state.error == null && state.items.isEmpty()) Text(stringResource(R.string.courses_no_associated))
+                if (state?.hasMore == true && !state.loading) TextButton(onClick = { onLoad(skill.name, true) }) { Text(stringResource(R.string.courses_more)) }
+                TextButton(onClick = { onExplore(skill.name) }) { Text(stringResource(R.string.courses_explore_skill, skill.name)) }
+            }
+        }
+        TextButton(onClick = { onExplore(null) }) { Text(stringResource(R.string.courses_explore_all)) }
     }
 }

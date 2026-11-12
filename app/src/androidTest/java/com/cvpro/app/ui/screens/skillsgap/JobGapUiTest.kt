@@ -15,6 +15,7 @@ import androidx.compose.ui.unit.Density
 import androidx.test.platform.app.InstrumentationRegistry
 import com.cvpro.app.domain.model.SkillLevel
 import com.cvpro.app.ui.theme.CvProTheme
+import org.junit.Assert.assertTrue
 import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
@@ -37,9 +38,7 @@ class JobGapUiTest {
     }
 
     @Test fun acceptanceSummaryIsVisibleAndEvidenceIsVoluntary() {
-        content { SkillsGapModeContent(SkillsGapMode.OFFER, {}, offerContent = {
-            JobSkillsGapContent(acceptancePreviewState(), {}, {}, {}, {}, {})
-        }, marketContent = {}) }
+        content { JobSkillsGapContent(acceptancePreviewState(), {}, {}, {}, {}, {}) }
         compose.onNodeWithText("Documentadas: 2 / 7").assertIsDisplayed()
         compose.onNodeWithText("28,57 % de cobertura documental").assertExists()
         compose.onNodeWithText("Cumples el nivel indicado").assertExists()
@@ -51,14 +50,13 @@ class JobGapUiTest {
         compose.onNodeWithText("Descripción: «SQL básico»").assertDoesNotExist()
     }
 
-    @Test fun missingCoursesAreSummarizedOnceAndNamesCanBeExpanded() {
+    @Test fun missingCoursesRemainUnderDisclosure() {
         content { JobSkillsGapContent(acceptancePreviewState(), {}, {}, {}, {}, {}) }
-        compose.onNodeWithText("Habilidades sin cursos asociados: 5").assertDoesNotExist()
+        compose.onNodeWithText("Habilidad no documentada").assertDoesNotExist()
         compose.onNodeWithTag("gap-courses").performScrollTo().performClick()
-        compose.onAllNodesWithText("Habilidades sin cursos asociados: 5").assertCountEquals(1)
+        compose.onNodeWithText("Habilidad no documentada").assertExists()
         compose.onNodeWithTag("gap-course-skills").performScrollTo().performClick()
-        compose.onNodeWithText("Comunicación, Logística, Office, Soporte técnico, Trabajo en equipo").performScrollTo().assertIsDisplayed()
-        screenshot("gap-courses-es.png")
+        compose.onAllNodesWithText("No encontramos cursos asociados a esta habilidad").assertCountEquals(1)
     }
 
     @Test fun unknownRequiredLevelDoesNotDrawAZeroOrInventBeginner() {
@@ -107,23 +105,11 @@ class JobGapUiTest {
         assertEquals(1, applications)
     }
 
-    @Test fun marketModeIsSeparateAndDoesNotGateOffers() {
-        content {
-            var mode by remember { mutableStateOf(SkillsGapMode.OFFER) }
-            SkillsGapModeContent(mode, { mode = it }, offerContent = { Text("Oferta disponible") },
-                marketContent = { SkillsGapContent(SkillsGapUiState(enabled = false), {}) })
-        }
-        compose.onNodeWithText("Oferta disponible").assertIsDisplayed()
-        compose.onNodeWithText("Mercado general").performClick()
-        compose.onNodeWithText("Oferta disponible").assertDoesNotExist()
-        compose.onNodeWithText("Por oferta").performClick()
-        compose.onNodeWithText("Oferta disponible").assertIsDisplayed()
-    }
-
-    @Test fun enabledMarketExplainsItsReferenceWithoutPretendingToBeAJob() {
-        content { SkillsGapContent(SkillsGapUiState(enabled = true), {}) }
-        compose.onNodeWithText("Compara tu instantánea de habilidades con una referencia configurada por el servicio. No es una oferta concreta ni un indicador del mercado en tiempo real.").assertIsDisplayed()
-        compose.onNodeWithTag("gap-offer-search").assertDoesNotExist()
+    @Test fun offerFlowHasNoMarketSelector() {
+        content { JobSkillsGapContent(acceptancePreviewState(), {}, {}, {}, {}, {}) }
+        compose.onNodeWithTag("job-gap-flow").assertExists()
+        compose.onNodeWithText("Mercado general").assertDoesNotExist()
+        compose.onNodeWithText("Por oferta").assertDoesNotExist()
     }
 
     @Test fun retryIsExplicitAndSelectionRemainsVisibleAfterNetworkError() {
@@ -156,6 +142,29 @@ class JobGapUiTest {
         compose.onNodeWithText("Documented: 2 / 7").assertIsDisplayed()
         compose.onNodeWithText("28.57 % documented coverage").assertExists()
         screenshot("gap-large-font-en.png")
+    }
+
+    @Test fun deficitCoursesLoadOnlyWhenTheirSkillIsExpanded() {
+        val fixture = acceptancePreviewState()
+        val analysis = fixture.analysis!!
+        val assessments = analysis.assessments!!.map { if (it.name == "SQL") it.copy(
+            requiredLevel = SkillLevel.EXPERT, status = "documented_skill_below_required", deficitSteps = 2) else it }
+        val loads = mutableListOf<String>()
+        var explored: String? = null
+        content {
+            JobSkillsGapContent(fixture.copy(analysis = analysis.copy(assessments = assessments),
+                levelCourses = mapOf("SQL" to LevelCoursesState(page = 1))), {}, {}, {}, {}, {},
+                onLoadCourses = { skill, _ -> loads += skill }, onExploreCourses = { explored = it })
+        }
+        assertTrue(loads.isEmpty())
+        compose.onNodeWithTag("gap-courses").performScrollTo().performClick()
+        assertTrue(loads.isEmpty())
+        compose.onNodeWithTag("level-courses:SQL").performScrollTo().performClick()
+        assertEquals(listOf("SQL"), loads)
+        compose.onNodeWithText("Nivel declarado: Intermedio \u00b7 Nivel requerido: Experto").performScrollTo().assertExists()
+        compose.onNodeWithText("Explorar cursos de SQL").performScrollTo().performClick()
+        assertEquals("SQL", explored)
+        screenshot("gap-level-courses-es.png")
     }
 
     private fun screenshot(name: String) {

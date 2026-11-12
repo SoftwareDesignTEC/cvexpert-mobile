@@ -56,11 +56,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cvpro.app.R
 import com.cvpro.app.domain.model.Cv
 import com.cvpro.app.domain.model.JobOffer
-import com.cvpro.app.domain.model.SkillsGapAnalysis
 import com.cvpro.app.ui.components.CvDetailSheet
 import com.cvpro.app.ui.components.PagePreview
-import com.cvpro.app.ui.components.RadarChart
-import com.cvpro.app.ui.components.RadarSeries
 import com.cvpro.app.ui.components.RemoteImage
 import com.cvpro.app.ui.components.VersionLabel
 import com.cvpro.app.ui.components.outlinedOnCardColors
@@ -75,7 +72,6 @@ fun HomeScreen(
     versionName: String,
     versionCode: Int,
     onTemplatesClick: () -> Unit,
-    onSkillsGapClick: () -> Unit,
     onJobsClick: () -> Unit,
     onCvsClick: () -> Unit,
     modifier: Modifier = Modifier,
@@ -105,7 +101,6 @@ fun HomeScreen(
         versionName = versionName,
         versionCode = versionCode,
         onTemplatesClick = onTemplatesClick,
-        onSkillsGapClick = onSkillsGapClick,
         onJobsClick = onJobsClick,
         onCvsClick = onCvsClick,
         onDownloadCv = viewModel::onDownloadCv,
@@ -125,7 +120,6 @@ fun HomeContent(
     versionName: String,
     versionCode: Int,
     onTemplatesClick: () -> Unit,
-    onSkillsGapClick: () -> Unit,
     onJobsClick: () -> Unit,
     onCvsClick: () -> Unit,
     onDownloadCv: (Cv) -> Unit,
@@ -163,7 +157,6 @@ fun HomeContent(
 
         CreateCvSection(onTemplatesClick = onTemplatesClick, onAiClick = { showAiCv = true })
 
-        SkillsSection(analysis = uiState.skillsGap, onSeeAreasClick = onSkillsGapClick)
 
         RecommendedOffersSection(offers = uiState.recommendedOffers, onSeeAllClick = onJobsClick)
 
@@ -378,64 +371,6 @@ private fun CreateCvSection(
     }
 }
 
-// ─── Análisis de habilidades ──────────────────────────────────────────────────
-
-/** El radar de habilidades, centrado y a todo el ancho como en el diseño. */
-@Composable
-private fun SkillsSection(
-    analysis: SkillsGapAnalysis?,
-    onSeeAreasClick: () -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    SectionCard(modifier = modifier) {
-        SectionHeader(title = stringResource(R.string.home_skills_title))
-        Text(
-            text = stringResource(R.string.home_skills_subtitle),
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(top = 2.dp),
-        )
-
-        if (analysis == null) {
-            EmptySectionText(stringResource(R.string.home_skills_empty))
-        } else {
-            if (analysis.marketStatus == "missing") Text(stringResource(R.string.skills_gap_market_missing))
-            if (analysis.status == "empty") Text(stringResource(R.string.skills_gap_empty))
-            if (analysis.status == "incomplete") Text(stringResource(R.string.skills_gap_incomplete))
-            if (analysis.canConfirmNoGaps) Text(stringResource(R.string.skills_gap_no_gaps))
-            if (analysis.skills.isNotEmpty()) {
-                Text(stringResource(R.string.skills_gap_ordinal_scale))
-                Text(stringResource(R.string.skills_gap_deficits_only))
-                RadarChart(
-                    labels = analysis.skills.map { it.name },
-                    series = listOf(
-                        RadarSeries(
-                            label = stringResource(R.string.skills_gap_series_user),
-                            values = analysis.skills.map { it.userLevel },
-                            color = MaterialTheme.colorScheme.primary,
-                        ),
-                    ),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(240.dp)
-                        .padding(top = 12.dp),
-                )
-            }
-        }
-
-        OutlinedButton(
-            onClick = onSeeAreasClick,
-            colors = outlinedOnCardColors(),
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 12.dp),
-        ) {
-            Text(stringResource(R.string.home_shortcut_skills_gap))
-        }
-    }
-}
-
-// ─── Ofertas recomendadas ─────────────────────────────────────────────────────
 
 @Composable
 private fun RecommendedOffersSection(
@@ -658,7 +593,6 @@ private fun HomePreview(darkTheme: Boolean) {
                 versionName = "0.3.0",
                 versionCode = 3,
                 onTemplatesClick = {},
-                onSkillsGapClick = {},
                 onJobsClick = {},
                 onCvsClick = {},
                 onDownloadCv = {},

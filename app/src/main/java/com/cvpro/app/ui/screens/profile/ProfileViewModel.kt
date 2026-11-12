@@ -5,12 +5,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cvpro.app.R
 import com.cvpro.app.data.location.DeviceLocationProvider
-import com.cvpro.app.domain.model.SkillsGapAnalysis
 import com.cvpro.app.domain.model.UserProfile
 import com.cvpro.app.domain.repository.AlertsRepository
 import com.cvpro.app.domain.repository.AuthRepository
 import com.cvpro.app.domain.repository.ProfileRepository
-import com.cvpro.app.domain.repository.SkillsGapRepository
 import com.cvpro.app.ui.components.FormValidation
 import com.cvpro.app.ui.components.toUserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -38,9 +36,6 @@ data class ProfileUiState(
     /** Perfil completo tal como lo devuelve el servicio, para la vista de solo lectura. */
     val profile: UserProfile? = null,
 
-    /** Radar de habilidades que el diseño muestra dentro del perfil. */
-    val skillsGap: SkillsGapAnalysis? = null,
-
     /** true mientras se está editando; false muestra la ficha del diseño. */
     val isEditing: Boolean = false,
 
@@ -62,7 +57,6 @@ data class ProfileUiState(
 class ProfileViewModel @Inject constructor(
     authRepository: AuthRepository,
     private val profileRepository: ProfileRepository,
-    private val skillsGapRepository: SkillsGapRepository,
     private val alertsRepository: AlertsRepository,
     private val locationProvider: DeviceLocationProvider,
 ) : ViewModel() {
@@ -94,21 +88,6 @@ class ProfileViewModel @Inject constructor(
             }
 
             loadProfile(user.id)
-        }
-
-        loadSkillsGap()
-    }
-
-    /**
-     * Carga el radar de habilidades.
-     *
-     * Va aparte del perfil a propósito: si el análisis falla, la ficha se sigue viendo y
-     * solo se oculta esa tarjeta.
-     */
-    private fun loadSkillsGap() {
-        viewModelScope.launch {
-            val analysis = runCatching { skillsGapRepository.getAnalysis() }.getOrNull()
-            _uiState.update { it.copy(skillsGap = analysis) }
         }
     }
 
