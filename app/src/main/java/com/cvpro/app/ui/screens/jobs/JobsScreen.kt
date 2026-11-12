@@ -33,6 +33,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.cvpro.app.ui.components.JobOfferDetailSheet
+import com.cvpro.app.ui.screens.skillsgap.JobGapEvaluationSheet
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -115,6 +116,11 @@ fun JobsContent(
 ) {
     // Oferta abierta en el detalle, o null si la hoja está cerrada.
     var detailOffer by remember { mutableStateOf<JobOffer?>(null) }
+    var gapOffer by remember { mutableStateOf<JobOffer?>(null) }
+
+    gapOffer?.let { offer ->
+        JobGapEvaluationSheet(offer = offer, onDismiss = { gapOffer = null })
+    }
 
     detailOffer?.let { offer ->
         JobOfferDetailSheet(
@@ -122,6 +128,7 @@ fun JobsContent(
             onDismiss = { detailOffer = null },
             applyState = uiState.applyStateOf(offer),
             onApply = { onApply(offer) },
+            onAnalyzeGap = { detailOffer = null; gapOffer = offer },
         )
     }
 

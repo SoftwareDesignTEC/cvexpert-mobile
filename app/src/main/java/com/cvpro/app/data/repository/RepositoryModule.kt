@@ -18,6 +18,7 @@ import com.cvpro.app.domain.repository.ApplicationRepository
 import com.cvpro.app.domain.repository.ProfileRepository
 import com.cvpro.app.domain.repository.TemplateRepository
 import com.cvpro.app.domain.repository.CvRepository
+import com.cvpro.app.domain.repository.JobGapEvaluationRepository
 import com.cvpro.app.domain.repository.SettingsContentRepository
 
 /**
@@ -29,6 +30,10 @@ import com.cvpro.app.domain.repository.SettingsContentRepository
 @Module
 @InstallIn(SingletonComponent::class)
 abstract class RepositoryModule {
+    @Binds
+    @Singleton
+    abstract fun bindJobGapEvaluationRepository(impl: ApiJobGapEvaluationRepository): JobGapEvaluationRepository
+
 
     @Binds
     @Singleton

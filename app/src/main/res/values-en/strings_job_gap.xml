@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="job_gap_title">Skills gap for this job</string>
+    <string name="job_gap_analyze">Analyze skills gap</string>
+    <string name="job_gap_choose_cv">Select the résumé you want to evaluate.</string>
+    <string name="job_gap_more_cvs">Load more résumés</string>
+    <string name="job_gap_no_cvs">You have no available résumés. Create one in My résumés and try again.</string>
+    <string name="job_gap_cv_used">Résumé used: %1$s</string>
+    <string name="job_gap_invalid_cv">This résumé cannot be evaluated: a skill has an invalid name or level, or there are more than 500 skills. Correct it in My résumés. Valid levels are beginner, intermediate, advanced and expert.</string>
+    <string name="job_gap_invalid_input">The résumé or job data is invalid or exceeds the allowed limits. Review the résumé and job.</string>
+    <string name="job_gap_forbidden">The service denied access. Try again later or contact the administrator.</string>
+    <string name="job_gap_not_found">The job was not found or the evaluation operation is unavailable.</string>
+    <string name="job_gap_too_large">The data exceeds the maximum size (100 KiB). No information has been truncated.</string>
+    <string name="job_gap_unavailable">The evaluation could not be completed. Try again later.</string>
+    <string name="job_gap_incompatible">The service returned an incompatible response. Try again later.</string>
+    <string name="job_gap_network">Could not connect. Check your connection and try again.</string>
+    <string name="job_gap_client_data">Analysis of declared résumé and job data; this does not verify competencies.</string>
+    <string name="job_gap_insufficient">The job contains no identifiable skills. Documented coverage is unknown.</string>
+    <string name="job_gap_coverage">Documented coverage: %1$s%% (documented skills: %2$d / %3$d)</string>
+    <string name="job_gap_coverage_notice" formatted="false">Coverage compares names. Even 100 % does not prove that required levels are met.</string>
+    <string name="job_gap_documented">Documented skills</string>
+    <string name="job_gap_not_documented">Not documented in the résumé</string>
+    <string name="job_gap_not_documented_skills">Skills not documented</string>
+    <string name="job_gap_none">None</string>
+    <string name="job_gap_missing_notice">Absence from the résumé does not prove the person lacks that skill.</string>
+    <string name="job_gap_levels">Level assessment</string>
+    <string name="job_gap_no_levels">The service did not provide a level assessment. Required levels are unknown; coverage does not prove compliance.</string>
+    <string name="job_gap_summary">Compared: %1$d · Below: %2$d · Meet: %3$d · Unknown required level: %4$d · Conflicts: %5$d</string>
+    <string name="job_gap_cv_level">Résumé level: %1$s</string>
+    <string name="job_gap_required_level">Required level: %1$s</string>
+    <string name="job_gap_unknown">Required level unknown</string>
+    <string name="job_gap_below">Documented level below requirement</string>
+    <string name="job_gap_meets">The declared level meets the explicit requirement</string>
+    <string name="job_gap_deficit">Ordinal deficit (steps): %1$d. This is not a percentage.</string>
+    <string name="job_gap_conflict">Conflicting level requirements; no level has been chosen.</string>
+    <string name="job_gap_optional">Optional mention: does not establish a mandatory level.</string>
+    <string name="job_gap_negated">The mention is negated.</string>
+    <string name="job_gap_contradictory">Contradictory levels were detected.</string>
+    <string name="job_gap_ambiguous">The level requirement is ambiguous.</string>
+    <string name="job_gap_no_evidence">No explicit evidence of a mandatory level.</string>
+    <string name="job_gap_evidence_description">Evidence in description: %1$s</string>
+    <string name="job_gap_evidence_requirements">Evidence in requirements: %1$s</string>
+</resources>
