@@ -32,6 +32,10 @@ import com.cvpro.app.domain.repository.SettingsContentRepository
 abstract class RepositoryModule {
     @Binds
     @Singleton
+    abstract fun bindCourseRepository(impl: ApiCourseRepository): com.cvpro.app.domain.repository.CourseRepository
+
+    @Binds
+    @Singleton
     abstract fun bindJobSkillsGapRepository(impl: ApiJobSkillsGapRepository): JobSkillsGapRepository
 
     @Binds

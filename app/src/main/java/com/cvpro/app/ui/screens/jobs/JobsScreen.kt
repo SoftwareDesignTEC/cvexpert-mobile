@@ -64,6 +64,7 @@ fun JobsScreen(
     modifier: Modifier = Modifier,
     viewModel: JobsViewModel = hiltViewModel(),
     onCvsClick: () -> Unit = {},
+    onExploreCourses: (String?) -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     // El Scaffold de la raíz comparte un único snackbar, igual que en Plantillas.
@@ -97,6 +98,7 @@ fun JobsScreen(
         onApply = viewModel::onApply,
         modifier = modifier,
         onCvsClick = onCvsClick,
+        onExploreCourses = onExploreCourses,
     )
 }
 
@@ -116,13 +118,15 @@ fun JobsContent(
     onApply: (JobOffer) -> Unit,
     modifier: Modifier = Modifier,
     onCvsClick: () -> Unit = {},
+    onExploreCourses: (String?) -> Unit = {},
 ) {
     // Oferta abierta en el detalle, o null si la hoja está cerrada.
     var detailOffer by remember { mutableStateOf<JobOffer?>(null) }
     var gapOffer by remember { mutableStateOf<JobOffer?>(null) }
 
     gapOffer?.let { offer ->
-        JobSkillsGapSheet(offer = offer, onDismiss = { gapOffer = null }, onCorrectCv = { gapOffer = null; onCvsClick() })
+        JobSkillsGapSheet(offer = offer, onDismiss = { gapOffer = null }, onCorrectCv = { gapOffer = null; onCvsClick() },
+            onExploreCourses = { skill -> gapOffer = null; onExploreCourses(skill) })
     }
 
     detailOffer?.let { offer ->

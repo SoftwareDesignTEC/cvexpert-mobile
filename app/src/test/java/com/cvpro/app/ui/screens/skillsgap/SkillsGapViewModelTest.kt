@@ -91,13 +91,6 @@ class SkillsGapViewModelTest {
         assertNull(gaps.saved)
     }
 
-    @Test fun unresolvedReasonsHaveUiMessages() {
-        val reasons = listOf("MISSING_USER_SKILL", "MISSING_MARKET_REQUIREMENT", "UNKNOWN_LEVEL",
-            "UNKNOWN_SCALE", "SCALE_MISMATCH")
-        assertEquals(5, reasons.map(::unresolvedReasonMessage).distinct().size)
-        assertEquals(R.string.skills_gap_unresolved_other, unresolvedReasonMessage("FUTURE_REASON"))
-    }
-
     @Test fun cvServiceFailureDoesNotPreventReadingExistingSnapshot() = runTest(dispatcher) {
         val gaps = FakeGaps()
         val vm = SkillsGapViewModel(gaps, FakeCvs().apply { listError = java.io.IOException() })

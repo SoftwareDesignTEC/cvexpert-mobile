@@ -33,9 +33,7 @@ internal fun acceptancePreviewState(): JobSkillsGapUiState {
 internal fun JobGapAcceptancePreview() {
     CvProTheme {
         Surface {
-            SkillsGapModeContent(SkillsGapMode.OFFER, {},
-                offerContent = { JobSkillsGapContent(acceptancePreviewState(), {}, {}, {}, {}, {}) },
-                marketContent = {})
+            JobSkillsGapContent(acceptancePreviewState(), {}, {}, {}, {}, {})
         }
     }
 }

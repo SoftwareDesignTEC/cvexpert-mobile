@@ -55,7 +55,7 @@ class JobGapUxTest {
     @Test fun `main flow fetches repository offers only after explicit CV selection and submits chosen models`() = runTest(dispatcher) {
         val offers = UxOffers()
         val gaps = UxGaps()
-        val vm = JobSkillsGapViewModel(UxCvs(), gaps, offers)
+        val vm = JobSkillsGapViewModel(UxCvs(), gaps, offers, EmptyCourseRepository())
         vm.start(); vm.start(); advanceUntilIdle()
         assertNull(vm.uiState.value.selectedCv)
         assertNull(vm.uiState.value.offer)
@@ -73,7 +73,7 @@ class JobGapUxTest {
 
     @Test fun `Jobs entry uses preselected offer and does not fetch offer list`() = runTest(dispatcher) {
         val offers = UxOffers()
-        val vm = JobSkillsGapViewModel(UxCvs(), UxGaps(), offers)
+        val vm = JobSkillsGapViewModel(UxCvs(), UxGaps(), offers, EmptyCourseRepository())
         vm.open(jobGapOffer()); advanceUntilIdle()
         vm.selectCv("cv1"); advanceUntilIdle()
         assertTrue(vm.uiState.value.offerLocked)
@@ -84,7 +84,7 @@ class JobGapUxTest {
 
     @Test fun `search is debounced paginated and discards late old query`() = runTest(dispatcher) {
         val offers = UxOffers()
-        val vm = JobSkillsGapViewModel(UxCvs(), UxGaps(), offers)
+        val vm = JobSkillsGapViewModel(UxCvs(), UxGaps(), offers, EmptyCourseRepository())
         vm.start(); advanceUntilIdle(); vm.selectCv("cv1"); advanceUntilIdle()
         vm.loadOffers(); vm.loadOffers(); advanceUntilIdle()
         assertEquals(listOf(1 to "", 2 to ""), offers.calls)
@@ -142,7 +142,7 @@ class JobGapUxTest {
 
     @Test fun `changing offer cancels analysis and stale response cannot replace new selection`() = runTest(dispatcher) {
         val gaps = UxGaps().apply { pending = CompletableDeferred() }
-        val vm = JobSkillsGapViewModel(UxCvs(), gaps, UxOffers())
+        val vm = JobSkillsGapViewModel(UxCvs(), gaps, UxOffers(), EmptyCourseRepository())
         vm.start(); advanceUntilIdle(); vm.selectCv("cv1"); advanceUntilIdle()
         vm.selectOffer("job1"); vm.analyze(); runCurrent()
         vm.selectOffer("job2")
@@ -153,7 +153,7 @@ class JobGapUxTest {
     }
 
     private suspend fun TestScope.selected(gaps: UxGaps): JobSkillsGapViewModel {
-        val vm = JobSkillsGapViewModel(UxCvs(), gaps, UxOffers())
+        val vm = JobSkillsGapViewModel(UxCvs(), gaps, UxOffers(), EmptyCourseRepository())
         vm.open(jobGapOffer()); testScheduler.advanceUntilIdle()
         vm.selectCv("cv1"); testScheduler.advanceUntilIdle()
         return vm

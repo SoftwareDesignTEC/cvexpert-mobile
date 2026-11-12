@@ -5,11 +5,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cvpro.app.R
 import com.cvpro.app.domain.model.*
+import com.cvpro.app.domain.repository.CourseRepository
 import com.cvpro.app.domain.repository.CvRepository
 import com.cvpro.app.domain.repository.JobOfferRepository
 import com.cvpro.app.domain.repository.JobSkillsGapRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -34,10 +37,18 @@ data class JobSkillsGapUiState(
     @param:StringRes val offersError: Int? = null,
     val isLoading: Boolean = false,
     val analysis: JobSkillsGapAnalysis? = null,
+    val levelCourses: Map<String, LevelCoursesState> = emptyMap(),
     @param:StringRes val errorMessage: Int? = null,
     val canEvaluateOnly: Boolean = false,
     val needsCvCorrection: Boolean = false,
 )
+
+data class LevelCoursesState(
+    val items: List<Course> = emptyList(), val page: Int = 0, val totalRecords: Long = 0,
+    val loading: Boolean = false, val error: CourseFailure? = null, val excludedRecords: Int = 0,
+) {
+    val hasMore get() = page.toLong() * 5 < totalRecords
+}
 
 /** Shared by the main offer mode and the sheet opened from Jobs. Never writes market snapshots. */
 @HiltViewModel
@@ -45,9 +56,47 @@ class JobSkillsGapViewModel @Inject constructor(
     private val cvs: CvRepository,
     private val gaps: JobSkillsGapRepository,
     private val jobs: JobOfferRepository,
+    private val courses: CourseRepository,
 ) : ViewModel() {
     private val _uiState = MutableStateFlow(JobSkillsGapUiState())
     val uiState = _uiState.asStateFlow()
+    private val courseOperations = mutableMapOf<String, Job>()
+    private val courseSlots = Semaphore(2)
+    // Each analysis owns its course requests. A late transport response cannot populate another selection.
+    private var courseGeneration = 0
+    private fun resetCourses() {
+        courseGeneration++
+        courseOperations.values.forEach { it.cancel() }
+        courseOperations.clear()
+        _uiState.update { it.copy(levelCourses = emptyMap()) }
+    }
+
+    fun loadLevelCourses(skillName: String, nextPage: Boolean = false) {
+        if (_uiState.value.analysis?.assessments.orEmpty().none { it.name == skillName && it.canSuggestLevelCourses() }) return
+        val previous = _uiState.value.levelCourses[skillName] ?: LevelCoursesState()
+        if (previous.loading || (previous.page > 0 && previous.error == null && !nextPage) || (nextPage && !previous.hasMore)) return
+        val page = if (nextPage || previous.error != null) previous.page + 1 else 1
+        val generation = courseGeneration
+        _uiState.update { it.copy(levelCourses = it.levelCourses + (skillName to previous.copy(loading = true, error = null))) }
+        courseOperations[skillName] = viewModelScope.launch {
+            try {
+                val result = courseSlots.withPermit {
+                    courses.getCourses(page, 5, CourseFilters(skillName = skillName))
+                }
+                currentCoroutineContext().ensureActive()
+                if (generation != courseGeneration) return@launch
+                _uiState.update { it.copy(levelCourses = it.levelCourses + (skillName to LevelCoursesState(
+                    (previous.items + result.items).distinctBy { course -> course.id }, result.page, result.totalRecords,
+                    excludedRecords = previous.excludedRecords + result.excludedRecords))) }
+            } catch (error: CancellationException) { throw error }
+            catch (error: Exception) {
+                currentCoroutineContext().ensureActive()
+                if (generation == courseGeneration) _uiState.update { it.copy(levelCourses = it.levelCourses +
+                    (skillName to previous.copy(error = (error as? CourseException)?.failure ?: CourseFailure.UNAVAILABLE))) }
+            }
+        }
+    }
+
     private var initialized = false
     private var operation: Job? = null
     private var offersOperation: Job? = null
@@ -68,6 +117,7 @@ class JobSkillsGapViewModel @Inject constructor(
     }
 
     fun close() {
+        resetCourses()
         operation?.cancel()
         offersOperation?.cancel()
         retryAction = null
@@ -90,6 +140,7 @@ class JobSkillsGapViewModel @Inject constructor(
         val state = _uiState.value
         if (state.cvs.none { it.id == id } || (state.isLoading && state.selectedCvId == id)) return
         operation?.cancel()
+        resetCourses()
         _uiState.update { it.copy(selectedCvId = id, selectedCv = null, analysis = null) }
         runOperation(R.string.job_gap_cv_detail_error, { selectCv(id) }) {
             val cv = cvs.getCvById(id)
@@ -106,6 +157,7 @@ class JobSkillsGapViewModel @Inject constructor(
         val offer = state.offers.find { it.id == id } ?: return
         operation?.cancel()
         retryAction = null
+        resetCourses()
         _uiState.update { it.copy(offer = offer, analysis = null, isLoading = false,
             errorMessage = null, canEvaluateOnly = false, needsCvCorrection = false) }
     }
@@ -149,6 +201,7 @@ class JobSkillsGapViewModel @Inject constructor(
         val cv = state.selectedCv ?: return
         val offer = state.offer ?: return
         if (state.isLoading) return
+        resetCourses()
         _uiState.update { it.copy(analysis = null) }
         runOperation(R.string.job_gap_error_generic, { analyze(evaluationOnly) }) {
             val result = gaps.analyze(cv, offer, evaluationOnly)

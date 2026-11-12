@@ -26,6 +26,11 @@ import com.cvpro.app.data.remote.api.SettingsApi
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
+    @Provides
+    @Singleton
+    fun provideCourseApi(retrofit: Retrofit): com.cvpro.app.data.remote.api.CourseApi =
+        retrofit.create(com.cvpro.app.data.remote.api.CourseApi::class.java)
+
 
     /**
      * Cliente HTTP con el token de Google adjunto y tiempos de espera propios.
