@@ -86,6 +86,13 @@
     <string name="cv_editor_field">Área de estudio</string>
     <string name="cv_editor_skill_name">Habilidad</string>
     <string name="cv_editor_level">Nivel</string>
+    <string name="cv_skill_level_beginner">Principiante</string>
+    <string name="cv_skill_level_intermediate">Intermedio</string>
+    <string name="cv_skill_level_advanced">Avanzado</string>
+    <string name="cv_skill_level_expert">Experto</string>
+    <string name="cv_skill_level_unselected">Sin seleccionar</string>
+    <string name="cv_skill_level_required">Selecciona un nivel para esta habilidad.</string>
+    <string name="cv_skill_level_invalid">Este nivel no es válido. Selecciona uno de la lista para corregirlo.</string>
     <string name="cv_editor_category">Categoría</string>
     <string name="cv_editor_language">Idioma</string>
     <string name="cv_editor_add_experience">Agregar experiencia</string>

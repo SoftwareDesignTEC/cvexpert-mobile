@@ -67,7 +67,8 @@ fun CvEditorSheet(
     val emailError = FormValidation.email(draft.personalInfo.email)
     val nameError = FormValidation.required(draft.personalInfo.name)
     val phoneError = FormValidation.phoneOptional(draft.personalInfo.phone.orEmpty())
-    val hasErrors = listOf(titleError, emailError, nameError, phoneError).any { it != null }
+    val hasErrors = listOf(titleError, emailError, nameError, phoneError).any { it != null } ||
+        FormValidation.hasInvalidSkills(draft.skills)
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -254,11 +255,13 @@ fun CvEditorSheet(
                         value = skill.name,
                         onValueChange = { update(skill.copy(name = it)) },
                         label = stringResource(R.string.cv_editor_skill_name),
+                        errorMessage = FormValidation.required(skill.name).messageOrNull(showErrors),
                     )
-                    FormTextField(
+                    CvSkillLevelField(
                         value = skill.level,
                         onValueChange = { update(skill.copy(level = it)) },
-                        label = stringResource(R.string.cv_editor_level),
+                        errorMessage = FormValidation.skillLevel(skill.level)
+                            .messageOrNull(showErrors || skill.level.isNotEmpty()),
                     )
                     FormTextField(
                         value = skill.category,
