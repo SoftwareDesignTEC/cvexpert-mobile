@@ -486,7 +486,7 @@
     <string name="skills_gap_incomplete">La cobertura es incompleta. Algunas habilidades quedaron sin comparar.</string>
     <string name="skills_gap_empty_page">Esta página no contiene brechas. Consulta las páginas anteriores.</string>
     <string name="skills_gap_missing_user_skill">Habilidad sin registrar</string>
-    <string name="skills_gap_disabled">El análisis de brechas está pendiente de activación del servicio. Las demás funciones siguen disponibles.</string>
+    <string name="skills_gap_disabled">La comparativa de mercado no está disponible en esta versión. Puedes analizar una oferta en la otra pestaña.</string>
     <string name="skills_gap_select_cv">Selecciona un CV para analizar sus habilidades</string>
     <string name="skills_gap_more_cvs">Cargar más CVs</string>
     <string name="skills_gap_no_cvs">No hay CVs cargados. Puedes crear uno en Mis currículums.</string>

@@ -5,183 +5,142 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cvpro.app.R
-import com.cvpro.app.domain.model.*
+import com.cvpro.app.domain.model.JobOffer
 
+/** The Jobs entry keeps its offer fixed. The main screen uses exactly the same content and VM. */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun JobSkillsGapSheet(
-    offer: JobOffer,
-    onDismiss: () -> Unit,
-    onCorrectCv: () -> Unit,
+    offer: JobOffer, onDismiss: () -> Unit, onCorrectCv: () -> Unit,
     viewModel: JobSkillsGapViewModel = hiltViewModel(),
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
     LaunchedEffect(offer) { viewModel.open(offer) }
     DisposableEffect(viewModel) { onDispose { viewModel.close() } }
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
-    ) {
-        val visibleState = if (state.offer == offer) state else JobSkillsGapUiState(offer = offer, isLoading = true)
-        JobSkillsGapContent(visibleState, viewModel::loadCvs, viewModel::selectCv,
-            { viewModel.analyze() }, { viewModel.analyze(evaluationOnly = true) }, onCorrectCv)
+    ModalBottomSheet(onDismissRequest = onDismiss,
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+        val visible = if (state.offer == offer) state else JobSkillsGapUiState(offer = offer, offerLocked = true, isLoading = true)
+        JobSkillsGapContent(visible, viewModel::loadCvs, viewModel::selectCv, { viewModel.analyze() },
+            { viewModel.analyze(true) }, onCorrectCv, onRetry = viewModel::retry,
+            modifier = Modifier.fillMaxHeight(0.95f))
     }
+}
+
+@Composable
+internal fun JobSkillsGapOfferScreen(
+    onCorrectCv: () -> Unit, modifier: Modifier = Modifier,
+    viewModel: JobSkillsGapViewModel = hiltViewModel(),
+) {
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+    LaunchedEffect(Unit) { viewModel.start() }
+    JobSkillsGapContent(state, viewModel::loadCvs, viewModel::selectCv, { viewModel.analyze() },
+        { viewModel.analyze(true) }, onCorrectCv, modifier = modifier, onRetry = viewModel::retry,
+        onOfferQuery = viewModel::changeOfferQuery, onLoadOffers = viewModel::loadOffers, onSelectOffer = viewModel::selectOffer)
 }
 
 @Composable
 internal fun JobSkillsGapContent(
     state: JobSkillsGapUiState,
-    onLoadCvs: () -> Unit,
-    onSelectCv: (String) -> Unit,
-    onAnalyze: () -> Unit,
-    onEvaluateOnly: () -> Unit,
-    onCorrectCv: () -> Unit,
+    onLoadCvs: () -> Unit, onSelectCv: (String) -> Unit,
+    onAnalyze: () -> Unit, onEvaluateOnly: () -> Unit, onCorrectCv: () -> Unit,
+    modifier: Modifier = Modifier,
+    onRetry: () -> Unit = onAnalyze,
+    onOfferQuery: (String) -> Unit = {}, onLoadOffers: () -> Unit = {}, onSelectOffer: (String) -> Unit = {},
 ) {
-    val locale = LocalConfiguration.current.locales[0]
-    LazyColumn(
-        modifier = Modifier.fillMaxWidth().fillMaxHeight(0.95f),
-        contentPadding = PaddingValues(20.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
+    var editCv by rememberSaveable { mutableStateOf(false) }
+    var editOffer by rememberSaveable { mutableStateOf(false) }
+    val showCvs = state.selectedCv == null || editCv
+    val showOffers = state.selectedCv != null && !state.offerLocked && (state.offer == null || editOffer)
+    LazyColumn(modifier = modifier.fillMaxSize().testTag("job-gap-flow"),
+        contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         item {
-            Text(stringResource(R.string.job_gap_title), style = MaterialTheme.typography.headlineSmall)
-            Text(state.offer?.title.orEmpty(), style = MaterialTheme.typography.titleMedium)
-            Text(state.offer?.company.orEmpty())
-            Text(stringResource(R.string.job_gap_choose_cv), modifier = Modifier.padding(top = 12.dp))
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                Text(state.offer?.title ?: stringResource(R.string.gap_offer_intro), style = MaterialTheme.typography.headlineSmall)
+                state.offer?.let { Text(it.company, style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant) }
+                state.selectedCv?.let { Text(stringResource(R.string.job_gap_cv_used, it.title), style = MaterialTheme.typography.bodyMedium) }
+                if (state.selectedCv != null) FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    TextButton(onClick = { editCv = !editCv }) { Text(stringResource(R.string.gap_change_cv)) }
+                    if (!state.offerLocked && state.offer != null) TextButton(onClick = { editOffer = !editOffer }) {
+                        Text(stringResource(R.string.gap_change_offer))
+                    }
+                }
+            }
         }
-        items(state.cvs, key = { "cv:" + it.id }) { cv ->
-            FilterChip(
-                selected = state.selectedCvId == cv.id,
-                onClick = { onSelectCv(cv.id) },
-                label = { Text(cv.title) },
-            )
-        }
-        if (!state.isLoading && (state.cvPage == 0 || state.hasMoreCvs)) {
-            item { OutlinedButton(onClick = onLoadCvs) { Text(stringResource(R.string.job_gap_load_cvs)) } }
-        }
-        if (!state.isLoading && state.cvPage > 0 && state.cvs.isEmpty()) {
-            item {
+        if (showCvs) {
+            item { Text(stringResource(R.string.gap_choose_cv), style = MaterialTheme.typography.titleMedium) }
+            items(state.cvs, key = { "cv:${it.id}" }) { cv ->
+                OutlinedCard(onClick = { editCv = false; onSelectCv(cv.id) }, modifier = Modifier.fillMaxWidth()) {
+                    Text(cv.title, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(16.dp))
+                }
+            }
+            if (state.hasMoreCvs) item {
+                OutlinedButton(onClick = onLoadCvs, enabled = !state.isLoading) { Text(stringResource(R.string.job_gap_load_cvs)) }
+            }
+            if (!state.isLoading && state.cvPage > 0 && state.cvs.isEmpty()) item {
                 Text(stringResource(R.string.job_gap_no_cvs))
-                OutlinedButton(onClick = onCorrectCv) { Text(stringResource(R.string.job_gap_open_cvs)) }
+                TextButton(onClick = onCorrectCv) { Text(stringResource(R.string.job_gap_open_cvs)) }
             }
         }
-        if (state.isLoading) item { CircularProgressIndicator() }
-        state.errorMessage?.let { message ->
+        if (showOffers) {
             item {
+                Text(stringResource(R.string.gap_choose_offer), style = MaterialTheme.typography.titleMedium)
+                OutlinedTextField(value = state.offerQuery, onValueChange = onOfferQuery,
+                    label = { Text(stringResource(R.string.gap_search_offers)) }, singleLine = true,
+                    modifier = Modifier.fillMaxWidth().testTag("gap-offer-search"))
+            }
+            items(state.offers, key = { "offer:${it.id}" }) { offer ->
+                OutlinedCard(onClick = { editOffer = false; onSelectOffer(offer.id) }, modifier = Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(offer.title, style = MaterialTheme.typography.titleSmall)
+                        Text(offer.company, style = MaterialTheme.typography.bodyMedium)
+                        if (offer.location.isNotBlank()) Text(offer.location, style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+            }
+            if (state.isLoadingOffers) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
+            state.offersError?.let { message -> item {
                 Text(stringResource(message), color = MaterialTheme.colorScheme.error)
-                if (state.selectedCvId != null && state.selectedCv == null && !state.isLoading) {
-                    OutlinedButton(onClick = { onSelectCv(state.selectedCvId) }) {
-                        Text(stringResource(R.string.applications_retry))
+                TextButton(onClick = onLoadOffers) { Text(stringResource(R.string.applications_retry)) }
+            } }
+            if (!state.isLoadingOffers && state.offersError == null && state.offerPage > 0 && state.offers.isEmpty()) item {
+                Text(stringResource(R.string.gap_no_offers))
+            }
+            if (state.hasMoreOffers && !state.isLoadingOffers) item {
+                OutlinedButton(onClick = onLoadOffers) { Text(stringResource(R.string.gap_more_offers)) }
+            }
+        }
+        if (state.isLoading) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
+        state.errorMessage?.let { message -> item {
+            Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)) {
+                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text(stringResource(R.string.gap_error_title), style = MaterialTheme.typography.titleSmall)
+                    Text(stringResource(message), style = MaterialTheme.typography.bodyMedium)
+                    if (!state.isLoading) TextButton(onClick = onRetry) { Text(stringResource(R.string.applications_retry)) }
+                    if (state.canEvaluateOnly) OutlinedButton(onClick = onEvaluateOnly, enabled = !state.isLoading) {
+                        Text(stringResource(R.string.gap_only_levels))
                     }
+                    if (state.needsCvCorrection) TextButton(onClick = onCorrectCv) { Text(stringResource(R.string.job_gap_open_cvs)) }
                 }
-                if (state.needsCvCorrection) {
-                    OutlinedButton(onClick = onCorrectCv) { Text(stringResource(R.string.job_gap_open_cvs)) }
-                }
-                if (state.canEvaluateOnly) {
-                    OutlinedButton(onClick = onEvaluateOnly) { Text(stringResource(R.string.job_gap_evaluate_only)) }
-                }
+            }
+        } }
+        if (state.selectedCv != null && state.offer != null && state.analysis == null && state.errorMessage == null) item {
+            Button(onClick = onAnalyze, enabled = !state.isLoading,
+                modifier = Modifier.fillMaxWidth().testTag("gap-analyze")) {
+                Text(stringResource(R.string.gap_analyze_skills))
             }
         }
-        if (state.selectedCv != null) item {
-            Text(stringResource(R.string.job_gap_cv_used, state.selectedCv.title), style = MaterialTheme.typography.titleSmall)
-            Button(onClick = onAnalyze, enabled = !state.isLoading) {
-                Text(stringResource(R.string.job_gap_analyze))
-            }
-        }
-        state.analysis?.let { analysis ->
-            item {
-                if (analysis.catalogStatus == null) Text(stringResource(R.string.job_gap_evaluation_only))
-                Text(stringResource(R.string.job_gap_client_data))
-                Text(stringResource(R.string.job_gap_coverage_notice))
-                if (analysis.status == JobCoverageStatus.INSUFFICIENT_INFORMATION) {
-                    Text(stringResource(R.string.job_gap_insufficient))
-                } else {
-                    Text(stringResource(R.string.job_gap_coverage,
-                        String.format(locale, "%.2f", analysis.documentedCoveragePercent),
-                        analysis.documentedMatchesCount, analysis.requiredSkillsCount))
-                }
-                if (analysis.status == JobCoverageStatus.COMPLETE) Text(stringResource(R.string.job_gap_complete))
-                Text(stringResource(R.string.job_gap_documented), style = MaterialTheme.typography.titleSmall)
-                if (analysis.matchedSkills.isEmpty()) Text(stringResource(R.string.job_gap_no_documented))
-                analysis.matchedSkills.forEach {
-                    Text(stringResource(R.string.job_gap_skill_level, it.name, stringResource(it.cvLevel.levelLabel())))
-                }
-                Text(stringResource(R.string.job_gap_not_documented), style = MaterialTheme.typography.titleSmall,
-                    modifier = Modifier.padding(top = 12.dp))
-                if (analysis.notDocumentedSkills.isEmpty()) Text(stringResource(R.string.job_gap_no_missing))
-                else Text(analysis.notDocumentedSkills.joinToString(", "))
-                Text(stringResource(R.string.job_gap_missing_notice))
-            }
-            item {
-                Text(stringResource(R.string.job_gap_levels), style = MaterialTheme.typography.titleMedium)
-                val levels = analysis.levelAnalysis
-                Text(if (levels == null) stringResource(R.string.job_gap_no_levels)
-                    else stringResource(R.string.job_gap_summary, levels.compared, levels.below, levels.meets, levels.unknownRequired, levels.conflicts))
-            }
-            items(analysis.assessments.orEmpty()) { LevelAssessmentCard(it) }
-            items(analysis.recommendations, key = { "skill:" + it.skillName }) { recommendation ->
-                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    Text(stringResource(R.string.job_gap_courses_for, recommendation.skillName),
-                        style = MaterialTheme.typography.titleSmall)
-                    if (recommendation.courses.isEmpty()) {
-                        Text(stringResource(if (recommendation.catalogMatch == SkillCatalogMatch.AMBIGUOUS)
-                            R.string.job_gap_ambiguous else R.string.job_gap_no_courses))
-                    }
-                    recommendation.courses.forEach { course ->
-                        CourseCard(course)
-                        Text(stringResource(if (course.isPaid == true) R.string.job_gap_paid else R.string.job_gap_free))
-                    }
-                }
-            }
-        }
-    }
-}
-
-private fun String.levelLabel(): Int = when (this) {
-    "beginner" -> R.string.job_gap_level_beginner
-    "intermediate" -> R.string.job_gap_level_intermediate
-    "advanced" -> R.string.job_gap_level_advanced
-    else -> R.string.job_gap_level_expert
-}
-
-@Composable
-private fun LevelAssessmentCard(assessment: JobLevelAssessment) {
-    OutlinedCard(modifier = Modifier.fillMaxWidth()) {
-        Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            Text(assessment.name, style = MaterialTheme.typography.titleSmall)
-            Text(stringResource(R.string.job_gap_cv_level, assessment.cvLevel?.let { stringResource(it.labelRes) }
-                ?: stringResource(R.string.job_gap_not_documented)))
-            Text(assessment.requiredLevel?.let { stringResource(R.string.job_gap_required_level, stringResource(it.labelRes)) }
-                ?: stringResource(R.string.job_gap_unknown))
-            Text(stringResource(when (assessment.status) {
-                "documented_skill_below_required" -> R.string.job_gap_below
-                "documented_skill_meets_required" -> R.string.job_gap_meets
-                "not_documented" -> R.string.job_gap_not_documented
-                else -> R.string.job_gap_unknown
-            }))
-            assessment.deficitSteps?.let { Text(stringResource(R.string.job_gap_deficit, it)) }
-            if (assessment.detectionStatus == "conflict") Text(stringResource(R.string.job_gap_conflict))
-            assessment.reason?.let { reason ->
-                Text(stringResource(when (reason) {
-                    "optional" -> R.string.job_gap_optional
-                    "negated" -> R.string.job_gap_negated
-                    "contradictory" -> R.string.job_gap_contradictory
-                    "ambiguous" -> R.string.job_gap_level_ambiguous
-                    else -> R.string.job_gap_no_evidence
-                }))
-            }
-            // Backend evidence is untrusted text, never HTML or executable links.
-            assessment.evidenceText?.let {
-                Text(stringResource(if (assessment.evidenceSource == "description")
-                    R.string.job_gap_evidence_description else R.string.job_gap_evidence_requirements, it))
-            }
-        }
+        state.analysis?.let { analysis -> item(key = "result:${analysis.cvId}:${analysis.jobId}") {
+            JobGapResult(analysis)
+        } }
     }
 }

@@ -58,7 +58,9 @@ fun CvProNavGraph(
         composable(CvProDestination.JOBS.route) {
             JobsScreen(onCvsClick = { navController.navigateToDestination(CvProDestination.CVS) })
         }
-        composable(CvProDestination.SKILLS_GAP.route) { SkillsGapScreen() }
+        composable(CvProDestination.SKILLS_GAP.route) {
+            SkillsGapScreen(onCvsClick = { navController.navigateToDestination(CvProDestination.CVS) })
+        }
         composable(CvProDestination.TEMPLATES.route) {
             TemplatesScreen(
                 // Al crear un CV desde una plantilla se abre Mis Currículums con su editor.

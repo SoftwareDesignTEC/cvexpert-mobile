@@ -31,6 +31,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.material3.Tab
+import androidx.compose.material3.PrimaryTabRow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -52,9 +55,41 @@ import com.cvpro.app.ui.components.RadarChart
 import com.cvpro.app.ui.components.RadarSeries
 import com.cvpro.app.ui.theme.CvProTheme
 
-/** Análisis de Brecha con estado. */
+internal enum class SkillsGapMode { OFFER, MARKET }
+
 @Composable
 fun SkillsGapScreen(
+    modifier: Modifier = Modifier,
+    onCvsClick: () -> Unit = {},
+) {
+    var mode by rememberSaveable { mutableStateOf(SkillsGapMode.OFFER) }
+    SkillsGapModeContent(mode, { mode = it }, modifier,
+        offerContent = { JobSkillsGapOfferScreen(onCorrectCv = onCvsClick) },
+        marketContent = { MarketSkillsGapScreen() })
+}
+
+/** Market VM is instantiated only inside its mode, so its opt-in never gates offer analysis. */
+@Composable
+internal fun SkillsGapModeContent(
+    mode: SkillsGapMode, onMode: (SkillsGapMode) -> Unit, modifier: Modifier = Modifier,
+    offerContent: @Composable () -> Unit, marketContent: @Composable () -> Unit,
+) {
+    Column(modifier.fillMaxSize()) {
+        PrimaryTabRow(selectedTabIndex = mode.ordinal) {
+            SkillsGapMode.entries.forEach { option ->
+                Tab(selected = mode == option, onClick = { onMode(option) }, text = {
+                    Text(stringResource(if (option == SkillsGapMode.OFFER) R.string.gap_mode_offer else R.string.gap_mode_market))
+                })
+            }
+        }
+        Box(Modifier.weight(1f)) {
+            if (mode == SkillsGapMode.OFFER) offerContent() else marketContent()
+        }
+    }
+}
+
+@Composable
+private fun MarketSkillsGapScreen(
     modifier: Modifier = Modifier,
     viewModel: SkillsGapViewModel = hiltViewModel(),
 ) {
@@ -90,6 +125,7 @@ fun SkillsGapContent(
             Text(stringResource(R.string.skills_gap_disabled))
             return@Column
         }
+        Text(stringResource(R.string.gap_market_about), style = MaterialTheme.typography.bodyMedium)
         OutlinedButton(onClick = onManualInput, enabled = !uiState.isLoading && (uiState.analysis != null || uiState.inputRequired)) {
             Text(stringResource(R.string.skills_gap_input_title))
         }

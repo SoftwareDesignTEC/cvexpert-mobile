@@ -65,6 +65,7 @@ android {
     defaultConfig {
         // Contrato con DevOps (firma del APK + Firebase). No se cambia.
         applicationId = "com.cvpro.app"
+        testInstrumentationRunner = "com.cvpro.app.test.GapUiTestRunner"
         minSdk = 26
         targetSdk = 35
         // Se sube en cada hito etiquetado. versionCode siempre crece: Firebase y Play
@@ -138,6 +139,10 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.okhttp.mockwebserver)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    androidTestImplementation("androidx.test:runner:1.6.2")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
