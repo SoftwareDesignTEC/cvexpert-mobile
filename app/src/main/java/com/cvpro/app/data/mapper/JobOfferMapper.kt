@@ -17,7 +17,7 @@ fun JobOfferDto.toDomain(): JobOffer {
         type = type.orEmpty(),
         description = description.orEmpty(),
         requirements = requirements.orEmpty(),
-        skills = skills.orEmpty().filter { it.isNotBlank() },
+        skills = skills.orEmpty(),
         salary = salary?.let { Salary(min = it.min ?: 0.0, max = it.max ?: 0.0, currency = it.currency.orEmpty()) },
         matchScore = matchScore,
         // Llega en epoch (o ISO en los mocks viejos); la pantalla la muestra ya legible.

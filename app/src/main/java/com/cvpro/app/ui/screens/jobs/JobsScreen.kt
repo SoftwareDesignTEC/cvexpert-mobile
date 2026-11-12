@@ -33,7 +33,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.cvpro.app.ui.components.JobOfferDetailSheet
-import com.cvpro.app.ui.screens.skillsgap.JobGapEvaluationSheet
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -54,6 +53,7 @@ import com.cvpro.app.ui.components.outlinedOnCardColors
 import com.cvpro.app.R
 import com.cvpro.app.domain.model.JobModality
 import com.cvpro.app.domain.model.JobOffer
+import com.cvpro.app.ui.screens.skillsgap.JobSkillsGapSheet
 import com.cvpro.app.ui.components.CompatibilityRing
 import com.cvpro.app.ui.components.EmptyState
 import com.cvpro.app.ui.theme.CvProTheme
@@ -63,6 +63,7 @@ import com.cvpro.app.ui.theme.CvProTheme
 fun JobsScreen(
     modifier: Modifier = Modifier,
     viewModel: JobsViewModel = hiltViewModel(),
+    onCvsClick: () -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     // El Scaffold de la raíz comparte un único snackbar, igual que en Plantillas.
@@ -95,6 +96,7 @@ fun JobsScreen(
         onLoadMore = viewModel::onLoadMore,
         onApply = viewModel::onApply,
         modifier = modifier,
+        onCvsClick = onCvsClick,
     )
 }
 
@@ -113,13 +115,14 @@ fun JobsContent(
     onLoadMore: () -> Unit,
     onApply: (JobOffer) -> Unit,
     modifier: Modifier = Modifier,
+    onCvsClick: () -> Unit = {},
 ) {
     // Oferta abierta en el detalle, o null si la hoja está cerrada.
     var detailOffer by remember { mutableStateOf<JobOffer?>(null) }
     var gapOffer by remember { mutableStateOf<JobOffer?>(null) }
 
     gapOffer?.let { offer ->
-        JobGapEvaluationSheet(offer = offer, onDismiss = { gapOffer = null })
+        JobSkillsGapSheet(offer = offer, onDismiss = { gapOffer = null }, onCorrectCv = { gapOffer = null; onCvsClick() })
     }
 
     detailOffer?.let { offer ->

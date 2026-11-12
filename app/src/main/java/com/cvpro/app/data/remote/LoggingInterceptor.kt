@@ -7,31 +7,22 @@ import okhttp3.Response
 import javax.inject.Inject
 import javax.inject.Singleton
 
-/**
- * Escribe en el log lo que devuelve el servicio.
- *
- * Sirve para ver el JSON tal como llega cuando un campo no aparece en pantalla: sin esto
- * hay que adivinar qué nombre usa el mock. Solo corre en compilaciones de depuración, así
- * que el APK de release no registra nada.
- */
+/** Diagnóstico de depuración limitado al código HTTP para todas las rutas. */
 @Singleton
-class LoggingInterceptor @Inject constructor() : Interceptor {
+class LoggingInterceptor internal constructor(
+    private val enabled: Boolean,
+    private val log: (String) -> Unit,
+) : Interceptor {
+
+    @Inject constructor() : this(BuildConfig.DEBUG, { message -> Log.d(TAG, message) })
 
     override fun intercept(chain: Interceptor.Chain): Response {
         val response = chain.proceed(chain.request())
-        if (!BuildConfig.DEBUG) return response
-        // Evaluation contains CV levels and verbatim job evidence. Do not put its body in logcat.
-        if (chain.request().url.encodedPath.endsWith("/skills-gap/evaluate")) return response
-
-        // peekBody lee el cuerpo sin consumirlo: Retrofit lo sigue necesitando después.
-        val body = response.peekBody(MAX_LOG_BYTES).string()
-        Log.d(TAG, "${chain.request().url} → ${response.code}")
-        Log.d(TAG, body)
+        if (enabled) log("HTTP ${response.code}")
         return response
     }
 
     private companion object {
         const val TAG = "ApiResponse"
-        const val MAX_LOG_BYTES = 8_000L
     }
 }

@@ -137,6 +137,13 @@
     <string name="cv_editor_field">Área de estudio</string>
     <string name="cv_editor_skill_name">Habilidad</string>
     <string name="cv_editor_level">Nivel</string>
+    <string name="cv_skill_level_beginner">Principiante</string>
+    <string name="cv_skill_level_intermediate">Intermedio</string>
+    <string name="cv_skill_level_advanced">Avanzado</string>
+    <string name="cv_skill_level_expert">Experto</string>
+    <string name="cv_skill_level_unselected">Sin seleccionar</string>
+    <string name="cv_skill_level_required">Selecciona un nivel para esta habilidad.</string>
+    <string name="cv_skill_level_invalid">Este nivel no es válido. Selecciona uno de la lista para corregirlo.</string>
     <string name="cv_editor_category">Categoría</string>
     <string name="cv_editor_language">Idioma</string>
     <string name="cv_editor_add_experience">Agregar experiencia</string>
@@ -479,6 +486,13 @@
     <string name="skills_gap_incomplete">La cobertura es incompleta. Algunas habilidades quedaron sin comparar.</string>
     <string name="skills_gap_empty_page">Esta página no contiene brechas. Consulta las páginas anteriores.</string>
     <string name="skills_gap_missing_user_skill">Habilidad sin registrar</string>
+    <string name="skills_gap_disabled">El análisis de brechas está pendiente de activación del servicio. Las demás funciones siguen disponibles.</string>
+    <string name="skills_gap_select_cv">Selecciona un CV para analizar sus habilidades</string>
+    <string name="skills_gap_more_cvs">Cargar más CVs</string>
+    <string name="skills_gap_no_cvs">No hay CVs cargados. Puedes crear uno en Mis currículums.</string>
+    <string name="skills_gap_selected_cv">CV seleccionado: %1$s</string>
+    <string name="skills_gap_replace_notice">Se enviarán %1$d habilidades; %2$d con nivel desconocido. Esto reemplaza tu instantánea de análisis completa con autoevaluaciones del CV. No vincula ni verifica el CV. Una lista vacía guarda una instantánea vacía.</string>
+    <string name="skills_gap_analyze">Enviar habilidades y analizar</string>
     <string name="skills_gap_missing_requirement">Requisito de mercado ausente</string>
     <string name="skills_gap_unknown_level">Nivel desconocido</string>
     <string name="skills_gap_unknown_scale">Escala desconocida</string>
@@ -489,7 +503,6 @@
     <string name="skills_gap_input_title">Registrar habilidades</string>
     <string name="skills_gap_update_skills">Reemplazar habilidades</string>
     <string name="skills_gap_review_title">Revisar la lista completa</string>
-    <string name="skills_gap_replace_notice">Al guardar, esta lista reemplaza todas tus habilidades de Brecha. Incluye también las que quieras conservar. Aquí solo se muestran las habilidades que agregaste en este formulario. Escribe los nombres tal como aparecen en los requisitos del mercado.</string>
     <string name="skills_gap_skill_name">Nombre de la habilidad</string>
     <string name="skills_gap_review_skill">%1$s · %2$s</string>
     <string name="skills_gap_add_skill">Agregar habilidad</string>
@@ -551,4 +564,6 @@
     <string name="profile_location_locating">Buscando tu ubicación…</string>
     <string name="profile_location_unavailable">No pudimos obtener tu ubicación. Revisa que la ubicación del teléfono esté activa o escríbela a mano.</string>
     <string name="profile_location_denied">Sin permiso de ubicación. Puedes escribirla a mano.</string>
+    <string name="skills_gap_snapshot_notice">Resultado de la instantánea guardada del usuario. Seleccionar otro CV no cambia la instantánea hasta enviar sus habilidades.</string>
+    <string name="skills_gap_manual_replace_notice">Al confirmar, reemplazarás toda tu instantánea de habilidades para el análisis de mercado. Los niveles desconocidos se conservarán como desconocidos.</string>
 </resources>

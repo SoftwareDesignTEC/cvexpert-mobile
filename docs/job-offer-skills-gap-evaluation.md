@@ -1,132 +1,140 @@
-# Análisis de brecha por oferta en Android
+# Integración del PR #34 en develop
 
-Base: `main` (`0dbaa0f`), rama `feat/job-offer-skills-gap-evaluation`.
+La rama `feat/job-offer-skills-gap-evaluation` integra `origin/develop` mediante un merge normal.
+El destino del PR #34 es `develop`. No se reescribe el historial remoto ni se fusiona el PR.
 
-Contrato consultado: [OpenAPI de Brecha en develop](https://github.com/SoftwareDesignTEC/cvexpert-ms-brecha-cursos/blob/develop/openapi.yaml)
+## Referencias y divergencia inspeccionadas
+
+- Rama del PR antes de integrar: `056c537`, creada sobre `main` en `0dbaa0f`.
+- `origin/develop`: `c257a8c`; `origin/main`: `d4968f8` al ejecutar `git fetch origin`.
+- Ancestro común entre main/develop y entre la rama del PR/develop: `bb21148`.
+- Develop aporta los PR #31/#32 (análisis por oferta, cursos y selector canónico de niveles)
+  y la validación CI separada de distribución. La rama del PR ya hereda de main cambios
+  de CV, fechas, IA, ubicación, autenticación y postulaciones. Se conserva ese historial;
+  el diff del PR contra develop incluye esos cambios heredados, no solo la evaluación nueva.
+
+Contratos consultados: [OpenAPI vigente](https://github.com/SoftwareDesignTEC/cvexpert-ms-brecha-cursos/blob/develop/openapi.yaml)
 y [niveles requeridos por oferta](https://github.com/SoftwareDesignTEC/cvexpert-ms-brecha-cursos/blob/develop/docs/job-required-skill-levels.md).
-`GET /jobs/{id}` está documentado en `cvexpert-docs/contratos/ofertas-postulaciones.openapi.yaml`.
+`recommendations` rechaza `description`/`requirements`; `evaluate` los admite. No se modifican
+contratos del backend ni se implementa comparación de competencias en Android.
 
-## Flujo y decisiones
+## Arquitectura final: un solo flujo por oferta
 
-En Ofertas → Ver detalle → Analizar brecha se abre una hoja Compose. Se cargan CV paginados
-por `CvRepository` y el usuario elige uno; se obtiene su detalle por `getCvById`.
-El botón Analizar brecha envía una evaluación de ese CV y una sola oferta.
-Si faltan habilidades, descripción o requisitos en la lista, el repositorio consulta
-`GET jobs/{id}`. Usa los campos de detalle disponibles y conserva los de lista cuando el
-detalle omite un campo. Un error de detalle impide enviar una evaluación incompleta y permite reintentar.
-Un detalle confirmado sin habilidades se evalúa como tal; no se extraen nombres en Android.
+La entrada está en Ofertas → detalle → Analizar con mi CV. El callback de `JobOfferDetailSheet`
+es opcional; Postularme y los otros consumidores de la hoja conservan su comportamiento.
 
-El callback de `JobOfferDetailSheet` es opcional; los usos de Panel y Postulaciones conservan
-su comportamiento. El botón Postularme, su registro y la apertura de la publicación original
-no cambian. Tampoco cambian GET `/skills-gap`, PUT `/skills-gap/input` ni recomendaciones.
+1. `JobSkillsGapSheet` muestra CV paginados mediante `JobSkillsGapViewModel` y `CvRepository`.
+   No se selecciona uno automáticamente; se obtiene el detalle del elegido con `getCvById`.
+2. `ApiJobSkillsGapRepository` consulta `GET /jobs/{id}` si faltan habilidades, descripción
+   o requisitos en la oferta. Usa el detalle disponible, sin extraer ni inventar habilidades.
+3. La acción normal consulta `recommendations` con el contrato original, sin texto adicional.
+   El ViewModel conserva y presenta esos cursos antes de solicitar niveles a `evaluate`.
+4. La evaluación envía descripción y requisitos. Solo se agregan sus niveles a los cursos
+   si coinciden CV, oferta y habilidades documentadas/no documentadas de ambas respuestas.
+   Si la oferta cambió entre peticiones, se informa incompatibilidad y no se mezclan datos.
+5. Si falla la evaluación, los cursos ya disponibles se conservan. Si falla el catálogo con
+   `CATALOG_UNAVAILABLE`, se mantiene la opción explícita «Consultar solo la evaluación»;
+   esa acción no vuelve a consultar recomendaciones y puede presentar niveles sin cursos.
 
-- DTO de evaluación separados, mapper de datos, repositorio Hilt, ViewModel y hoja Compose.
-- Se usa el Retrofit de `NetworkModule` y su `AuthInterceptor`; no se suministran encabezados
-  de identidad ni certificados desde Android. No se exige `X-Data-Mode` a esta operación.
-- Política del CV: cualquier nombre vacío/inválido, nivel no reconocido por `SkillLevel`,
-  nombre de más de 200 puntos Unicode o más de 500 habilidades bloquea **todo** el envío.
-  No se descartan habilidades ni se reemplazan niveles. Un CV vacío es válido: no documenta habilidades.
-- Se validan los límites del contrato, Unicode y controles antes de enviar. El tamaño total
-  se mide con Gson (el mismo conversor de Retrofit), en UTF-8, con máximo 100 KiB.
-  No se recorta texto. Los duplicados contradictorios que rechace el backend producen un error de datos.
-- Se envían descripción y requisitos, incluso vacíos si la oferta no tiene texto. Las respuestas
-  anteriores sin `skillLevelAssessments`/`levelAnalysis` siguen mostrando cobertura y un aviso
-  de que no se conocen los niveles requeridos.
-- La comparación, extracción de evidencia y déficit pertenecen al backend. Android conserva
-  sus resultados. `complete`/100 % describen nombres documentados; no son cumplimiento de niveles.
-  `deficitSteps=null` no se convierte en cero; son pasos ordinales, nunca porcentajes.
-- Conflictos, opcionalidad, niveles desconocidos y evidencia se muestran como texto sin interpretar HTML.
-- La carga se marca antes de lanzar la corrutina para impedir dobles pulsaciones. Cambiar
-  CV/oferta o cerrar cancela la operación. Antes de publicar resultados se comprueba que la
-  corrutina siga activa; la hoja no presenta estado de otra oferta mientras cambia su argumento.
-- Hay estados de carga, lista vacía, error y reintento de la operación que falló. Los errores
-  400/401/403/404/413/503 se traducen a mensajes locales, sin cuerpos ni excepciones remotas.
-  El logger existente omite el cuerpo de evaluación también en Debug.
+Solo existe `JobSkillsGapRepository`, su implementación y su binding Hilt; también un único
+ViewModel y una única hoja por oferta. Se retiran las clases paralelas `JobGapEvaluation*`.
+Los tests del PR original mantienen sus escenarios y nombres de suite, adaptados al flujo unificado.
 
-## Ejemplo del request construido
+El request de recomendaciones y el de evaluación son DTO distintos dentro de `JobSkillsGapDto.kt`.
+Comparten la proyección mínima del CV. La respuesta y los modelos de dominio existentes se
+extienden con `skillLevelAssessments`/`levelAnalysis`, opcionales por compatibilidad intencional.
 
-Los tests usan `CvDto` y `JobOfferDto` convertidos con los mappers reales:
+## Datos, estados y privacidad
+
+- Se reutilizan `NetworkModule` y `AuthInterceptor`. Android no introduce encabezados de
+  identidad, certificados, credenciales ni URLs Azure fijas.
+- `SkillLevel` define los cuatro valores válidos. Una habilidad con nivel inválido bloquea
+  todo el envío; un nombre inválido o más de 500 habilidades también lo bloquea. No se filtran
+  habilidades ni se convierten niveles desconocidos en principiante. Un CV vacío es válido.
+- Se validan límites por puntos Unicode: 200 habilidades por oferta, 20 000 caracteres de
+  descripción, 100 requisitos de 2 000 caracteres y JSON UTF-8 de 100 KiB. No hay truncamiento.
+  Identificadores, controles y sustitutos Unicode inválidos se rechazan localmente.
+- El repositorio y mapper validan identidad de la respuesta, cobertura, niveles y estados.
+  Una respuesta antigua sin análisis de niveles conserva la cobertura y muestra el aviso correspondiente.
+- El backend es quien calcula el déficit. `null` no se convierte en cero. Los pasos son ordinales,
+  no porcentajes. `complete`/100 % solo indican nombres documentados, no cumplimiento de niveles.
+- La hoja muestra niveles, evidencia textual, desconocidos, opcionalidad y conflictos. La evidencia
+  se presenta como texto. No hay recomendaciones nuevas basadas en déficits de nivel.
+- Cambiar CV/oferta o cerrar cancela la operación. Se comprueba actividad antes de publicar
+  resultados y se bloquea la doble pulsación. La hoja oculta estado de otra oferta durante el cambio.
+- Los errores HTTP se convierten en mensajes locales. Se conserva el logger de develop, que
+  registra únicamente el código HTTP en todas las rutas: sin cuerpos, URLs, tokens ni evidencia.
+
+## Resolución de los 22 conflictos
+
+| Grupo | Resolución |
+| --- | --- |
+| `SkillsGapApi.kt` | Una declaración por POST; DTO textual solo en evaluate. GET/PUT conservan el contrato y feature gate de develop. |
+| `SkillsGapMapper.kt`, `SkillsGapDto.kt`, `ApiSkillsGapRepository.kt`, modelo/interfaz de mercado | Se mantiene la selección de CV, snapshot, metadatos y tipos de develop. Se conserva la entrada manual de main. Un 409 solo solicita snapshot si GET devuelve `SKILLS_INPUT_REQUIRED`; otro 409 no se interpreta como datos faltantes. |
+| `RepositoryModule.kt` | Un binding JobSkillsGap; se conservan los demás bindings de la rama, incluidos idioma, IA y notificaciones. |
+| `JobsScreen.kt` | Una entrada al análisis en el detalle; conserva postulación, URL original, filtros y paginación de la rama. |
+| `CvEditorSheet.kt` | Combina validaciones y campos del editor de main con el selector canónico y la validación de habilidades de develop. |
+| `JobOfferMapper.kt`, DTO/modelo de oferta | Un solo campo skills, sin filtrar la entrada; conserva applyUrl y fecha de publicación. |
+| `LoggingInterceptor.kt` | Versión de develop que limita los logs al código HTTP, con sus pruebas. |
+| Home/Profile | Se conserva la presentación con guardas de cobertura, mercado ausente y radar solo cuando hay datos. |
+| `SkillsGapScreen.kt`, `SkillsGapViewModel.kt`, test con add/add | Un flujo de mercado con selector de CV y entrada manual. Las cinco regresiones manuales quedan en `SkillsGapManualInputTest`; se conservan las siete de develop. |
+| XML español/inglés | Unión de claves por idioma. Los textos por oferta quedan en `job_skills_gap.xml`; se eliminan `strings_job_gap.xml` y claves nuevas sin consumidores. Ambigüedad de catálogo y de nivel tienen textos distintos. |
+| Gradle/CI | Se conserva el flag de mercado y el CI de develop para Debug/Release/pruebas/lint; también el diagnóstico de firma heredado de main. No se cambia la versión ni se distribuye desde la rama del PR. |
+
+`DetailSheet.kt`, `JobSkillsGapSheet.kt`, su ViewModel/repositorio/mapper/DTO/modelos y
+las pruebas de integración se adaptan explícitamente fuera de las marcas de conflicto.
+Los fixtures del editor se actualizan a las fechas JSON de la rama; no se elimina su cobertura.
+
+## Ejemplo de evaluación
 
 ```json
 {
-  "cv": {
-    "id": "cv1",
-    "skills": [
-      {"name": "Python", "level": "intermediate"},
-      {"name": "SQL", "level": "advanced"}
-    ]
-  },
-  "jobs": [{
-    "id": "job1",
-    "skills": ["Python", "SQL", "Docker"],
+  "cv": {"id": "cv1", "skills": [
+    {"name": "Python", "level": "intermediate"},
+    {"name": "SQL", "level": "advanced"}
+  ]},
+  "jobs": [{"id": "job1", "skills": ["Python", "SQL", "Docker"],
     "description": "Python avanzado y SQL básico.",
-    "requirements": ["Docker intermedio"]
-  }]
+    "requirements": ["Docker intermedio"]}]
 }
 ```
 
-La respuesta de prueba del backend documenta Python con déficit 1, SQL con déficit 0 y
-Docker sin `cvLevel` ni déficit. Estas son respuestas simuladas del contrato, no una llamada a Azure.
+Para recomendaciones, el mismo CV/oferta se proyecta solamente con `id` y `skills`.
+El fixture del backend devuelve déficit 1 para Python, 0 para SQL y `cvLevel`/déficit null
+para Docker. Son respuestas simuladas de contrato, no una ejecución contra Azure.
 
-## Verificación local
+## Validación y alcance
 
-Archivos de implementación (bajo `app/src/main/java/com/cvpro/app/`):
-
-- `data/remote/api/SkillsGapApi.kt`, `data/remote/api/JobApi.kt`: operaciones Retrofit.
-- `data/remote/dto/JobGapEvaluationDto.kt`, `data/mapper/JobGapEvaluationMapper.kt`: contrato y adaptación.
-- `data/repository/ApiJobGapEvaluationRepository.kt`, `data/repository/RepositoryModule.kt`: repositorio y binding Hilt.
-- `domain/model/JobGapEvaluation.kt`, `domain/repository/JobGapEvaluationRepository.kt`: modelos e interfaz.
-- `ui/screens/skillsgap/JobGapEvaluationViewModel.kt`, `ui/screens/skillsgap/JobGapEvaluationSheet.kt`: estados y presentación.
-- `ui/screens/jobs/JobsScreen.kt`, `ui/components/DetailSheet.kt`: entrada opcional al flujo.
-- `data/remote/LoggingInterceptor.kt`: exclusión del cuerpo de evaluación.
-
-También se agregan `app/src/main/res/values/strings_job_gap.xml` y
-`app/src/main/res/values-en/strings_job_gap.xml`; las pruebas son
-`app/src/test/java/com/cvpro/app/data/JobGapEvaluationTest.kt` y
-`app/src/test/java/com/cvpro/app/ui/screens/skillsgap/JobGapEvaluationViewModelTest.kt`.
-Este documento completa los 18 archivos de la entrega.
-
-Desde la raíz del worktree, con SDK Android instalado y accesible:
+Comando obligatorio:
 
 ```powershell
-$env:ANDROID_HOME = 'C:\ruta\al\Android\Sdk'
 .\gradlew.bat assembleDebug testDebugUnitTest lintDebug --console=plain
 git diff --check
 ```
 
-Las pruebas nuevas cubren proyección real de modelos, transporte de ambos textos, niveles del
-contrato, respuestas antiguas, cobertura completa con déficit, ausencia de habilidades,
-CV vacío/inválido, límites Unicode/tamaño total, detalle de oferta, errores HTTP, token mediante
-el interceptor existente, reintentos, selección explícita, doble pulsación y respuestas tardías
-después de cambiar de CV/oferta. También se ejecuta la suite existente del análisis de mercado.
+Se ejecutan también `assembleRelease` y `testReleaseUnitTest`, como exige el CI.
+Las suites incluyen mercado, editor de CV, privacidad de logs, recomendaciones, niveles,
+límites, reintentos, HTTP, solicitudes duplicadas y resultados tardíos.
+Se añaden pruebas específicas de contratos separados de POST y combinación de cursos/niveles,
+incluidas las dos direcciones de fallo (catálogo o evaluación).
 
-Resultado final local (11 de noviembre de 2026): `assembleDebug`, `testDebugUnitTest` y
-`lintDebug` terminaron con `BUILD SUCCESSFUL`. Pasaron 41 pruebas (20 nuevas), sin fallos ni
-errores. Lint terminó con 0 errores y 99 advertencias del proyecto; no señala los archivos
-nuevos de esta entrega. `git diff --check` y `git diff --cached --check` también pasaron.
-El APK Debug se generó en `app/build/outputs/apk/debug/app-debug.apk`.
+Resultado local final: `assembleDebug assembleRelease testDebugUnitTest testReleaseUnitTest
+lintDebug --console=plain` terminó con `BUILD SUCCESSFUL`. Pasaron 89 pruebas en Debug y 89 en
+Release, sin fallos ni errores. Lint terminó con 0 errores y 103 advertencias del proyecto.
+`git diff --check` pasó. La inspección XML encontró 0 recursos duplicados por qualifier;
+hay una sola declaración Retrofit por cada POST y un único binding de análisis por oferta.
+Hilt compiló en ambas variantes. No se publicaron los APK generados localmente.
 
-## Prueba real pendiente contra APIM
+Una ejecución intermedia detectó la diferencia entre el manejo genérico de 409 de develop
+y el específico de main. Se resolvió según el código contractual `SKILLS_INPUT_REQUIRED`
+para GET, y se adaptó el caso de error no contractual de la suite anterior. Los demás fallos
+intermedios fueron incompatibilidades de tipos en fixtures/selector, resueltas antes de esta ejecución final.
 
-No se verificó Azure/APIM ni se ejecutó una sesión Android autenticada. El APK de validación local
-no demuestra que las operaciones estén publicadas ni que las políticas del gateway sean correctas.
+No se ejecuta una sesión Android autenticada contra Azure/APIM. El backend está desplegado
+según el contexto de la tarea; estas pruebas locales no certifican sus rutas ni políticas reales.
+Para la comprobación real: configurar APIM/OAuth en el entorno local, registrar la firma Debug,
+iniciar sesión, seleccionar CV/oferta y verificar cursos, niveles, cambio rápido de selección,
+fallo del catálogo, Postularme y análisis de mercado. El flag `SKILLS_GAP_HTTP_020_ENABLED`
+debe habilitarse explícitamente para la pantalla de mercado, como antes en develop.
 
-1. Confirmar con el responsable de APIM que están desplegados el backend de Brecha con análisis
-   de niveles, `POST /skills-gap/evaluate` y `GET /jobs/{id}`, con sus rutas públicas/reescrituras.
-   APIM debe validar Google y administrar la identidad y el certificado hacia el backend.
-2. Configurar localmente `APIM_BASE_URL` (prefijo público con barra final) y
-   `GOOGLE_WEB_CLIENT_ID` en `local.properties` ignorado por Git, o mediante el entorno ya soportado.
-   No agregar certificados, secretos ni encabezados de identidad a la app.
-3. Registrar el application ID Debug `com.cvpro.app.debug` y la firma Debug para el OAuth
-   correspondiente. Compilar con `assembleDebug` e instalar el APK en un equipo con Google Play.
-4. Iniciar sesión. Crear o elegir un CV con niveles canónicos, abrir una oferta real y seleccionar
-   explícitamente ese CV en Analizar brecha. Confirmar que título/CV/evidencia corresponden a la selección.
-5. Con una oferta controlada disponible para el entorno de prueba, verificar Python intermedio
-   frente a avanzado (1), SQL avanzado frente a básico (0), Docker ausente (nivel CV/déficit desconocidos),
-   texto opcional/conflictivo y oferta sin habilidades. No editar producción para fabricar estos datos.
-6. Confirmar en trazas seguras del gateway una única evaluación por pulsación y su autenticación;
-   no copiar tokens ni cuerpos de CV a reportes. Probar cambio rápido de CV/oferta, cierre y reintento.
-7. Probar sesión vencida, permisos denegados y operación ausente en un entorno controlado.
-   Verificar finalmente Postularme/apertura de oferta original y la pantalla de análisis de mercado.
-
-No fusionar el PR ni distribuir automáticamente como parte de esta entrega.
+No publicar APK, distribuir versiones ni fusionar el PR como parte de esta integración.

@@ -94,5 +94,7 @@ Tomadas del emulador con la app corriendo contra los mocks de APIM, en tema oscu
 
 ## Documentación
 
+- [Brechas HTTP 0.2.0](docs/skills-gap-http-020.md): activación apagada por defecto, selección de CV, contrato ordinal y requisitos de APIM pendientes.
+- [Brechas por oferta](docs/job-specific-skills-gap.md): selección de oferta y CV, cobertura documental y cursos asociados. Publicación de las nuevas rutas en APIM pendiente.
 - `docs/contract/models.ts`: modelos de datos compartidos con la web en la Fase I.
 - `docs/licencias/`: licencias de las fuentes Inter y Plus Jakarta Sans.

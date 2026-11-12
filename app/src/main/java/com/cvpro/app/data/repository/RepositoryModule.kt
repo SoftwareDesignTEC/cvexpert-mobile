@@ -5,6 +5,7 @@ import com.cvpro.app.data.locale.SystemLanguageRepository
 import com.cvpro.app.domain.repository.JobOfferRepository
 import com.cvpro.app.domain.repository.LanguageRepository
 import com.cvpro.app.domain.repository.NotificationRepository
+import com.cvpro.app.domain.repository.JobSkillsGapRepository
 import com.cvpro.app.domain.repository.SettingsRepository
 import com.cvpro.app.domain.repository.SkillsGapRepository
 import dagger.Binds
@@ -18,7 +19,6 @@ import com.cvpro.app.domain.repository.ApplicationRepository
 import com.cvpro.app.domain.repository.ProfileRepository
 import com.cvpro.app.domain.repository.TemplateRepository
 import com.cvpro.app.domain.repository.CvRepository
-import com.cvpro.app.domain.repository.JobGapEvaluationRepository
 import com.cvpro.app.domain.repository.SettingsContentRepository
 
 /**
@@ -32,8 +32,7 @@ import com.cvpro.app.domain.repository.SettingsContentRepository
 abstract class RepositoryModule {
     @Binds
     @Singleton
-    abstract fun bindJobGapEvaluationRepository(impl: ApiJobGapEvaluationRepository): JobGapEvaluationRepository
-
+    abstract fun bindJobSkillsGapRepository(impl: ApiJobSkillsGapRepository): JobSkillsGapRepository
 
     @Binds
     @Singleton

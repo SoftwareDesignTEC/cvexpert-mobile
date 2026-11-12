@@ -60,60 +60,75 @@ fun SkillsGapScreen(
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    if (uiState.inputStage != null) SkillsInputDialog(uiState, viewModel)
     SkillsGapContent(
         uiState = uiState,
         onRetryClick = viewModel::onRetryClick,
-        onOpenInput = viewModel::openInput,
+        onSelectCv = viewModel::onSelectCv,
+        onAnalyze = viewModel::onAnalyzeClick,
+        onMoreCvs = viewModel::onMoreCvs,
         onPage = viewModel::onPage,
         modifier = modifier,
+        onManualInput = viewModel::openInput,
     )
-    if (uiState.inputStage != null) SkillsInputDialog(uiState, viewModel)
 }
 
 @Composable
-private fun SkillsGapContent(
+fun SkillsGapContent(
     uiState: SkillsGapUiState,
     onRetryClick: () -> Unit,
-    onOpenInput: () -> Unit,
-    onPage: (Long) -> Unit,
     modifier: Modifier = Modifier,
+    onSelectCv: (String) -> Unit = {},
+    onAnalyze: () -> Unit = {},
+    onMoreCvs: () -> Unit = {},
+    onPage: (Int) -> Unit = {},
+    onManualInput: () -> Unit = {},
 ) {
-    Column(
-        modifier = modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
-    ) {
+    Column(modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(12.dp),
+        verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        if (!uiState.enabled) {
+            Text(stringResource(R.string.skills_gap_disabled))
+            return@Column
+        }
+        OutlinedButton(onClick = onManualInput, enabled = !uiState.isLoading && (uiState.analysis != null || uiState.inputRequired)) {
+            Text(stringResource(R.string.skills_gap_input_title))
+        }
+        Text(stringResource(R.string.skills_gap_select_cv), style = MaterialTheme.typography.titleMedium)
+        uiState.cvErrorMessage?.let { Text(stringResource(it)) }
+        uiState.cvs.forEach { cv ->
+            OutlinedButton(onClick = { onSelectCv(cv.id) }, enabled = !uiState.isLoading) {
+                Text(cv.title)
+            }
+        }
+        if (uiState.hasMoreCvs) {
+            OutlinedButton(onClick = onMoreCvs, enabled = !uiState.isLoading) {
+                Text(stringResource(R.string.skills_gap_more_cvs))
+            }
+        }
+        if (uiState.cvs.isEmpty() && uiState.cvPage > 0 && !uiState.isLoading) Text(stringResource(R.string.skills_gap_no_cvs))
+        uiState.selectedCv?.let { cv ->
+            Text(stringResource(R.string.skills_gap_selected_cv, cv.title))
+            Text(stringResource(R.string.skills_gap_replace_notice, uiState.input.orEmpty().size,
+                uiState.input.orEmpty().count { it.level == null }))
+            Button(onClick = onAnalyze, enabled = !uiState.isLoading && uiState.input != null) {
+                Text(stringResource(R.string.skills_gap_analyze))
+            }
+        }
         if (uiState.isLoading) CircularProgressIndicator()
         uiState.errorMessage?.let { Text(stringResource(it)) }
-        if (uiState.inputRequired || uiState.analysis != null) {
-            Button(onClick = onOpenInput) {
-                val label = if (uiState.inputRequired) {
-                    R.string.skills_gap_input_title
-                } else {
-                    R.string.skills_gap_update_skills
-                }
-                Text(stringResource(label))
-            }
-        }
-        if (uiState.errorMessage != null && !uiState.inputRequired) {
-            OutlinedButton(onClick = onRetryClick) {
-                Text(stringResource(R.string.applications_retry))
-            }
+        OutlinedButton(onClick = onRetryClick, enabled = !uiState.isLoading) {
+            Text(stringResource(R.string.applications_retry))
         }
         uiState.analysis?.let { analysis ->
+            Text(stringResource(R.string.skills_gap_snapshot_notice))
             SkillsGapSections(analysis)
-            if (analysis.page > 1 || analysis.hasMore) {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                if (analysis.page > 1) OutlinedButton(onClick = { onPage(analysis.page - 1) }, enabled = !uiState.isLoading) {
+                    Text(stringResource(R.string.skills_gap_previous))
+                }
                 Text(stringResource(R.string.skills_gap_page, analysis.page, analysis.totalRecords))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (analysis.page > 1) {
-                        OutlinedButton(onClick = { onPage(analysis.page - 1) }) {
-                            Text(stringResource(R.string.skills_gap_previous))
-                        }
-                    }
-                    if (analysis.hasMore) {
-                        OutlinedButton(onClick = { onPage(analysis.page + 1) }) {
-                            Text(stringResource(R.string.skills_gap_next))
-                        }
-                    }
+                if (analysis.hasMore) OutlinedButton(onClick = { onPage(analysis.page + 1) }, enabled = !uiState.isLoading) {
+                    Text(stringResource(R.string.skills_gap_next))
                 }
             }
         }
@@ -131,32 +146,19 @@ private fun SkillsGapSections(
             .padding(horizontal = 12.dp, vertical = 8.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
+        Text(stringResource(R.string.skills_gap_ordinal_scale))
+        Text(stringResource(R.string.skills_gap_deficits_only))
         Text(stringResource(R.string.skills_gap_coverage, analysis.comparedSkills, analysis.unresolved.size))
-        if (analysis.marketStatus == "missing") {
-            Text(stringResource(R.string.skills_gap_market_missing))
-        }
-        when (analysis.status) {
-            "empty" -> Text(stringResource(R.string.skills_gap_empty))
-            "incomplete" -> Text(stringResource(R.string.skills_gap_incomplete))
-        }
+        if (analysis.marketStatus == "missing") Text(stringResource(R.string.skills_gap_market_missing))
+        if (analysis.status != "complete" || analysis.unresolved.isNotEmpty() || analysis.comparedSkills == 0)
+            Text(stringResource(R.string.skills_gap_incomplete))
         analysis.unresolved.forEach { skill ->
-            Text(stringResource(
-                R.string.skills_gap_review_skill,
-                skill.skillName,
-                stringResource(unresolvedReasonMessage(skill.reason)),
-            ))
+            Text("${skill.skillName}: ${stringResource(unresolvedReasonMessage(skill.reason))}")
         }
-        if (analysis.skills.isNotEmpty()) {
-            Text(stringResource(R.string.skills_gap_ordinal_scale))
-            Text(stringResource(R.string.skills_gap_deficits_only))
-            ComparisonCard(analysis = analysis)
-            ImprovementPointsCard(skills = analysis.skills)
-            CoursesCard(courses = analysis.recommendations)
-        } else if (analysis.canConfirmNoGaps) {
-            Text(stringResource(R.string.skills_gap_no_gaps))
-        } else if (analysis.totalRecords > 0) {
-            Text(stringResource(R.string.skills_gap_empty_page))
-        }
+        if (analysis.skills.isNotEmpty()) ComparisonCard(analysis = analysis)
+        if (analysis.skills.isNotEmpty() || analysis.canConfirmNoGaps)
+            ImprovementPointsCard(skills = analysis.skillsToImprove)
+        CoursesCard(courses = analysis.recommendations)
         Spacer(modifier = Modifier.height(8.dp))
     }
 }
@@ -418,7 +420,7 @@ private fun CoursesCard(
 }
 
 @Composable
-private fun CourseCard(
+internal fun CourseCard(
     course: CourseRecommendation,
     modifier: Modifier = Modifier,
 ) {
@@ -481,7 +483,7 @@ private fun CourseCard(
                 modifier = Modifier.padding(top = 6.dp),
             ) {
                 Text(
-                    text = course.durationHours?.let {
+                    text = course.duration?.let {
                         stringResource(R.string.skills_gap_course_duration, it)
                     } ?: stringResource(R.string.skills_gap_course_no_duration),
                     style = MaterialTheme.typography.labelSmall,
@@ -525,20 +527,11 @@ private fun SectionCard(
     }
 }
 
-private fun unresolvedReasonMessage(reason: String): Int = when (reason) {
-    "MISSING_USER_SKILL" -> R.string.skills_gap_missing_user_skill
-    "MISSING_MARKET_REQUIREMENT" -> R.string.skills_gap_missing_requirement
-    "UNKNOWN_LEVEL" -> R.string.skills_gap_unknown_level
-    "UNKNOWN_SCALE" -> R.string.skills_gap_unknown_scale
-    "SCALE_MISMATCH" -> R.string.skills_gap_scale_mismatch
-    else -> R.string.skills_gap_unresolved_other
-}
-
-@Preview(name = "Brechas · claro", widthDp = 390)
+@Preview(name = "Brechas · claro", widthDp = 390, heightDp = 1200)
 @Composable
 private fun SkillsGapPreviewLight() = SkillsGapPreview(darkTheme = false)
 
-@Preview(name = "Brechas · oscuro", widthDp = 390)
+@Preview(name = "Brechas · oscuro", widthDp = 390, heightDp = 1200)
 @Composable
 private fun SkillsGapPreviewDark() = SkillsGapPreview(darkTheme = true)
 
@@ -548,13 +541,40 @@ private fun SkillsGapPreview(darkTheme: Boolean) {
         Surface(color = MaterialTheme.colorScheme.background) {
             SkillsGapContent(
                 uiState = SkillsGapUiState(
-                    inputRequired = true,
-                    errorMessage = R.string.skills_gap_input_required,
+                    enabled = true,
+                    analysis = SkillsGapAnalysis(
+                        skills = listOf(
+                            SkillGapItem("Python", 1, 3),
+                            SkillGapItem("SQL", 1, 3),
+                            SkillGapItem("Visualización", 1, 3),
+                            SkillGapItem("Machine Learning", 1, 3),
+                            SkillGapItem("Cloud", 1, 3),
+                            SkillGapItem("Comunicación", 1, 3),
+                            SkillGapItem("Liderazgo", 1, 3),
+                        ),
+                        recommendations = listOf(
+                            CourseRecommendation(
+                                id = "1",
+                                title = "Python para análisis de datos",
+                                platform = "DataCamp",
+                                url = "https://ejemplo.com",
+                                logoUrl = null,
+                                duration = "6 horas",
+                            ),
+                        ),
+                    ),
                 ),
                 onRetryClick = {},
-                onOpenInput = {},
-                onPage = {},
             )
         }
     }
+}
+
+internal fun unresolvedReasonMessage(reason: String): Int = when (reason) {
+    "MISSING_USER_SKILL" -> R.string.skills_gap_missing_user_skill
+    "MISSING_MARKET_REQUIREMENT" -> R.string.skills_gap_missing_requirement
+    "UNKNOWN_LEVEL" -> R.string.skills_gap_unknown_level
+    "UNKNOWN_SCALE" -> R.string.skills_gap_unknown_scale
+    "SCALE_MISMATCH" -> R.string.skills_gap_scale_mismatch
+    else -> R.string.skills_gap_unresolved_other
 }

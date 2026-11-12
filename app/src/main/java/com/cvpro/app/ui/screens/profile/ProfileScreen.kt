@@ -219,7 +219,7 @@ fun ProfileCard(
 
         // Análisis de habilidades: el mismo radar del Panel Principal.
         val analysis = uiState.skillsGap
-        if (analysis != null) {
+        if (analysis != null && analysis.skills.isNotEmpty()) {
             ProfileSurface {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Box(

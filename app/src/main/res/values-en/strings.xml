@@ -139,6 +139,13 @@
     <string name="cv_editor_field">Field of study</string>
     <string name="cv_editor_skill_name">Skill</string>
     <string name="cv_editor_level">Level</string>
+    <string name="cv_skill_level_beginner">Beginner</string>
+    <string name="cv_skill_level_intermediate">Intermediate</string>
+    <string name="cv_skill_level_advanced">Advanced</string>
+    <string name="cv_skill_level_expert">Expert</string>
+    <string name="cv_skill_level_unselected">Not selected</string>
+    <string name="cv_skill_level_required">Select a level for this skill.</string>
+    <string name="cv_skill_level_invalid">This level is invalid. Select one from the list to correct it.</string>
     <string name="cv_editor_category">Category</string>
     <string name="cv_editor_language">Language</string>
     <string name="cv_editor_add_experience">Add experience</string>
@@ -543,4 +550,12 @@
     <string name="profile_location_locating">Finding your location…</string>
     <string name="profile_location_unavailable">We couldn\'t get your location. Check that location is on or type it in.</string>
     <string name="profile_location_denied">No location permission. You can type it in.</string>
+    <string name="skills_gap_disabled">Skills gap analysis is awaiting service activation. Other features remain available.</string>
+    <string name="skills_gap_select_cv">Select a CV to analyze its skills</string>
+    <string name="skills_gap_more_cvs">Load more CVs</string>
+    <string name="skills_gap_no_cvs">No CVs loaded. You can create one in My CVs.</string>
+    <string name="skills_gap_selected_cv">Selected CV: %1$s</string>
+    <string name="skills_gap_analyze">Submit skills and analyze</string>
+    <string name="skills_gap_snapshot_notice">Result from the saved user snapshot. Selecting another CV does not change the snapshot until its skills are submitted.</string>
+    <string name="skills_gap_manual_replace_notice">Confirming replaces your entire skills snapshot for market analysis. Unknown levels will remain unknown.</string>
 </resources>

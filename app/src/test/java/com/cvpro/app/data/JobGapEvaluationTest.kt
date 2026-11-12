@@ -5,7 +5,7 @@ import com.cvpro.app.data.remote.api.*
 import com.cvpro.app.data.remote.AuthInterceptor
 import com.cvpro.app.domain.repository.AuthRepository
 import com.cvpro.app.data.remote.dto.*
-import com.cvpro.app.data.repository.ApiJobGapEvaluationRepository
+import com.cvpro.app.data.repository.ApiJobSkillsGapRepository
 import com.cvpro.app.domain.model.*
 import com.google.gson.Gson
 import com.google.gson.JsonParser
@@ -57,13 +57,13 @@ class JobGapEvaluationTest {
     @Test fun `unknown optional and conflicting requirements stay unknown`() {
         for ((detection, reason) in listOf("unknown" to "no_explicit_evidence", "unknown" to "optional",
             "conflict" to "contradictory", "conflict" to "ambiguous", "conflict" to "negated")) {
-            val dto = gson.fromJson(evaluationJson, JobGapEvaluationResponseDto::class.java)
+            val dto = gson.fromJson(evaluationJson, JobSkillsGapResponseDto::class.java)
             val result = dto.results!!.single()
             val assessment = result.skillLevelAssessments!!.first().copy(requiredLevel = null,
                 evidenceSource = null, evidenceText = null, detectionStatus = detection, reason = reason,
                 status = "unknown_required_level", deficitSteps = null)
             val actual = dto.copy(results = listOf(result.copy(skillLevelAssessments =
-                listOf(assessment) + result.skillLevelAssessments.drop(1)))).toEvaluation("cv1", "job1").assessments!!.first()
+                listOf(assessment) + result.skillLevelAssessments.drop(1)))).toJobAnalysis("cv1", "job1", true).assessments!!.first()
             assertNull(actual.requiredLevel)
             assertNull(actual.deficitSteps)
             assertEquals(reason, actual.reason)
@@ -71,17 +71,17 @@ class JobGapEvaluationTest {
     }
 
     @Test fun `legacy responses have no level analysis and complete coverage can coexist with deficits`() {
-        val dto = gson.fromJson(evaluationJson, JobGapEvaluationResponseDto::class.java)
+        val dto = gson.fromJson(evaluationJson, JobSkillsGapResponseDto::class.java)
         val result = dto.results!!.single()
         val legacy = dto.copy(results = listOf(result.copy(skillLevelAssessments = null, levelAnalysis = null)))
-            .toEvaluation("cv1", "job1")
+            .toJobAnalysis("cv1", "job1", true)
         assertNull(legacy.assessments)
         assertNull(legacy.levelAnalysis)
         val complete = dto.copy(results = listOf(result.copy(status = "complete", requiredSkillsCount = 2,
             documentedCoveragePercent = 100.0, notDocumentedSkills = emptyList(),
             skillLevelAssessments = result.skillLevelAssessments!!.take(2),
             levelAnalysis = result.levelAnalysis!!.copy(notDocumentedCount = 0))))
-            .toEvaluation("cv1", "job1")
+            .toJobAnalysis("cv1", "job1", true)
         assertEquals(100.0, complete.documentedCoveragePercent!!, 0.0)
         assertEquals(1, complete.assessments!!.first().deficitSteps)
     }
@@ -89,12 +89,12 @@ class JobGapEvaluationTest {
     @Test fun `empty CV is valid but any invalid skill blocks the entire request`() {
         assertTrue(evaluationCv().copy(skills = emptyList()).toEvaluationRequest(evaluationOffer()).cv.skills.isEmpty())
         for (level in listOf("", "unknown", "Advanced", "básico")) {
-            assertFailure(JobGapFailure.INVALID_CV) {
+            assertFailure(JobSkillsGapFailure.INVALID_CV_LEVEL) {
                 evaluationCv().copy(skills = listOf(Skill("", "Python", level, "")))
                     .toEvaluationRequest(evaluationOffer())
             }
         }
-        for (name in listOf("", "  ", "\uFEFF", "\u00A0")) assertFailure(JobGapFailure.INVALID_CV) {
+        for (name in listOf("", "  ", "\uFEFF", "\u00A0")) assertFailure(JobSkillsGapFailure.INVALID_CV) {
             evaluationCv().copy(skills = listOf(Skill("", name, "beginner", ""))).toEvaluationRequest(evaluationOffer())
         }
     }
@@ -110,12 +110,12 @@ class JobGapEvaluationTest {
             offer.copy(requirements = List(101) { "a" }), offer.copy(requirements = listOf("a".repeat(2_001))),
             offer.copy(skills = List(201) { "a" }), offer.copy(description = "bad\u0000text"),
             offer.copy(description = "isolated\uD800"), offer.copy(id = "bad\nid"))) {
-            assertFailure(JobGapFailure.INVALID_INPUT) { cv.toEvaluationRequest(invalid) }
+            assertFailure(JobSkillsGapFailure.INVALID_INPUT) { cv.toEvaluationRequest(invalid) }
         }
-        assertFailure(JobGapFailure.INVALID_CV) {
+        assertFailure(JobSkillsGapFailure.INVALID_CV) {
             cv.copy(skills = List(501) { cv.skills.first() }).toEvaluationRequest(offer)
         }
-        assertFailure(JobGapFailure.INVALID_CV) {
+        assertFailure(JobSkillsGapFailure.INVALID_CV) {
             cv.copy(skills = listOf(cv.skills.first().copy(name = "a".repeat(201)))).toEvaluationRequest(offer)
         }
     }
@@ -149,7 +149,7 @@ class JobGapEvaluationTest {
                 .client(OkHttpClient.Builder().addInterceptor(AuthInterceptor(auth)).build())
                 .addConverterFactory(GsonConverterFactory.create()).build()
             server.enqueue(MockResponse().setBody(evaluationJson))
-            ApiJobGapEvaluationRepository(retrofit.create(SkillsGapApi::class.java), retrofit.create(JobApi::class.java))
+            ApiJobSkillsGapRepository(retrofit.create(SkillsGapApi::class.java), retrofit.create(JobApi::class.java))
                 .evaluate(evaluationCv(), evaluationOffer())
             val request = server.takeRequest(5, TimeUnit.SECONDS)!!
             assertEquals("Bearer unit-test-token", request.getHeader("Authorization"))
@@ -180,19 +180,19 @@ class JobGapEvaluationTest {
             server.enqueue(MockResponse().setBody("""{"cvId":"cv1","dataSource":"client_request","results":[{"jobId":"job1","status":"insufficient_information","requiredSkillsCount":0,"documentedMatchesCount":0,"documentedCoveragePercent":null,"matchedSkills":[],"notDocumentedSkills":[]}]}"""))
             val actual = repository.evaluate(evaluationCv(), evaluationOffer().copy(skills = emptyList()))
             assertNull(actual.documentedCoveragePercent)
-            assertEquals("insufficient_information", actual.status)
+            assertEquals(JobCoverageStatus.INSUFFICIENT_INFORMATION, actual.status)
             assertEquals(0, actual.requiredSkillsCount)
         }
     }
 
     @Test fun `HTTP failures never expose backend bodies`() = runTest {
         withServer { server, repository ->
-            for ((code, expected) in listOf(400 to JobGapFailure.INVALID_INPUT, 401 to JobGapFailure.UNAUTHORIZED,
-                403 to JobGapFailure.FORBIDDEN, 404 to JobGapFailure.NOT_FOUND, 413 to JobGapFailure.TOO_LARGE,
-                503 to JobGapFailure.UNAVAILABLE)) {
+            for ((code, expected) in listOf(400 to JobSkillsGapFailure.INVALID_INPUT, 401 to JobSkillsGapFailure.UNAUTHORIZED,
+                403 to JobSkillsGapFailure.FORBIDDEN, 404 to JobSkillsGapFailure.ROUTE_UNAVAILABLE, 413 to JobSkillsGapFailure.TOO_LARGE,
+                503 to JobSkillsGapFailure.UNAVAILABLE)) {
                 server.enqueue(MockResponse().setResponseCode(code).setBody("private backend details"))
                 try { repository.evaluate(evaluationCv(), evaluationOffer()); fail("Expected failure") }
-                catch (error: JobGapException) {
+                catch (error: JobSkillsGapException) {
                     assertEquals(expected, error.failure)
                     assertFalse(error.message!!.contains("private"))
                 }
@@ -204,33 +204,57 @@ class JobGapEvaluationTest {
         withServer { server, repository ->
             val offer = evaluationOffer().copy(requirements = List(100) { "á".repeat(1_000) })
             try { repository.evaluate(evaluationCv(), offer); fail("Expected failure") }
-            catch (error: JobGapException) { assertEquals(JobGapFailure.TOO_LARGE, error.failure) }
+            catch (error: JobSkillsGapException) { assertEquals(JobSkillsGapFailure.TOO_LARGE, error.failure) }
             assertEquals(0, server.requestCount)
         }
     }
 
     @Test fun `mismatched and incomplete responses are rejected`() {
-        val dto = gson.fromJson(evaluationJson, JobGapEvaluationResponseDto::class.java)
+        val dto = gson.fromJson(evaluationJson, JobSkillsGapResponseDto::class.java)
         for (invalid in listOf(dto.copy(cvId = "other"), dto.copy(results = emptyList()),
             dto.copy(results = listOf(dto.results!!.single().copy(jobId = "other"))),
             dto.copy(results = listOf(dto.results.single().copy(matchedSkills = null))))) {
-            assertFailure(JobGapFailure.INCOMPATIBLE) { invalid.toEvaluation("cv1", "job1") }
+            assertFailure(JobSkillsGapFailure.INCOMPATIBLE_RESPONSE) { invalid.toJobAnalysis("cv1", "job1", true) }
         }
     }
 
-    private suspend fun withServer(block: suspend (MockWebServer, ApiJobGapEvaluationRepository) -> Unit) {
+    @Test fun `unified repository preserves distinct closed contracts for courses and levels`() = runTest {
+        withServer { server, repository ->
+            val levels = gson.fromJson(evaluationJson, JobSkillsGapResponseDto::class.java)
+            val courses = levels.copy(catalogStatus = "consulted", results = listOf(levels.results!!.single().copy(
+                skillLevelAssessments = null, levelAnalysis = null,
+                recommendations = listOf(JobSkillCoursesDto("Docker", "not_found", emptyList())))))
+            server.enqueue(MockResponse().setBody(gson.toJson(courses)))
+            server.enqueue(MockResponse().setBody(evaluationJson))
+            val recommendations = repository.analyze(evaluationCv(), evaluationOffer(), evaluationOnly = false)
+            val evaluated = repository.analyze(evaluationCv(), evaluationOffer(), evaluationOnly = true)
+            assertEquals(recommendations.matchedSkills, evaluated.matchedSkills)
+            assertEquals("Docker", recommendations.recommendations.single().skillName)
+            assertEquals(1, evaluated.assessments!!.first().deficitSteps)
+            val courseCall = server.takeRequest(5, TimeUnit.SECONDS)!!
+            assertEquals("/gateway/skills-gap/recommendations", courseCall.path)
+            val courseBody = JsonParser.parseString(courseCall.body.readUtf8()).asJsonObject["jobs"].asJsonArray[0].asJsonObject
+            assertEquals(setOf("id", "skills"), courseBody.keySet())
+            val levelCall = server.takeRequest(5, TimeUnit.SECONDS)!!
+            assertEquals("/gateway/skills-gap/evaluate", levelCall.path)
+            val levelBody = JsonParser.parseString(levelCall.body.readUtf8()).asJsonObject["jobs"].asJsonArray[0].asJsonObject
+            assertEquals(setOf("id", "skills", "description", "requirements"), levelBody.keySet())
+        }
+    }
+
+    private suspend fun withServer(block: suspend (MockWebServer, ApiJobSkillsGapRepository) -> Unit) {
         val server = MockWebServer()
         server.start()
         try {
             val retrofit = Retrofit.Builder().baseUrl(server.url("/gateway/"))
                 .addConverterFactory(GsonConverterFactory.create()).build()
-            block(server, ApiJobGapEvaluationRepository(retrofit.create(SkillsGapApi::class.java), retrofit.create(JobApi::class.java)))
+            block(server, ApiJobSkillsGapRepository(retrofit.create(SkillsGapApi::class.java), retrofit.create(JobApi::class.java)))
         } finally { server.shutdown() }
     }
 
-    private fun assertFailure(expected: JobGapFailure, block: () -> Unit) {
+    private fun assertFailure(expected: JobSkillsGapFailure, block: () -> Unit) {
         try { block(); fail("Expected failure") }
-        catch (error: JobGapException) { assertEquals(expected, error.failure) }
+        catch (error: JobSkillsGapException) { assertEquals(expected, error.failure) }
     }
 }
 
@@ -241,8 +265,8 @@ internal fun evaluationOffer(): JobOffer = JobOfferDto(id = "job1", title = "Des
     skills = listOf("Python", "SQL", "Docker"), description = "Python avanzado y SQL básico.",
     requirements = listOf("Docker intermedio")).toDomain()
 
-internal fun evaluationResult(): JobGapEvaluation = Gson().fromJson(evaluationJson, JobGapEvaluationResponseDto::class.java)
-    .toEvaluation("cv1", "job1")
+internal fun evaluationResult(): JobSkillsGapAnalysis = Gson().fromJson(evaluationJson, JobSkillsGapResponseDto::class.java)
+    .toJobAnalysis("cv1", "job1", true)
 
 internal val evaluationJson = """
 {"cvId":"cv1","dataSource":"client_request","results":[{
@@ -255,3 +279,5 @@ internal val evaluationJson = """
  "levelAnalysis":{"scale":"cv-skill-v1","comparedSkillsCount":2,"belowRequiredCount":1,"meetsRequiredCount":1,"notDocumentedCount":1,"unknownRequiredLevelCount":0,"conflictCount":0}
 }]}
 """.trimIndent()
+
+private suspend fun ApiJobSkillsGapRepository.evaluate(cv: Cv, offer: JobOffer) = analyze(cv, offer, evaluationOnly = true)

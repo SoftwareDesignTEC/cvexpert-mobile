@@ -153,7 +153,7 @@ fun CvEditorSheet(
     // en un voluntariado o un proyecto escolar puede no haber empresa.
     val experienceErrors = draft.workExperiences.any { it.missingPosition() || it.missingDescription() || it.missingCompany() }
     val hasErrors = listOf(titleError, emailError, nameError, phoneError).any { it != null } ||
-        missingStartDate || experienceErrors
+        missingStartDate || experienceErrors || FormValidation.hasInvalidSkills(draft.skills)
 
     // Cada campo que puede fallar se registra con una clave. Al guardar con errores, la hoja se
     // desplaza sola al primero, para que el usuario no tenga que buscar qué falta.
@@ -454,11 +454,13 @@ fun CvEditorSheet(
                         onValueChange = { update(skill.copy(name = it)) },
                         label = stringResource(R.string.cv_editor_skill_name),
                         placeholder = stringResource(R.string.cv_example_skill),
+                        errorMessage = FormValidation.required(skill.name).messageOrNull(showErrors),
                     )
-                    LevelField(
+                    CvSkillLevelField(
                         value = skill.level,
-                        options = SkillLevel.entries,
                         onValueChange = { update(skill.copy(level = it)) },
+                        errorMessage = FormValidation.skillLevel(skill.level)
+                            .messageOrNull(showErrors || skill.level.isNotEmpty()),
                     )
                     FormTextField(
                         value = skill.category,

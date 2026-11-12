@@ -4,6 +4,7 @@ import com.cvpro.app.domain.model.SkillInput
 import com.cvpro.app.domain.model.SkillsGapAnalysis
 
 interface SkillsGapRepository {
-    suspend fun getAnalysis(page: Long = 1): SkillsGapAnalysis
+    val enabled: Boolean
+    suspend fun getAnalysis(page: Int = 1): SkillsGapAnalysis
     suspend fun replaceInput(skills: List<SkillInput>)
 }

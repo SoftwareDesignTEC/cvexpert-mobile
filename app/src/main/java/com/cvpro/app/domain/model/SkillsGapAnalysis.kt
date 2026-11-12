@@ -1,57 +1,37 @@
 package com.cvpro.app.domain.model
 
-/** Positions on cv-skill-v1 (1–4). The API returns only skills with a calculable deficit. */
+/** cv-skill-v1: ordinal positions, never percentages. GET items contain deficits only. */
 data class SkillGapItem(
-    val name: String,
-    val userLevel: Int,
-    val marketLevel: Int,
-    val deficitSteps: Int,
+    val name: String, val userLevel: Int, val marketLevel: Int,
+    val deficitSteps: Int = marketLevel - userLevel,
 )
-
 data class UnresolvedSkill(
-    val skillName: String,
-    val reason: String,
-    val userLevel: Int?,
-    val marketLevel: Int?,
+    val skillName: String, val reason: String, val userLevel: Int?, val marketLevel: Int?,
 )
-
 data class SkillsGapAnalysis(
-    val skills: List<SkillGapItem>,
-    val recommendations: List<CourseRecommendation>,
-    val status: String,
-    val comparedSkills: Int,
-    val scaleKey: String,
-    val marketStatus: String,
-    val unresolved: List<UnresolvedSkill>,
-    val page: Long,
-    val pageSize: Int,
-    val totalRecords: Long,
+    val skills: List<SkillGapItem>, val recommendations: List<CourseRecommendation>,
+    val status: String = "incomplete", val comparedSkills: Int = 0,
+    val scaleKey: String = "cv-skill-v1", val marketStatus: String = "missing",
+    val unresolved: List<UnresolvedSkill> = emptyList(),
+    val page: Int = 1, val pageSize: Int = 100, val totalRecords: Int = skills.size,
 ) {
-    val hasMore get() = page * pageSize < totalRecords
-    val hasFullCoverage get() = status == "complete" && marketStatus == "available" &&
-        comparedSkills > 0 && unresolved.isEmpty()
-    val canConfirmNoGaps get() = hasFullCoverage && totalRecords == 0L
+    val skillsToImprove get() = skills.sortedByDescending { it.deficitSteps }
+    val hasMore get() = page.toLong() * pageSize < totalRecords
+    val canConfirmNoGaps get() = status == "complete" && marketStatus == "available" &&
+        comparedSkills > 0 && unresolved.isEmpty() && totalRecords == 0
 }
-
 data class CourseRecommendation(
-    val id: String,
-    val title: String,
-    val platform: String,
-    val url: String,
-    val logoUrl: String?,
-    val durationHours: Int?,
+    val id: String, val title: String, val platform: String, val url: String,
+    val logoUrl: String?, val duration: String?,
+    val isPaid: Boolean? = null, val skills: List<String> = emptyList(),
 )
-
-data class SkillInput(val skillName: String, val level: SkillLevel?)
-
-fun List<SkillInput>.isValidSkillsGapInput(): Boolean =
-    size in 1..500 && distinctBy { it.skillName }.size == size && all {
-        val name = it.skillName
-        name.length in 1..200 && name.isNotBlank() && name == name.trim() && '\u0000' !in name
-    }
-
+data class SkillInput(val skillName: String, val level: String?)
 enum class SkillsGapFailure {
-    UNAUTHORIZED, INPUT_REQUIRED, UNAVAILABLE, INVALID_INPUT, INCOMPATIBLE_RESPONSE,
+    DISABLED, UNAUTHORIZED, INPUT_REQUIRED, UNAVAILABLE, INVALID_INPUT, INCOMPATIBLE_RESPONSE,
 }
-
 class SkillsGapException(val failure: SkillsGapFailure) : Exception(failure.name)
+
+fun List<SkillInput>.isValidSkillsGapInput(): Boolean = size in 1..500 && distinctBy { it.skillName }.size == size && all {
+    it.skillName.isNotBlank() && it.skillName.length <= 200 && it.skillName == it.skillName.trim() && '\u0000' !in it.skillName &&
+        (it.level == null || SkillLevel.fromApi(it.level) != null)
+}
