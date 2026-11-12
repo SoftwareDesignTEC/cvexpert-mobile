@@ -22,8 +22,8 @@ class SkillsGapContractTest {
         assertEquals(1, gap.userLevel)
         assertEquals(4, gap.marketLevel)
         assertEquals(3, gap.deficitSteps)
-        assertNull(analysis.recommendations[0].durationHours)
-        assertEquals(0, analysis.recommendations[1].durationHours)
+        assertNull(analysis.recommendations[0].duration)
+        assertEquals("0 horas", analysis.recommendations[1].duration)
         assertEquals("cv-skill-v1", analysis.scaleKey)
     }
 

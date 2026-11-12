@@ -65,15 +65,18 @@ android {
     defaultConfig {
         // Contrato con DevOps (firma del APK + Firebase). No se cambia.
         applicationId = "com.cvpro.app"
+        testInstrumentationRunner = "com.cvpro.app.test.GapUiTestRunner"
         minSdk = 26
         targetSdk = 35
         // Se sube en cada hito etiquetado. versionCode siempre crece: Firebase y Play
         // rechazan una subida con un número igual o menor al anterior.
-        versionCode = 21
-        versionName = "0.8.10"
+        versionCode = 22
+        versionName = "0.8.11"
 
         // Se inyectan como constantes en BuildConfig.
         buildConfigField("String", "APIM_BASE_URL", "\"${configValue("APIM_BASE_URL")}\"")
+        // Opt-in only after APIM exposes the real 0.2.0 GET and PUT operations.
+        buildConfigField("boolean", "SKILLS_GAP_HTTP_020_ENABLED", configValue("SKILLS_GAP_HTTP_020_ENABLED").equals("true", ignoreCase = true).toString())
         // Web client ID de Google (OAuth). Es el mismo que usa la web como VITE_GOOGLE_CLIENT_ID.
         buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"${configValue("GOOGLE_WEB_CLIENT_ID")}\"")
         // Enciende las llamadas al servicio de Notificaciones de Samuel. Queda apagada hasta que
@@ -136,6 +139,10 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.okhttp.mockwebserver)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation("androidx.compose.ui:ui-test-junit4")
+    androidTestImplementation("androidx.test:runner:1.6.2")
+    debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

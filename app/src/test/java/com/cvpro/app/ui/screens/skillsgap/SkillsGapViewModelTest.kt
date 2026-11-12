@@ -1,187 +1,137 @@
 package com.cvpro.app.ui.screens.skillsgap
 
 import com.cvpro.app.R
-import com.cvpro.app.domain.model.SkillInput
-import com.cvpro.app.domain.model.SkillLevel
-import com.cvpro.app.domain.model.SkillsGapAnalysis
-import com.cvpro.app.domain.model.SkillsGapException
-import com.cvpro.app.domain.model.SkillsGapFailure
-import com.cvpro.app.domain.repository.SkillsGapRepository
+import com.cvpro.app.domain.model.*
+import com.cvpro.app.domain.repository.*
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.StandardTestDispatcher
-import kotlinx.coroutines.test.advanceUntilIdle
-import kotlinx.coroutines.test.resetMain
-import kotlinx.coroutines.test.runTest
-import kotlinx.coroutines.test.setMain
+import kotlinx.coroutines.test.*
 import org.junit.After
-import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
-import org.junit.Assert.assertNotNull
-import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
+import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class SkillsGapViewModelTest {
     private val dispatcher = StandardTestDispatcher()
+    @Before fun setup() { Dispatchers.setMain(dispatcher) }
+    @After fun teardown() { Dispatchers.resetMain() }
 
-    @Before
-    fun setup() {
-        Dispatchers.setMain(dispatcher)
+    @Test fun disabledStateDoesNotReadCvsOrAnalysis() = runTest(dispatcher) {
+        val gaps = FakeGaps(enabled = false)
+        val cvs = FakeCvs()
+        val vm = SkillsGapViewModel(gaps, cvs)
+        advanceUntilIdle()
+        vm.onAnalyzeClick(); vm.onRetryClick(); vm.onMoreCvs(); vm.onSelectCv("cv1")
+        advanceUntilIdle()
+        assertFalse(vm.uiState.value.enabled)
+        assertEquals(0, cvs.calls)
+        assertTrue(gaps.events.isEmpty())
     }
 
-    @After
-    fun teardown() {
-        Dispatchers.resetMain()
+    @Test fun missingSnapshotAllowsCvSelectionAndExplicitReplaceThenRead() = runTest(dispatcher) {
+        val gaps = FakeGaps().apply { readError = SkillsGapException(SkillsGapFailure.INPUT_REQUIRED) }
+        val vm = SkillsGapViewModel(gaps, FakeCvs())
+        advanceUntilIdle()
+        assertEquals(R.string.skills_gap_input_required, vm.uiState.value.errorMessage)
+        assertEquals(1, vm.uiState.value.cvs.size)
+        vm.onSelectCv("cv1")
+        advanceUntilIdle()
+        assertEquals("cv1", vm.uiState.value.selectedCv?.id)
+        assertNull(vm.uiState.value.input!!.last().level)
+        assertNull(gaps.saved)
+        gaps.readError = null
+        vm.onAnalyzeClick()
+        advanceUntilIdle()
+        assertEquals(listOf("GET:1", "PUT", "GET:1"), gaps.events)
+        assertEquals(listOf(SkillInput("SQL", "beginner"), SkillInput("Python", null)), gaps.saved)
+        assertNotNull(vm.uiState.value.analysis)
+        assertFalse(vm.uiState.value.isLoading)
     }
 
-    @Test
-    fun `missing snapshot guides manual input and only confirmation writes then reloads`() = runTest(dispatcher) {
-        val repository = FakeSkillsGapRepository().apply { readFailure = SkillsGapFailure.INPUT_REQUIRED }
-        val viewModel = SkillsGapViewModel(repository)
+    @Test fun failedPutDoesNotReadAndRetryDoesNotRepeatWrite() = runTest(dispatcher) {
+        val gaps = FakeGaps()
+        val vm = SkillsGapViewModel(gaps, FakeCvs())
         advanceUntilIdle()
-        assertTrue(viewModel.uiState.value.inputRequired)
-        assertEquals(R.string.skills_gap_input_required, viewModel.uiState.value.errorMessage)
-
-        viewModel.openInput()
-        viewModel.changeName(0, " Example A ")
-        viewModel.changeLevel(0, SkillLevel.ADVANCED)
-        viewModel.addSkill()
-        viewModel.changeName(1, "Example B")
-        viewModel.confirmInput()
-        viewModel.reviewInput()
-        advanceUntilIdle()
-
-        assertEquals(SkillsInputStage.REVIEW, viewModel.uiState.value.inputStage)
-        assertEquals(listOf("GET:1"), repository.events)
-
-        repository.readFailure = null
-        viewModel.confirmInput()
-        viewModel.confirmInput()
-        advanceUntilIdle()
-
-        assertEquals(listOf("GET:1", "PUT", "GET:1"), repository.events)
-        assertEquals(listOf(SkillInput("Example A", SkillLevel.ADVANCED), SkillInput("Example B", null)), repository.saved)
-        assertFalse(viewModel.uiState.value.inputRequired)
-        assertNotNull(viewModel.uiState.value.analysis)
+        vm.onSelectCv("cv1"); advanceUntilIdle()
+        gaps.writeError = SkillsGapException(SkillsGapFailure.UNAVAILABLE)
+        vm.onAnalyzeClick(); advanceUntilIdle()
+        assertEquals(listOf("GET:1", "PUT"), gaps.events)
+        assertNull(vm.uiState.value.analysis)
+        assertEquals(R.string.skills_gap_unavailable, vm.uiState.value.errorMessage)
+        vm.onRetryClick(); advanceUntilIdle()
+        assertEquals(listOf("GET:1", "PUT", "GET:1"), gaps.events)
     }
 
-    @Test
-    fun `empty and duplicate drafts cannot enter review or write`() = runTest(dispatcher) {
-        val repository = FakeSkillsGapRepository()
-        val viewModel = SkillsGapViewModel(repository)
+    @Test fun failedReadAfterSuccessfulPutCanRetryWithoutResubmission() = runTest(dispatcher) {
+        val gaps = FakeGaps()
+        val vm = SkillsGapViewModel(gaps, FakeCvs())
         advanceUntilIdle()
-        viewModel.openInput()
-        viewModel.removeSkill(0)
-        viewModel.reviewInput()
-        viewModel.confirmInput()
-        assertEquals(R.string.skills_gap_invalid_input, viewModel.uiState.value.inputError)
-
-        viewModel.addSkill()
-        viewModel.addSkill()
-        viewModel.changeName(0, "Example")
-        viewModel.changeName(1, " Example ")
-        viewModel.reviewInput()
-        viewModel.confirmInput()
-        advanceUntilIdle()
-        assertEquals(SkillsInputStage.EDIT, viewModel.uiState.value.inputStage)
-        assertEquals(R.string.skills_gap_invalid_input, viewModel.uiState.value.inputError)
-        assertEquals(listOf("GET:1"), repository.events)
+        vm.onSelectCv("cv1"); advanceUntilIdle()
+        gaps.readError = SkillsGapException(SkillsGapFailure.UNAVAILABLE)
+        vm.onAnalyzeClick(); advanceUntilIdle()
+        assertNotNull(gaps.saved)
+        assertNull(vm.uiState.value.analysis)
+        gaps.readError = null
+        vm.onRetryClick(); advanceUntilIdle()
+        assertEquals(1, gaps.events.count { it == "PUT" })
+        assertNotNull(vm.uiState.value.analysis)
     }
 
-    @Test
-    fun `closing review preserves draft without writing over existing skills`() = runTest(dispatcher) {
-        val repository = FakeSkillsGapRepository()
-        val viewModel = SkillsGapViewModel(repository)
+    @Test fun pageNavigationReadsOnlyAndFailureClearsOldResult() = runTest(dispatcher) {
+        val gaps = FakeGaps()
+        val vm = SkillsGapViewModel(gaps, FakeCvs())
         advanceUntilIdle()
-        viewModel.prepareInput()
-        viewModel.closeInput()
-        viewModel.confirmInput()
-        advanceUntilIdle()
-
-        assertEquals(listOf("GET:1"), repository.events)
-        assertNull(viewModel.uiState.value.inputStage)
-        assertEquals(listOf(SkillInput("Example", null)), viewModel.uiState.value.draft)
-        assertNotNull(viewModel.uiState.value.analysis)
+        vm.onPage(2); advanceUntilIdle()
+        assertEquals(2, vm.uiState.value.analysis?.page)
+        gaps.readError = SkillsGapException(SkillsGapFailure.UNAUTHORIZED)
+        vm.onPage(1); advanceUntilIdle()
+        assertNull(vm.uiState.value.analysis)
+        assertEquals(R.string.skills_gap_unauthorized, vm.uiState.value.errorMessage)
+        assertNull(gaps.saved)
     }
 
-    @Test
-    fun `failed write preserves draft and retry reads only`() = runTest(dispatcher) {
-        val repository = FakeSkillsGapRepository().apply { writeFailure = SkillsGapFailure.UNAVAILABLE }
-        val viewModel = SkillsGapViewModel(repository)
+    @Test fun cvServiceFailureDoesNotPreventReadingExistingSnapshot() = runTest(dispatcher) {
+        val gaps = FakeGaps()
+        val vm = SkillsGapViewModel(gaps, FakeCvs().apply { listError = java.io.IOException() })
         advanceUntilIdle()
-        viewModel.prepareInput()
-        viewModel.confirmInput()
-        advanceUntilIdle()
-
-        assertEquals(listOf("GET:1", "PUT"), repository.events)
-        assertEquals(SkillsInputStage.EDIT, viewModel.uiState.value.inputStage)
-        assertEquals(R.string.skills_gap_unavailable, viewModel.uiState.value.inputError)
-        assertEquals(listOf(SkillInput("Example", null)), viewModel.uiState.value.draft)
-        assertNull(viewModel.uiState.value.analysis)
-
-        viewModel.closeInput()
-        assertEquals(R.string.skills_gap_unavailable, viewModel.uiState.value.errorMessage)
-        viewModel.onRetryClick()
-        advanceUntilIdle()
-        assertEquals(listOf("GET:1", "PUT", "GET:1"), repository.events)
-    }
-
-    @Test
-    fun `after confirmed write a failed reload can be retried without writing again`() = runTest(dispatcher) {
-        val repository = FakeSkillsGapRepository()
-        val viewModel = SkillsGapViewModel(repository)
-        advanceUntilIdle()
-        viewModel.prepareInput()
-        repository.readFailure = SkillsGapFailure.UNAVAILABLE
-        viewModel.confirmInput()
-        advanceUntilIdle()
-        assertNotNull(repository.saved)
-        assertEquals(R.string.skills_gap_unavailable, viewModel.uiState.value.errorMessage)
-        assertNull(viewModel.uiState.value.analysis)
-
-        repository.readFailure = null
-        viewModel.onRetryClick()
-        advanceUntilIdle()
-        assertEquals(listOf("GET:1", "PUT", "GET:1", "GET:1"), repository.events)
-        assertNotNull(viewModel.uiState.value.analysis)
-    }
-
-    private fun SkillsGapViewModel.prepareInput() {
-        openInput()
-        changeName(0, "Example")
-        reviewInput()
+        assertEquals(R.string.skills_gap_error_network, vm.uiState.value.cvErrorMessage)
+        assertNull(vm.uiState.value.errorMessage)
+        assertNotNull(vm.uiState.value.analysis)
+        assertEquals(listOf("GET:1"), gaps.events)
     }
 }
 
-private class FakeSkillsGapRepository : SkillsGapRepository {
+private class FakeGaps(override val enabled: Boolean = true) : SkillsGapRepository {
     val events = mutableListOf<String>()
-    var readFailure: SkillsGapFailure? = null
-    var writeFailure: SkillsGapFailure? = null
+    var readError: Exception? = null
+    var writeError: Exception? = null
     var saved: List<SkillInput>? = null
-
-    override suspend fun getAnalysis(page: Long): SkillsGapAnalysis {
+    override suspend fun getAnalysis(page: Int): SkillsGapAnalysis {
         events += "GET:$page"
-        readFailure?.let { throw SkillsGapException(it) }
-        return SkillsGapAnalysis(
-            skills = emptyList(),
-            recommendations = emptyList(),
-            status = "incomplete",
-            comparedSkills = 0,
-            scaleKey = "cv-skill-v1",
-            marketStatus = "missing",
-            unresolved = emptyList(),
-            page = page,
-            pageSize = 100,
-            totalRecords = 0,
-        )
+        readError?.let { throw it }
+        return SkillsGapAnalysis(emptyList(), emptyList(), status = "incomplete", page = page)
     }
-
     override suspend fun replaceInput(skills: List<SkillInput>) {
         events += "PUT"
-        writeFailure?.let { throw SkillsGapException(it) }
+        writeError?.let { throw it }
         saved = skills
     }
+}
+
+private class FakeCvs : CvRepository {
+    var calls = 0
+    var listError: Exception? = null
+    private val cv = Cv("cv1", "user", "My CV", "template", "", "", null,
+        UserProfile("user", "Name", "email", null, "", null, null, emptyList(), emptyList(), emptyList()),
+        emptyList(), emptyList(), listOf(Skill("1", "SQL", "beginner", ""), Skill("2", "Python", "NEW", "")), emptyList(), emptyList())
+    override suspend fun getCvs(page: Int, pageSize: Int, query: String): PagedResult<Cv> {
+        calls++
+        listError?.let { throw it }
+        return PagedResult(listOf(cv), page, pageSize, 1)
+    }
+    override suspend fun getCvById(id: String): Cv { calls++; return cv }
+    override suspend fun updateCv(cv: Cv): Cv = error("not used")
+    override suspend fun createCv(title: String, templateId: String, personalInfo: UserProfile?): Cv = error("not used")
+    override suspend fun deleteCv(id: String) = error("not used")
 }

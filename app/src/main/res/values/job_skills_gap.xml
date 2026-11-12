@@ -1,0 +1,22 @@
+<resources>
+    <string name="job_gap_load_cvs">Cargar CVs</string>
+    <string name="job_gap_no_cvs">Todavía no tienes CVs para analizar.</string>
+    <string name="job_gap_open_cvs">Abrir mis CVs</string>
+    <string name="job_gap_analyze">Analizar con mi CV</string>
+    <string name="job_gap_cv_list_error">No se pudieron cargar tus currículums.</string>
+    <string name="job_gap_cv_detail_error">No se pudo abrir ese currículum. Inténtalo de nuevo.</string>
+    <string name="job_gap_error_generic">No se pudo completar el análisis. Vuelve a intentarlo.</string>
+    <string name="job_gap_incompatible">Recibimos datos que no podemos mostrar. Inténtalo más tarde.</string>
+    <string name="job_gap_network_error">Revisa tu conexión e inténtalo de nuevo.</string>
+    <string name="job_gap_invalid_level">Revisa los niveles de tus habilidades en Mis CVs.</string>
+    <string name="job_gap_invalid_input">Revisa los datos del CV o elige otra oferta.</string>
+    <string name="job_gap_unavailable">El servicio no está disponible. Inténtalo más tarde.</string>
+    <string name="job_gap_route_unavailable">Esta oferta o función ya no está disponible.</string>
+    <string name="job_gap_catalog_error">No pudimos cargar los cursos. Puedes consultar solo los niveles.</string>
+    <string name="job_gap_free">Acceso gratuito según el catálogo</string>
+    <string name="job_gap_paid">De pago según el catálogo</string>
+    <string name="job_gap_cv_used">CV utilizado: %1$s</string>
+    <string name="job_gap_invalid_cv">Revisa los nombres, niveles y cantidad de habilidades de tu CV.</string>
+    <string name="job_gap_forbidden">Tu cuenta no tiene acceso a esta operación.</string>
+    <string name="job_gap_too_large">El CV o la oferta supera el tamaño permitido.</string>
+</resources>

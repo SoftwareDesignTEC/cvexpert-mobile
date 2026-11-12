@@ -58,11 +58,11 @@ internal fun SkillsInputDialog(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 item {
-                    Text(stringResource(R.string.skills_gap_replace_notice))
+                    Text(stringResource(R.string.skills_gap_manual_replace_notice))
                 }
                 if (reviewing) {
                     items(state.draft) { skill ->
-                        Text(stringResource(R.string.skills_gap_review_skill, skill.skillName, levelLabel(skill.level)))
+                        Text(stringResource(R.string.skills_gap_review_skill, skill.skillName, levelLabel(skill.level?.let(SkillLevel::fromApi))))
                     }
                 } else {
                     itemsIndexed(state.draft) { index, skill ->
@@ -75,7 +75,7 @@ internal fun SkillsInputDialog(
                                 singleLine = true,
                             )
                             Row {
-                                SkillLevelMenu(skill.level) { viewModel.changeLevel(index, it) }
+                                SkillLevelMenu(skill.level?.let(SkillLevel::fromApi)) { viewModel.changeLevel(index, it) }
                                 TextButton(onClick = { viewModel.removeSkill(index) }) {
                                     Text(stringResource(R.string.skills_gap_remove_skill))
                                 }

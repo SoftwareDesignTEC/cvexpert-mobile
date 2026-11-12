@@ -1,0 +1,27 @@
+<resources>
+    <string name="destination_courses">Courses</string>
+    <string name="courses_explore">Explore courses</string>
+    <string name="courses_exact_filters">Platform and skill must match the catalog exactly, including case.</string>
+    <string name="courses_platform">Exact platform</string>
+    <string name="courses_skill">Exact skill</string>
+    <string name="courses_any_price">All</string>
+    <string name="courses_apply">Apply filters</string>
+    <string name="courses_clear">Clear filters</string>
+    <string name="courses_page">Page %1$d · %2$d server records</string>
+    <string name="courses_data_defect">The backend returned test records or example links. They are hidden; the server total is unchanged. This data defect needs correction.</string>
+    <string name="courses_page_empty">There are no publishable courses on this page.</string>
+    <string name="courses_no_matches">No courses match these filters.</string>
+    <string name="courses_empty">The catalog has no courses yet.</string>
+    <string name="courses_unavailable">The catalog is unavailable. The service or its database may be temporarily unreachable.</string>
+    <string name="courses_open_error">Unable to open the course link.</string>
+    <string name="courses_suggested">Suggested courses</string>
+    <string name="courses_missing_reason">Skill not documented</string>
+    <string name="courses_missing_skill">%1$s — Not documented in your CV</string>
+    <string name="courses_no_associated">We found no courses associated with this skill</string>
+    <string name="courses_explore_skill">Explore courses for %1$s</string>
+    <string name="courses_level_reason">Level to improve · Related courses to improve %1$s</string>
+    <string name="courses_levels">Declared level: %1$s · Required level: %2$s</string>
+    <string name="courses_level_disclaimer">These courses are associated with the skill. Their educational level is not verified by the catalog.</string>
+    <string name="courses_more">Load more courses</string>
+    <string name="courses_explore_all">Explore all courses</string>
+</resources>

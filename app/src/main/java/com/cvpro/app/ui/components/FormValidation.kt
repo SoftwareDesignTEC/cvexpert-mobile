@@ -2,6 +2,8 @@ package com.cvpro.app.ui.components
 
 import androidx.annotation.StringRes
 import com.cvpro.app.R
+import com.cvpro.app.domain.model.Skill
+import com.cvpro.app.domain.model.jobSkillLevels
 
 /**
  * Reglas de validación de los formularios.
@@ -16,6 +18,17 @@ object FormValidation {
     @StringRes
     fun required(value: String): Int? =
         if (value.isBlank()) R.string.validation_required else null
+
+    /** El contrato de habilidades es distinto del de niveles de idiomas. */
+    @StringRes
+    fun skillLevel(value: String): Int? = when {
+        value.isBlank() -> R.string.cv_skill_level_required
+        value !in jobSkillLevels -> R.string.cv_skill_level_invalid
+        else -> null
+    }
+
+    fun hasInvalidSkills(skills: List<Skill>): Boolean =
+        skills.any { required(it.name) != null || skillLevel(it.level) != null }
 
     /** Correo electrónico con formato válido. */
     @StringRes

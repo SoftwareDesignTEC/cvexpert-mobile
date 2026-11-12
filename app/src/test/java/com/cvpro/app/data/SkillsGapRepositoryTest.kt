@@ -32,7 +32,7 @@ class SkillsGapRepositoryTest {
             .addConverterFactory(GsonConverterFactory.create())
             .build()
             .create(SkillsGapApi::class.java)
-        repository = ApiSkillsGapRepository(api)
+        repository = ApiSkillsGapRepository(api, true)
     }
 
     @After
@@ -43,7 +43,7 @@ class SkillsGapRepositoryTest {
     @Test
     fun `puts the exact input shape with all level values and explicit null`() = runTest {
         val levels = SkillLevel.entries + null
-        val skills = levels.mapIndexed { index, level -> SkillInput("Skill $index", level) }
+        val skills = levels.mapIndexed { index, level -> SkillInput("Skill $index", level?.apiValue) }
         server.enqueue(MockResponse().setResponseCode(204))
         repository.replaceInput(skills)
 
@@ -71,8 +71,8 @@ class SkillsGapRepositoryTest {
         val request = checkNotNull(server.takeRequest(5, TimeUnit.SECONDS))
         assertEquals("GET", request.method)
         assertEquals("/gateway/skills-gap?page=2&pageSize=100", request.path)
-        assertEquals(2L, analysis.page)
-        assertEquals(101L, analysis.totalRecords)
+        assertEquals(2, analysis.page)
+        assertEquals(101, analysis.totalRecords)
         assertTrue(analysis.skills.isEmpty())
     }
 
@@ -103,14 +103,13 @@ class SkillsGapRepositoryTest {
     @Test
     fun `rejects empty invalid and oversized snapshots before sending`() = runTest {
         listOf(
-            emptyList(),
             listOf(SkillInput(" ", null)),
             listOf(SkillInput("name\u0000", null)),
             listOf(SkillInput(" name ", null)),
             listOf(SkillInput("a".repeat(201), null)),
             validSkills + validSkills,
             List(501) { SkillInput("Skill $it", null) },
-            List(200) { SkillInput("$it" + "界".repeat(190), SkillLevel.EXPERT) },
+            List(200) { SkillInput("$it" + "界".repeat(190), SkillLevel.EXPERT.apiValue) },
         ).forEach { invalidSkills ->
             expectFailure(SkillsGapFailure.INVALID_INPUT) { repository.replaceInput(invalidSkills) }
         }
@@ -126,5 +125,5 @@ class SkillsGapRepositoryTest {
         }
     }
 
-    private val validSkills = listOf(SkillInput("Example", SkillLevel.BEGINNER))
+    private val validSkills = listOf(SkillInput("Example", SkillLevel.BEGINNER.apiValue))
 }

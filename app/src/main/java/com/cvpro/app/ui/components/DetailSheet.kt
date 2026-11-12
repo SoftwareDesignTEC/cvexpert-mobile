@@ -46,6 +46,7 @@ fun JobOfferDetailSheet(
     modifier: Modifier = Modifier,
     applyState: ApplyState? = null,
     onApply: () -> Unit = {},
+    onAnalyzeGap: (() -> Unit)? = null,
 ) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
@@ -154,6 +155,12 @@ fun JobOfferDetailSheet(
                         .padding(top = 24.dp),
                 ) {
                     Text(stringResource(R.string.jobs_open_original))
+                }
+            }
+
+            onAnalyzeGap?.let { analyze ->
+                OutlinedButton(onClick = analyze, modifier = Modifier.fillMaxWidth().padding(top = 16.dp)) {
+                    Text(stringResource(R.string.job_gap_analyze))
                 }
             }
 

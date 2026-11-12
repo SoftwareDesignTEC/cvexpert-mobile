@@ -26,6 +26,11 @@ import com.cvpro.app.data.remote.api.SettingsApi
 @Module
 @InstallIn(SingletonComponent::class)
 object NetworkModule {
+    @Provides
+    @Singleton
+    fun provideCourseApi(retrofit: Retrofit): com.cvpro.app.data.remote.api.CourseApi =
+        retrofit.create(com.cvpro.app.data.remote.api.CourseApi::class.java)
+
 
     /**
      * Cliente HTTP con el token de Google adjunto y tiempos de espera propios.
@@ -100,8 +105,11 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideSkillsGapApi(retrofit: Retrofit): SkillsGapApi {
-        return retrofit.create(SkillsGapApi::class.java)
+    fun provideSkillsGapApi(retrofit: Retrofit, client: OkHttpClient): SkillsGapApi {
+        // No automatic connection retries for analysis POSTs. Explicit UI retry repeats only the failed operation.
+        // The cloned client preserves authentication, privacy logging, timeouts and the existing base URL.
+        val skillsClient = client.newBuilder().retryOnConnectionFailure(false).build()
+        return retrofit.newBuilder().client(skillsClient).build().create(SkillsGapApi::class.java)
     }
 
     @Provides

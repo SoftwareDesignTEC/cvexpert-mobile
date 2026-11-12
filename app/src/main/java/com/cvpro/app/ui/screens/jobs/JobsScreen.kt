@@ -53,6 +53,7 @@ import com.cvpro.app.ui.components.outlinedOnCardColors
 import com.cvpro.app.R
 import com.cvpro.app.domain.model.JobModality
 import com.cvpro.app.domain.model.JobOffer
+import com.cvpro.app.ui.screens.skillsgap.JobSkillsGapSheet
 import com.cvpro.app.ui.components.CompatibilityRing
 import com.cvpro.app.ui.components.EmptyState
 import com.cvpro.app.ui.theme.CvProTheme
@@ -62,6 +63,8 @@ import com.cvpro.app.ui.theme.CvProTheme
 fun JobsScreen(
     modifier: Modifier = Modifier,
     viewModel: JobsViewModel = hiltViewModel(),
+    onCvsClick: () -> Unit = {},
+    onExploreCourses: (String?) -> Unit = {},
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     // El Scaffold de la raíz comparte un único snackbar, igual que en Plantillas.
@@ -94,6 +97,8 @@ fun JobsScreen(
         onLoadMore = viewModel::onLoadMore,
         onApply = viewModel::onApply,
         modifier = modifier,
+        onCvsClick = onCvsClick,
+        onExploreCourses = onExploreCourses,
     )
 }
 
@@ -112,9 +117,17 @@ fun JobsContent(
     onLoadMore: () -> Unit,
     onApply: (JobOffer) -> Unit,
     modifier: Modifier = Modifier,
+    onCvsClick: () -> Unit = {},
+    onExploreCourses: (String?) -> Unit = {},
 ) {
     // Oferta abierta en el detalle, o null si la hoja está cerrada.
     var detailOffer by remember { mutableStateOf<JobOffer?>(null) }
+    var gapOffer by remember { mutableStateOf<JobOffer?>(null) }
+
+    gapOffer?.let { offer ->
+        JobSkillsGapSheet(offer = offer, onDismiss = { gapOffer = null }, onCorrectCv = { gapOffer = null; onCvsClick() },
+            onExploreCourses = { skill -> gapOffer = null; onExploreCourses(skill) })
+    }
 
     detailOffer?.let { offer ->
         JobOfferDetailSheet(
@@ -122,6 +135,7 @@ fun JobsContent(
             onDismiss = { detailOffer = null },
             applyState = uiState.applyStateOf(offer),
             onApply = { onApply(offer) },
+            onAnalyzeGap = { detailOffer = null; gapOffer = offer },
         )
     }
 

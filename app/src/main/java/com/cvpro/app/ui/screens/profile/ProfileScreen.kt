@@ -56,8 +56,6 @@ import com.cvpro.app.ui.components.ComingSoonSheet
 import com.cvpro.app.ui.components.FormTextField
 import com.cvpro.app.ui.components.LocalSnackbarHostState
 import com.cvpro.app.ui.components.PrimaryButton
-import com.cvpro.app.ui.components.RadarChart
-import com.cvpro.app.ui.components.RadarSeries
 import com.cvpro.app.ui.components.RemoteImage
 import com.cvpro.app.ui.components.outlinedOnCardColors
 import com.cvpro.app.ui.theme.CvProTheme
@@ -67,7 +65,6 @@ import com.cvpro.app.ui.theme.CvProTheme
  */
 @Composable
 fun ProfileScreen(
-    onSkillsGapClick: () -> Unit,
     modifier: Modifier = Modifier,
     viewModel: ProfileViewModel = hiltViewModel(),
 ) {
@@ -126,7 +123,6 @@ fun ProfileScreen(
         ProfileCard(
             uiState = uiState,
             onEditClick = viewModel::onEditClick,
-            onSkillsGapClick = onSkillsGapClick,
             modifier = modifier,
         )
     }
@@ -143,7 +139,6 @@ fun ProfileScreen(
 fun ProfileCard(
     uiState: ProfileUiState,
     onEditClick: () -> Unit,
-    onSkillsGapClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     val profile = uiState.profile
@@ -215,60 +210,6 @@ fun ProfileCard(
                 onClick = onEditClick,
                 modifier = Modifier.padding(top = 12.dp),
             )
-        }
-
-        // Análisis de habilidades: el mismo radar del Panel Principal.
-        val analysis = uiState.skillsGap
-        if (analysis != null) {
-            ProfileSurface {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Box(
-                        modifier = Modifier
-                            .size(width = 4.dp, height = 18.dp)
-                            .clip(RoundedCornerShape(2.dp))
-                            .background(MaterialTheme.colorScheme.primary),
-                    )
-                    Text(
-                        text = stringResource(R.string.home_skills_title),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        modifier = Modifier.padding(start = 8.dp),
-                    )
-                }
-
-                if (analysis.marketStatus == "missing") Text(stringResource(R.string.skills_gap_market_missing))
-                if (analysis.status == "empty") Text(stringResource(R.string.skills_gap_empty))
-                if (analysis.status == "incomplete") Text(stringResource(R.string.skills_gap_incomplete))
-                if (analysis.canConfirmNoGaps) Text(stringResource(R.string.skills_gap_no_gaps))
-                if (analysis.skills.isNotEmpty()) {
-                    Text(stringResource(R.string.skills_gap_ordinal_scale))
-                    Text(stringResource(R.string.skills_gap_deficits_only))
-                    RadarChart(
-                        labels = analysis.skills.map { it.name },
-                        series = listOf(
-                            RadarSeries(
-                                label = stringResource(R.string.skills_gap_series_user),
-                                values = analysis.skills.map { it.userLevel },
-                                color = MaterialTheme.colorScheme.primary,
-                            ),
-                        ),
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(240.dp)
-                            .padding(top = 12.dp),
-                    )
-                }
-
-                OutlinedButton(
-                    onClick = onSkillsGapClick,
-                    colors = outlinedOnCardColors(),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 12.dp),
-                ) {
-                    Text(stringResource(R.string.home_shortcut_skills_gap))
-                }
-            }
         }
 
         // Datos de contacto.

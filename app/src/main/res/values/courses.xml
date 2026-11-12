@@ -1,0 +1,27 @@
+<resources>
+    <string name="destination_courses">Cursos</string>
+    <string name="courses_explore">Explorar cursos</string>
+    <string name="courses_exact_filters">Plataforma y habilidad deben coincidir exactamente con el catálogo, incluidas las mayúsculas.</string>
+    <string name="courses_platform">Plataforma exacta</string>
+    <string name="courses_skill">Habilidad exacta</string>
+    <string name="courses_any_price">Todos</string>
+    <string name="courses_apply">Aplicar filtros</string>
+    <string name="courses_clear">Limpiar filtros</string>
+    <string name="courses_page">Página %1$d · %2$d registros del servidor</string>
+    <string name="courses_data_defect">El backend devolvió registros de prueba o enlaces de ejemplo. Se ocultaron; el total del servidor se conserva. Defecto de datos pendiente de corregir.</string>
+    <string name="courses_page_empty">No hay cursos publicables en esta página.</string>
+    <string name="courses_no_matches">No encontramos cursos con estos filtros.</string>
+    <string name="courses_empty">El catálogo todavía no contiene cursos.</string>
+    <string name="courses_unavailable">El catálogo no está disponible. El servicio o su base de datos pueden estar temporalmente inaccesibles.</string>
+    <string name="courses_open_error">No se pudo abrir el enlace del curso.</string>
+    <string name="courses_suggested">Cursos sugeridos</string>
+    <string name="courses_missing_reason">Habilidad no documentada</string>
+    <string name="courses_missing_skill">%1$s — No documentada en tu CV</string>
+    <string name="courses_no_associated">No encontramos cursos asociados a esta habilidad</string>
+    <string name="courses_explore_skill">Explorar cursos de %1$s</string>
+    <string name="courses_level_reason">Nivel por mejorar · Cursos relacionados para mejorar %1$s</string>
+    <string name="courses_levels">Nivel declarado: %1$s · Nivel requerido: %2$s</string>
+    <string name="courses_level_disclaimer">Son cursos asociados a la habilidad. Su nivel educativo no está verificado por el catálogo.</string>
+    <string name="courses_more">Cargar más cursos</string>
+    <string name="courses_explore_all">Explorar todos los cursos</string>
+</resources>

@@ -1,0 +1,22 @@
+<resources>
+    <string name="job_gap_load_cvs">Load CVs</string>
+    <string name="job_gap_no_cvs">You do not have any CVs to analyze yet.</string>
+    <string name="job_gap_open_cvs">Open my CVs</string>
+    <string name="job_gap_analyze">Analyze with my CV</string>
+    <string name="job_gap_cv_list_error">Your résumés could not be loaded.</string>
+    <string name="job_gap_cv_detail_error">This résumé could not be opened. Try again.</string>
+    <string name="job_gap_error_generic">The analysis could not be completed. Try again.</string>
+    <string name="job_gap_incompatible">We received data we cannot display. Try again later.</string>
+    <string name="job_gap_network_error">Check your connection and try again.</string>
+    <string name="job_gap_invalid_level">Review your skill levels in My résumés.</string>
+    <string name="job_gap_invalid_input">Review the résumé data or choose another job.</string>
+    <string name="job_gap_unavailable">The service is unavailable. Try again later.</string>
+    <string name="job_gap_route_unavailable">This job or feature is no longer available.</string>
+    <string name="job_gap_catalog_error">Courses could not be loaded. You can check levels only.</string>
+    <string name="job_gap_free">Free access according to the catalog</string>
+    <string name="job_gap_paid">Paid according to the catalog</string>
+    <string name="job_gap_cv_used">Résumé used: %1$s</string>
+    <string name="job_gap_invalid_cv">Review the names, levels and number of skills in your résumé.</string>
+    <string name="job_gap_forbidden">Your account does not have access to this operation.</string>
+    <string name="job_gap_too_large">The résumé or job exceeds the allowed size.</string>
+</resources>
