@@ -55,7 +55,6 @@ import com.cvpro.app.domain.model.Cv
 import com.cvpro.app.ui.components.LoadingState
 import com.cvpro.app.ui.components.BlockingProgressDialog
 import com.cvpro.app.ui.components.CvCardActions
-import com.cvpro.app.ui.components.CvDetailSheet
 import com.cvpro.app.ui.components.CvEditorSheet
 import com.cvpro.app.ui.components.EmptyState
 import com.cvpro.app.ui.components.PagePreview
@@ -287,7 +286,17 @@ fun CvsContent(
     var cvToDelete by remember { mutableStateOf<Cv?>(null) }
     // Currículum abierto para verlo (solo lectura).
     var viewingCv by remember { mutableStateOf<Cv?>(null) }
-    viewingCv?.let { cv -> CvDetailSheet(cv = cv, onDismiss = { viewingCv = null }) }
+    viewingCv?.let { cv ->
+        CvDocumentViewer(
+            cv = cv,
+            onDismiss = { viewingCv = null },
+            onEditClick = {
+                viewingCv = null
+                editingCv = cv
+            },
+            onDownloadClick = { onDownloadCv(cv) },
+        )
+    }
 
     editingCv?.let { cv ->
         CvEditorSheet(

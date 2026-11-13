@@ -49,6 +49,9 @@ class CvPreviewRenderer @Inject constructor(
             bitmap?.let { template.id to it }
         }.toMap()
 
+    /** Todas las hojas del currículum, como en el PDF, para "Ver currículum". */
+    suspend fun pagesFor(cv: Cv): List<Bitmap> = pdfGenerator.renderPages(cv, layoutFor(cv.templateId))
+
     private suspend fun preview(cv: Cv): Bitmap? =
         cvPreviews.get(cv) ?: safely { pdfGenerator.renderPreview(cv, layoutFor(cv.templateId)) }
             ?.also { cvPreviews.put(cv, it) }
