@@ -99,9 +99,11 @@ class JobGapUiTest {
             com.cvpro.app.ui.screens.jobs.JobsContent(
                 uiState = com.cvpro.app.ui.screens.jobs.JobsUiState(offers = listOf(offer)),
                 onQueryChange = {}, onFilterChange = {}, onRetryClick = {}, onLoadMore = {},
-                onApply = { applications++ })
+                onApply = { _, status -> if (status == com.cvpro.app.domain.model.ApplicationStatus.APPLIED) applications++ })
         }
-        compose.onNodeWithText("Postularme").performScrollTo().performClick()
+        // "Agregar a postulaciones" pregunta la columna antes de guardar.
+        compose.onNodeWithText("Agregar a postulaciones").performScrollTo().performClick()
+        compose.onNodeWithText("Aplicado").performClick()
         assertEquals(1, applications)
     }
 
