@@ -29,7 +29,9 @@ data class ApplicationsUiState(
     val applications: List<JobApplication> = emptyList(),
     val selectedStatus: ApplicationStatus = ApplicationStatus.APPLIED,
     val totalRecords: Int = 0,
-    val isLoading: Boolean = false,
+    // Arranca en true: la primera carga sale apenas se muestra la pantalla, y si arrancara en
+    // false se vería un instante "no hay nada" antes de que lleguen los datos.
+    val isLoading: Boolean = true,
     @param:StringRes val error: Int? = null,
     /** Aviso de una sola vez (retirar una postulación): se muestra y se limpia. */
     val message: UiMessage? = null,

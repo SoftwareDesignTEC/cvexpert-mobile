@@ -58,122 +58,27 @@ import com.cvpro.app.ui.components.CvCardActions
 import com.cvpro.app.ui.components.CvEditorSheet
 import com.cvpro.app.ui.components.EmptyState
 import com.cvpro.app.ui.components.PagePreview
-import com.cvpro.app.ui.components.RemoteImage
+import com.cvpro.app.ui.components.PreviewPlaceholder
 import com.cvpro.app.ui.components.outlinedOnCardColors
 import com.cvpro.app.ui.theme.CvProTheme
 
 
 /**
- * Vista previa de la tarjeta.
- *
- * Si el servicio manda la imagen del currículum armado, se muestra esa. Si no llega o no
- * carga, se dibuja a mano con los datos del CV, que es lo que se hacía antes.
+ * Vista previa de la tarjeta: la primera hoja del PDF real, dibujada con su plantilla. Mientras
+ * se dibuja (un segundo), una rueda en vez de un recuadro vacío.
  */
 @Composable
 private fun CvPreview(
-    cv: Cv,
     page: Bitmap?,
     modifier: Modifier = Modifier,
 ) {
-    // Primero la hoja real dibujada con su plantilla; si todavía no está, lo de antes.
     if (page != null) {
         PagePreview(page = page, modifier = modifier)
-        return
-    }
-    RemoteImage(
-        url = cv.previewUrl,
-        contentDescription = null,
-        contentScale = ContentScale.Crop,
-        modifier = modifier,
-        fallback = { DrawnCvPreview(cv = cv, modifier = modifier) },
-    )
-}
-
-/** Vista previa dibujada con los datos del CV, para cuando no hay imagen. */
-@Composable
-private fun DrawnCvPreview(
-    cv: Cv,
-    modifier: Modifier = Modifier,
-) {
-    Surface(
-        color = Color.White,
-        shape = RoundedCornerShape(
-            topStart = 8.dp,
-            topEnd = 8.dp,
-        ),
-        modifier = modifier,
-    ) {
-        Column(
-            modifier = Modifier.padding(10.dp),
-        ) {
-            Text(
-                text = cv.personalInfo.name,
-                style = MaterialTheme.typography.labelLarge,
-                color = Color(0xFF1F2937),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-
-            Text(
-                text = cv.personalInfo.email,
-                style = MaterialTheme.typography.labelSmall,
-                color = Color(0xFF6B7280),
-                maxLines = 1,
-                overflow = TextOverflow.Ellipsis,
-            )
-
-            cv.personalInfo.location
-                .takeIf { it.isNotBlank() }
-                ?.let { location ->
-                    Text(
-                        text = location,
-                        style = MaterialTheme.typography.labelSmall,
-                        color = Color(0xFF6B7280),
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-
-            Spacer(modifier = Modifier.height(8.dp))
-
-            HorizontalDivider(
-                color = Color(0xFFE5E7EB),
-            )
-
-            cv.workExperiences.firstOrNull()?.let { experience ->
-                Text(
-                    text = experience.position,
-                    style = MaterialTheme.typography.labelMedium,
-                    color = Color(0xFF1F2937),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(top = 6.dp),
-                )
-
-                Text(
-                    text = experience.company,
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFF6B7280),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-            }
-
-            if (cv.skills.isNotEmpty()) {
-                Text(
-                    text = cv.skills
-                        .take(3)
-                        .joinToString(" · ") { it.name },
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Color(0xFF1565F5),
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(top = 6.dp),
-                )
-            }
-        }
+    } else {
+        PreviewPlaceholder(modifier = modifier)
     }
 }
+
 /** Mis Currículums: la lista de CV guardados, con buscador. */
 @Composable
 fun CvsScreen(
@@ -506,7 +411,6 @@ private fun CvCard(
             // El modelo del CV no trae imagen de vista previa: por ahora va el recuadro gris
             // del diseño.
             CvPreview(
-                cv = cv,
                 page = preview,
                 modifier = Modifier
                     .fillMaxWidth()

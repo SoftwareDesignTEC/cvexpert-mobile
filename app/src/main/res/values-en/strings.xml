@@ -207,7 +207,6 @@
     <string name="home_recent_cvs_title">Recent CVs</string>
     <string name="home_recent_cvs_see_all">See all</string>
     <string name="home_recent_cvs_empty">You don\'t have any saved CVs yet.</string>
-    <string name="home_cv_preview">Preview</string>
     <string name="home_cv_updated_at">Modified %1$s</string>
     <string name="home_cv_download">Download</string>
     <string name="cv_card_view">View CV</string>

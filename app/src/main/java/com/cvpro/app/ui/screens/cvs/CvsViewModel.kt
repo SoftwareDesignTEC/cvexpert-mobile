@@ -27,7 +27,9 @@ import kotlinx.coroutines.launch
 data class CvsUiState(
     val cvs: List<Cv> = emptyList(),
     val query: String = "",
-    val isLoading: Boolean = false,
+    // Arranca en true: la primera carga sale apenas se muestra la pantalla, y si arrancara en
+    // false se vería un instante "no hay nada" antes de que lleguen los datos.
+    val isLoading: Boolean = true,
     val isGeneratingPdf: Boolean = false,
     @param:StringRes val error: Int? = null,
     val deletingId: String? = null,
