@@ -28,6 +28,7 @@ import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -60,6 +61,7 @@ import com.cvpro.app.ui.screens.cvs.CvDocumentViewer
 import com.cvpro.app.ui.components.BlockingProgressDialog
 import com.cvpro.app.ui.components.CvCardActions
 import com.cvpro.app.ui.components.PagePreview
+import com.cvpro.app.ui.components.PreviewPlaceholder
 import com.cvpro.app.ui.components.RemoteImage
 import com.cvpro.app.ui.components.VersionLabel
 import com.cvpro.app.ui.components.outlinedOnCardColors
@@ -169,6 +171,7 @@ fun HomeContent(
         RecentCvsSection(
             cvs = uiState.recentCvs,
             previews = uiState.cvPreviews,
+            isLoading = uiState.isLoading,
             onSeeAllClick = onCvsClick,
             onCvClick = { detailCv = it },
             onEditClick = onEditCv,
@@ -178,7 +181,11 @@ fun HomeContent(
         CreateCvSection(onTemplatesClick = onTemplatesClick, onAiClick = { showAiCv = true })
 
 
-        RecommendedOffersSection(offers = uiState.recommendedOffers, onSeeAllClick = onJobsClick)
+        RecommendedOffersSection(
+            offers = uiState.recommendedOffers,
+            isLoading = uiState.isLoading,
+            onSeeAllClick = onJobsClick,
+        )
 
         VersionLabel(
             versionName = versionName,
@@ -196,6 +203,7 @@ fun HomeContent(
 private fun RecentCvsSection(
     cvs: List<Cv>,
     previews: Map<String, Bitmap>,
+    isLoading: Boolean,
     onSeeAllClick: () -> Unit,
     onCvClick: (Cv) -> Unit,
     onEditClick: (Cv) -> Unit,
@@ -209,7 +217,9 @@ private fun RecentCvsSection(
             onActionClick = onSeeAllClick,
         )
 
-        if (cvs.isEmpty()) {
+        if (isLoading && cvs.isEmpty()) {
+            SectionLoading(stringResource(R.string.loading_cvs))
+        } else if (cvs.isEmpty()) {
             EmptySectionText(stringResource(R.string.home_recent_cvs_empty))
         } else {
             LazyRow(
@@ -247,6 +257,7 @@ private fun RecentCvCard(
         Column {
             // Primero la hoja real del CV dibujada con su plantilla. Si todavía no está, la
             // imagen que manda el servicio y, si tampoco, el recuadro con el rótulo.
+            // Mientras se dibuja la hoja, una rueda en vez de un recuadro vacío.
             if (preview != null) {
                 PagePreview(
                     page = preview,
@@ -254,29 +265,13 @@ private fun RecentCvCard(
                         .fillMaxWidth()
                         .height(110.dp),
                 )
-            } else RemoteImage(
-                url = cv.previewUrl,
-                contentDescription = null,
-                contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(110.dp),
-                fallback = {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(110.dp)
-                            .background(MaterialTheme.colorScheme.surfaceVariant),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = stringResource(R.string.home_cv_preview),
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                },
-            )
+            } else {
+                PreviewPlaceholder(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(110.dp),
+                )
+            }
 
             Column(modifier = Modifier.padding(start = 10.dp, end = 0.dp, top = 6.dp, bottom = 10.dp)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -386,6 +381,7 @@ private fun CreateCvSection(
 @Composable
 private fun RecommendedOffersSection(
     offers: List<JobOffer>,
+    isLoading: Boolean,
     onSeeAllClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -396,7 +392,9 @@ private fun RecommendedOffersSection(
             onActionClick = onSeeAllClick,
         )
 
-        if (offers.isEmpty()) {
+        if (isLoading && offers.isEmpty()) {
+            SectionLoading(stringResource(R.string.loading_jobs))
+        } else if (offers.isEmpty()) {
             EmptySectionText(stringResource(R.string.home_offers_empty))
         } else {
             offers.forEach { offer ->
@@ -516,6 +514,29 @@ private fun SectionHeader(
                 )
             }
         }
+    }
+}
+
+/** La sección todavía está cargando: rueda con su texto, para que no parezca vacía. */
+@Composable
+private fun SectionLoading(
+    text: String,
+    modifier: Modifier = Modifier,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Center,
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 20.dp),
+    ) {
+        CircularProgressIndicator(modifier = Modifier.size(20.dp), strokeWidth = 2.dp)
+        Text(
+            text = text,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(start = 12.dp),
+        )
     }
 }
 

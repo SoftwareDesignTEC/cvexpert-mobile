@@ -205,7 +205,6 @@
     <string name="home_recent_cvs_title">Currículums Recientes</string>
     <string name="home_recent_cvs_see_all">Ver todos</string>
     <string name="home_recent_cvs_empty">Todavía no tienes currículums guardados.</string>
-    <string name="home_cv_preview">Vista previa</string>
     <string name="home_cv_updated_at">Modificado %1$s</string>
     <string name="home_cv_download">Descargar</string>
     <string name="cv_card_view">Ver currículum</string>

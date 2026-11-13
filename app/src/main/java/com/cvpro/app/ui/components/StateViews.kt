@@ -1,6 +1,8 @@
 package com.cvpro.app.ui.components
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -59,6 +61,20 @@ fun BlockingProgressDialog(message: String) {
                 )
             }
         }
+    }
+}
+
+/**
+ * Recuadro de una miniatura que todavía se está dibujando: una rueda chica en vez de un hueco
+ * vacío, para que se note que viene algo.
+ */
+@Composable
+fun PreviewPlaceholder(modifier: Modifier = Modifier) {
+    Box(
+        contentAlignment = Alignment.Center,
+        modifier = modifier.background(MaterialTheme.colorScheme.surfaceVariant),
+    ) {
+        CircularProgressIndicator(modifier = Modifier.size(24.dp), strokeWidth = 2.dp)
     }
 }
 
