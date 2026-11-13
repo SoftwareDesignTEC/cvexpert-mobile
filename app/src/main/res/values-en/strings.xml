@@ -213,6 +213,11 @@
     <string name="cv_card_view">View CV</string>
     <string name="cv_card_edit">Edit CV</string>
     <string name="cv_card_more">More options</string>
+    <string name="cv_viewer_loading">Preparing your CV…</string>
+    <string name="cv_viewer_error_message">We could not show your CV. Try again.</string>
+    <string name="cv_viewer_page">Page %1$d of %2$d</string>
+    <string name="cv_viewer_zoom_in">Double-tap the page to zoom in.</string>
+    <string name="cv_viewer_zoom_out">Double-tap to see the whole page. Swipe sideways to move.</string>
     <string name="create_cv_ai_title">Create your CV with AI</string>
     <string name="create_cv_ai_steps">Tell the AI about your experience in your own words (or dictate it) and it builds your full CV. You can also pick a template and use \"Improve with AI\" in the editor.</string>
     <string name="create_cv_ai_action">Pick a template</string>

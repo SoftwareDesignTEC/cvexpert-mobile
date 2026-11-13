@@ -104,6 +104,31 @@ class CvPdfGenerator @Inject constructor(
     }
 
     /**
+     * Todas las hojas del currículum como imágenes, tal como salen en el PDF descargado.
+     *
+     * Es lo que muestra "Ver currículum": usa el mismo [drawCv] que [generate], así que lo que
+     * se ve en pantalla es exactamente el documento (formato, columnas, colores y saltos de
+     * hoja), solo que sin tener que abrir otra app.
+     */
+    suspend fun renderPages(
+        cv: Cv,
+        layout: CvLayout = CvLayout.DEFAULT,
+        widthPx: Int = FULL_PAGE_WIDTH_PX,
+    ): List<Bitmap> = withContext(Dispatchers.Default) {
+        val writer = PageWriter(Paints(layout))
+        writer.drawCv(cv, layout)
+        val scale = widthPx / PAGE_WIDTH.toFloat()
+        (0 until writer.pageCount).map { index ->
+            val bitmap = createBitmap(widthPx, (PAGE_HEIGHT * scale).roundToInt(), Bitmap.Config.RGB_565)
+            val canvas = Canvas(bitmap)
+            canvas.drawColor(Color.WHITE)
+            canvas.scale(scale, scale)
+            writer.renderPage(index, canvas)
+            bitmap
+        }
+    }
+
+    /**
      * Vista previa de una plantilla, con un currículum de ejemplo.
      *
      * El servicio de CVs no manda una imagen de cada plantilla (su previewUrl es un rectángulo
@@ -487,6 +512,14 @@ class CvPdfGenerator @Inject constructor(
             pages.first().forEach { it(canvas) }
         }
 
+        /** Cuántas hojas ocupa el currículum. */
+        val pageCount: Int get() = pages.size
+
+        /** Dibuja la hoja [index] en un lienzo cualquiera ("Ver currículum"). */
+        fun renderPage(index: Int, canvas: Canvas) {
+            pages[index].forEach { it(canvas) }
+        }
+
         /** Dibuja todas las hojas en el documento, una tras otra. */
         fun render(document: PdfDocument) {
             pages.forEachIndexed { index, operations ->
@@ -600,6 +633,9 @@ class CvPdfGenerator @Inject constructor(
         // Ancho de las vistas previas: la tarjeta de Mis Currículums ocupa todo el ancho del
         // teléfono, y con menos se veía borrosa. En RGB_565 son unos 1,5 MB por imagen.
         const val PREVIEW_WIDTH_PX = 720
+
+        /** Ancho de cada hoja en "Ver currículum": más que la pantalla, para que se lea nítida al acercarla. */
+        const val FULL_PAGE_WIDTH_PX = 1600
 
         // Separación de los títulos de sección, igual que antes: 10 hasta la línea y 16 hasta el texto.
         const val SECTION_TOP = 10f

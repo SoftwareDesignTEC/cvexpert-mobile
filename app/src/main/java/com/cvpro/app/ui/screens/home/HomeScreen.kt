@@ -56,7 +56,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cvpro.app.R
 import com.cvpro.app.domain.model.Cv
 import com.cvpro.app.domain.model.JobOffer
-import com.cvpro.app.ui.components.CvDetailSheet
+import com.cvpro.app.ui.screens.cvs.CvDocumentViewer
 import com.cvpro.app.ui.components.BlockingProgressDialog
 import com.cvpro.app.ui.components.CvCardActions
 import com.cvpro.app.ui.components.PagePreview
@@ -146,7 +146,17 @@ fun HomeContent(
         )
     }
 
-    detailCv?.let { cv -> CvDetailSheet(cv = cv, onDismiss = { detailCv = null }) }
+    detailCv?.let { cv ->
+        CvDocumentViewer(
+            cv = cv,
+            onDismiss = { detailCv = null },
+            onEditClick = {
+                detailCv = null
+                onEditCv(cv)
+            },
+            onDownloadClick = { onDownloadCv(cv) },
+        )
+    }
     if (uiState.isGeneratingPdf) BlockingProgressDialog(stringResource(R.string.pdf_preparing))
 
     Column(

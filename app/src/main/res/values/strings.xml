@@ -211,6 +211,11 @@
     <string name="cv_card_view">Ver currículum</string>
     <string name="cv_card_edit">Editar currículum</string>
     <string name="cv_card_more">Más opciones</string>
+    <string name="cv_viewer_loading">Preparando tu currículum…</string>
+    <string name="cv_viewer_error_message">No pudimos mostrar tu currículum. Inténtalo de nuevo.</string>
+    <string name="cv_viewer_page">Hoja %1$d de %2$d</string>
+    <string name="cv_viewer_zoom_in">Toca dos veces la hoja para acercarla.</string>
+    <string name="cv_viewer_zoom_out">Toca dos veces para verla completa. Desliza de lado para moverte.</string>
     <string name="create_cv_ai_title">Crea tu currículum con IA</string>
     <string name="create_cv_ai_steps">Cuéntale a la IA tu experiencia con tus palabras (o díctala) y arma tu currículum completo. También puedes elegir una plantilla y usar \"Mejorar con IA\" en el editor.</string>
     <string name="create_cv_ai_action">Elegir plantilla</string>
