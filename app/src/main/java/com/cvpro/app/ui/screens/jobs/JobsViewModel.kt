@@ -49,6 +49,8 @@ data class JobsUiState(
     val message: UiMessage? = null,
     /** Página real de la oferta que hay que abrir en el navegador (después de postularse). */
     val urlToOpen: String? = null,
+    /** Se están buscando ofertas nuevas en JSearch ("Buscar ofertas nuevas"). */
+    val isRefreshing: Boolean = false,
 ) {
     /**
      * Ofertas que se ven con el filtro elegido.
@@ -141,13 +143,40 @@ class JobsViewModel @Inject constructor(
     }
 
     /**
-     * Postula al usuario a la oferta (POST /applications).
-     *
-     * El servicio de Ofertas toma el usuario del token y la postulación nace en "Aplicado".
-     * Un 409 significa que ya estaba postulado: no es un error para el usuario, así que se
-     * le avisa y la oferta queda marcada igual.
+     * "Buscar ofertas nuevas": el servicio corre la búsqueda en JSearch en ese momento y
+     * después se recarga la lista. Sirve para mostrar en vivo que las ofertas son reales.
      */
-    fun onApply(offer: JobOffer) {
+    fun onRefreshOffers() {
+        if (_uiState.value.isRefreshing) return
+        _uiState.update { it.copy(isRefreshing = true) }
+        viewModelScope.launch {
+            val message = try {
+                val result = jobOfferRepository.refreshOffers()
+                loadFirstPage(showLoader = false)
+                if (result.created > 0) {
+                    UiMessage(R.string.jobs_refresh_new, listOf(result.created.toString(), result.updated.toString()))
+                } else {
+                    UiMessage(R.string.jobs_refresh_none, listOf(result.updated.toString()))
+                }
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: HttpException) {
+                UiMessage(
+                    if (exception.code() == HTTP_TOO_MANY_REQUESTS) R.string.jobs_refresh_too_soon else R.string.jobs_refresh_unavailable,
+                )
+            } catch (exception: IOException) {
+                UiMessage(R.string.jobs_error_network)
+            }
+            _uiState.update { it.copy(isRefreshing = false, message = message) }
+        }
+    }
+
+    /**
+     * Agrega la oferta a Mis Postulaciones (POST /applications) en la columna [status], que
+     * elige el usuario. Un 409 significa que ya estaba en el tablero: no es un error, así que
+     * se le avisa y la oferta queda marcada igual.
+     */
+    fun onApply(offer: JobOffer, status: ApplicationStatus = ApplicationStatus.APPLIED) {
         val state = _uiState.value
         if (state.applyingOfferId != null || offer.id in state.appliedOfferIds) return
 
@@ -162,18 +191,20 @@ class JobsViewModel @Inject constructor(
                     companyLogoUrl = offer.companyLogoUrl,
                     location = offer.location,
                     modality = offer.modality,
-                    status = ApplicationStatus.APPLIED,
+                    status = status,
                     notes = null,
                 )
-                // Con una oferta real, la postulación de verdad se termina en la página de la
-                // empresa: se registra en el tablero y se abre esa página.
-                val message = if (offer.applyUrl != null) {
-                    UiMessage(R.string.jobs_apply_success_external, listOf(offer.title))
-                } else {
-                    UiMessage(R.string.jobs_apply_success, listOf(offer.title))
+                // Solo "Aplicado" abre la página de la empresa: ahí se termina de postular. En las
+                // demás columnas el usuario solo está ordenando su tablero.
+                val opensCompanyPage = status == ApplicationStatus.APPLIED && offer.applyUrl != null
+                val message = when {
+                    status == ApplicationStatus.INTERESTED -> UiMessage(R.string.jobs_saved_interested, listOf(offer.title))
+                    opensCompanyPage -> UiMessage(R.string.jobs_apply_success_external, listOf(offer.title))
+                    status == ApplicationStatus.APPLIED -> UiMessage(R.string.jobs_apply_success, listOf(offer.title))
+                    else -> UiMessage(R.string.jobs_saved_column, listOf(offer.title))
                 }
                 markApplied(offer, message)
-                _uiState.update { it.copy(urlToOpen = offer.applyUrl) }
+                if (opensCompanyPage) _uiState.update { it.copy(urlToOpen = offer.applyUrl) }
             } catch (exception: CancellationException) {
                 throw exception
             } catch (exception: HttpException) {
@@ -289,5 +320,7 @@ class JobsViewModel @Inject constructor(
         const val APPLICATIONS_PAGE_SIZE = 50
         /** El servicio de Ofertas responde 409 si el usuario ya se postuló a esa oferta. */
         const val HTTP_CONFLICT = 409
+        /** "Buscar ofertas nuevas" se usó hace menos de 10 minutos. */
+        const val HTTP_TOO_MANY_REQUESTS = 429
     }
 }

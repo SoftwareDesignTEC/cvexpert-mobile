@@ -730,13 +730,17 @@ private fun SessionsDialog(
             when {
 
                 isLoading -> {
-                    Box(
-                        modifier =
-                            Modifier.fillMaxWidth(),
-                        contentAlignment =
-                            Alignment.Center,
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         CircularProgressIndicator()
+                        Text(
+                            text = stringResource(R.string.state_loading),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 12.dp),
+                        )
                     }
                 }
 
@@ -908,13 +912,17 @@ private fun LegalDocumentDialog(
             when {
 
                 isLoading -> {
-                    Box(
-                        modifier =
-                            Modifier.fillMaxWidth(),
-                        contentAlignment =
-                            Alignment.Center,
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
                     ) {
                         CircularProgressIndicator()
+                        Text(
+                            text = stringResource(R.string.state_loading),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(top = 12.dp),
+                        )
                     }
                 }
 

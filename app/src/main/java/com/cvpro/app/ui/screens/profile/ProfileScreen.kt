@@ -52,9 +52,11 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cvpro.app.R
 import com.cvpro.app.domain.model.JobModality
+import com.cvpro.app.ui.components.LoadingState
 import com.cvpro.app.ui.components.ComingSoonSheet
 import com.cvpro.app.ui.components.FormTextField
 import com.cvpro.app.ui.components.LocalSnackbarHostState
+import com.cvpro.app.ui.components.LocationField
 import com.cvpro.app.ui.components.PrimaryButton
 import com.cvpro.app.ui.components.RemoteImage
 import com.cvpro.app.ui.components.outlinedOnCardColors
@@ -101,12 +103,7 @@ fun ProfileScreen(
     }
 
     if (uiState.isLoading) {
-        Box(
-            modifier = modifier.fillMaxSize(),
-            contentAlignment = Alignment.Center,
-        ) {
-            CircularProgressIndicator()
-        }
+        LoadingState(modifier = modifier, message = stringResource(R.string.loading_profile))
     } else if (uiState.isEditing) {
         ProfileForm(
             uiState = uiState,
@@ -157,7 +154,7 @@ fun ProfileCard(
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
             .padding(horizontal = 12.dp, vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(16.dp),
     ) {
 
         // Ficha principal: foto, nombre, etiquetas y descripción.
@@ -432,7 +429,8 @@ fun ProfileForm(
             keyboardType = KeyboardType.Phone,
             modifier = Modifier.padding(top = 12.dp),
         )
-        FormTextField(
+        // Sugiere lugares de Costa Rica mientras se escribe.
+        LocationField(
             value = uiState.location,
             onValueChange = onLocationChange,
             label = stringResource(R.string.profile_field_location),

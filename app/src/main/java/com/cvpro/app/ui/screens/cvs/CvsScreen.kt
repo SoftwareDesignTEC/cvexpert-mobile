@@ -52,6 +52,10 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cvpro.app.R
 import com.cvpro.app.domain.model.Cv
+import com.cvpro.app.ui.components.LoadingState
+import com.cvpro.app.ui.components.BlockingProgressDialog
+import com.cvpro.app.ui.components.CvCardActions
+import com.cvpro.app.ui.components.CvDetailSheet
 import com.cvpro.app.ui.components.CvEditorSheet
 import com.cvpro.app.ui.components.EmptyState
 import com.cvpro.app.ui.components.PagePreview
@@ -281,6 +285,9 @@ fun CvsContent(
     LaunchedEffect(editingCv?.id) { onEditorChanged() }
     // Currículum que el usuario pidió borrar, a la espera de que confirme.
     var cvToDelete by remember { mutableStateOf<Cv?>(null) }
+    // Currículum abierto para verlo (solo lectura).
+    var viewingCv by remember { mutableStateOf<Cv?>(null) }
+    viewingCv?.let { cv -> CvDetailSheet(cv = cv, onDismiss = { viewingCv = null }) }
 
     editingCv?.let { cv ->
         CvEditorSheet(
@@ -327,46 +334,50 @@ fun CvsContent(
         )
     }
 
+    if (uiState.isGeneratingPdf) BlockingProgressDialog(stringResource(R.string.pdf_preparing))
+
     Column(modifier = modifier.fillMaxSize()) {
         CvsHeader(query = uiState.query, onQueryChange = onQueryChange)
 
-        CreateCvBanner(
-            onTemplatesClick = onTemplatesClick,
-            onAiClick = { showAiCv = true },
-            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-        )
-
         when {
-            uiState.isLoading -> Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center,
-            ) {
-                CircularProgressIndicator()
-            }
+            uiState.isLoading -> LoadingState(message = stringResource(R.string.loading_cvs))
 
             uiState.error != null -> CvsError(message = stringResource(uiState.error), onRetry = onRetry)
 
-            uiState.cvs.isEmpty() -> EmptyState(
-                title = stringResource(R.string.cvs_empty_title),
-                message = stringResource(R.string.cvs_empty_message),
-            )
+            uiState.cvs.isEmpty() -> Column {
+                CreateCvBanner(
+                    onTemplatesClick = onTemplatesClick,
+                    onAiClick = { showAiCv = true },
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+                )
+                EmptyState(
+                    title = stringResource(R.string.cvs_empty_title),
+                    message = stringResource(R.string.cvs_empty_message),
+                )
+            }
 
             else -> LazyColumn(
                 // Una sola columna, con la tarjeta a todo el ancho. En dos columnas la
                 // vista previa quedaba tan angosta que no se leía nada, y los botones de
                 // Ver/Editar y Descargar se apretaban. En la web son varias columnas
                 // porque hay ancho de sobra; en el teléfono no.
-                contentPadding = PaddingValues(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(20.dp),
                 modifier = Modifier.fillMaxSize(),
             ) {
+                // El recuadro para crear uno va dentro de la lista: se desplaza con ella en vez
+                // de quedarse fijo tapando media pantalla.
+                item(key = "create") {
+                    CreateCvBanner(onTemplatesClick = onTemplatesClick, onAiClick = { showAiCv = true })
+                }
                 items(items = uiState.cvs, key = { it.id }) { cv ->
                     CvCard(
                         cv = cv,
                         preview = uiState.previews[cv.id],
                         isDeleting = uiState.deletingId == cv.id,
                         onDeleteClick = { cvToDelete = cv },
-                        onCvClick = { editingCv = it },
+                        onViewClick = { viewingCv = it },
+                        onEditClick = { editingCv = it },
                         onDownloadClick = { onDownloadCv(cv) },
                     )
                 }
@@ -462,18 +473,23 @@ private fun CreateCvBanner(
     }
 }
 
-/** Tarjeta de un currículum: vista previa, título, fecha y acciones. */
+/**
+ * Tarjeta de un currículum: vista previa, título y fecha, el lápiz para editar y el menú ⋮ con
+ * Descargar y Eliminar (ver CvCardActions). Tocar la tarjeta o "Ver currículum" lo abre.
+ */
 @Composable
 private fun CvCard(
     cv: Cv,
     preview: Bitmap?,
     isDeleting: Boolean,
     onDeleteClick: () -> Unit,
-    onCvClick: (Cv) -> Unit,
+    onViewClick: (Cv) -> Unit,
+    onEditClick: (Cv) -> Unit,
     onDownloadClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Card(
+        onClick = { onViewClick(cv) },
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
     ) {
@@ -488,69 +504,45 @@ private fun CvCard(
                     .height(170.dp),
             )
 
-            Column(modifier = Modifier.padding(10.dp)) {
-                Text(
-                    text = cv.title,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Text(
-                    text = stringResource(R.string.home_cv_updated_at, cv.updatedAt),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(top = 2.dp),
-                )
-
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    modifier = Modifier.padding(top = 10.dp),
-                ) {
-                    Button(
-                        onClick = { onCvClick(cv) },
-                        contentPadding = TIGHT_BUTTON_PADDING,
-                        modifier = Modifier.weight(1f),
-                    ) {
+            Column(modifier = Modifier.padding(start = 12.dp, end = 4.dp, top = 8.dp, bottom = 12.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(modifier = Modifier.weight(1f)) {
                         Text(
-                            text = stringResource(R.string.home_cv_edit),
+                            text = cv.title,
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Text(
+                            text = if (isDeleting) {
+                                stringResource(R.string.cvs_deleting)
+                            } else {
+                                stringResource(R.string.home_cv_updated_at, cv.updatedAt)
+                            },
                             style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
                             maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(top = 4.dp),
                         )
                     }
-                    Button(
-                        onClick = onDownloadClick,
-                        contentPadding = TIGHT_BUTTON_PADDING,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.onSurface,
-                            contentColor = MaterialTheme.colorScheme.surface,
-                        ),
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        Text(
-                            text = stringResource(R.string.home_cv_download),
-                            style = MaterialTheme.typography.labelSmall,
-                            maxLines = 1,
-                        )
-                    }
+                    CvCardActions(
+                        onEditClick = { onEditClick(cv) },
+                        onDownloadClick = onDownloadClick,
+                        onDeleteClick = onDeleteClick,
+                        enabled = !isDeleting,
+                    )
                 }
 
-                // El diseño no dibuja el borrado, pero es la única operación de eliminar del
-                // CRUD y la rúbrica la pide, así que queda discreta al pie.
-                TextButton(
-                    onClick = onDeleteClick,
-                    enabled = !isDeleting,
-                    contentPadding = TIGHT_BUTTON_PADDING,
-                    modifier = Modifier.align(Alignment.End),
+                // Lo principal es ver el currículum: es el único botón grande.
+                Button(
+                    onClick = { onViewClick(cv) },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp, end = 8.dp),
                 ) {
-                    Text(
-                        text = stringResource(
-                            if (isDeleting) R.string.cvs_deleting else R.string.cvs_delete,
-                        ),
-                        style = MaterialTheme.typography.labelSmall,
-                    )
+                    Text(stringResource(R.string.cv_card_view))
                 }
             }
         }

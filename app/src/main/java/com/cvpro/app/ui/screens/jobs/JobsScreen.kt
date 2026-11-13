@@ -17,21 +17,27 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import com.cvpro.app.ui.components.LoadingState
 import com.cvpro.app.ui.components.JobOfferDetailSheet
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -51,6 +57,7 @@ import com.cvpro.app.ui.components.LocalSnackbarHostState
 import com.cvpro.app.ui.components.RemoteImage
 import com.cvpro.app.ui.components.outlinedOnCardColors
 import com.cvpro.app.R
+import com.cvpro.app.domain.model.ApplicationStatus
 import com.cvpro.app.domain.model.JobModality
 import com.cvpro.app.domain.model.JobOffer
 import com.cvpro.app.ui.screens.skillsgap.JobSkillsGapSheet
@@ -96,6 +103,7 @@ fun JobsScreen(
         onRetryClick = viewModel::onRetryClick,
         onLoadMore = viewModel::onLoadMore,
         onApply = viewModel::onApply,
+        onRefreshOffers = viewModel::onRefreshOffers,
         modifier = modifier,
         onCvsClick = onCvsClick,
         onExploreCourses = onExploreCourses,
@@ -115,13 +123,26 @@ fun JobsContent(
     onFilterChange: (JobsFilter) -> Unit,
     onRetryClick: () -> Unit,
     onLoadMore: () -> Unit,
-    onApply: (JobOffer) -> Unit,
+    onApply: (JobOffer, ApplicationStatus) -> Unit,
     modifier: Modifier = Modifier,
+    onRefreshOffers: () -> Unit = {},
     onCvsClick: () -> Unit = {},
     onExploreCourses: (String?) -> Unit = {},
 ) {
     // Oferta abierta en el detalle, o null si la hoja está cerrada.
     var detailOffer by remember { mutableStateOf<JobOffer?>(null) }
+    // Oferta que se va a agregar al tablero, mientras el usuario elige la columna.
+    var choosingColumnFor by remember { mutableStateOf<JobOffer?>(null) }
+    choosingColumnFor?.let { offer ->
+        ApplicationColumnDialog(
+            hasCompanyPage = offer.applyUrl != null,
+            onColumnClick = { status ->
+                choosingColumnFor = null
+                onApply(offer, status)
+            },
+            onDismiss = { choosingColumnFor = null },
+        )
+    }
     var gapOffer by remember { mutableStateOf<JobOffer?>(null) }
 
     gapOffer?.let { offer ->
@@ -134,7 +155,7 @@ fun JobsContent(
             offer = offer,
             onDismiss = { detailOffer = null },
             applyState = uiState.applyStateOf(offer),
-            onApply = { onApply(offer) },
+            onApply = { choosingColumnFor = offer },
             onAnalyzeGap = { detailOffer = null; gapOffer = offer },
         )
     }
@@ -148,6 +169,8 @@ fun JobsContent(
         JobsHeader(
             query = uiState.query,
             totalRecords = uiState.totalRecords,
+            isRefreshing = uiState.isRefreshing,
+            onRefreshClick = onRefreshOffers,
             onQueryChange = onQueryChange,
         )
 
@@ -157,12 +180,7 @@ fun JobsContent(
         )
 
         when {
-            uiState.isLoading -> Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center,
-            ) {
-                CircularProgressIndicator()
-            }
+            uiState.isLoading -> LoadingState(message = stringResource(R.string.loading_jobs))
 
             uiState.errorMessage != null -> JobsError(
                 messageRes = uiState.errorMessage,
@@ -183,8 +201,8 @@ fun JobsContent(
             )
 
             else -> LazyColumn(
-                contentPadding = PaddingValues(12.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp),
                 modifier = Modifier.fillMaxSize(),
             ) {
                 items(items = shownOffers, key = { it.id }) { offer ->
@@ -192,7 +210,7 @@ fun JobsContent(
                         offer = offer,
                         applyState = uiState.applyStateOf(offer),
                         onDetailsClick = { detailOffer = offer },
-                        onApplyClick = { onApply(offer) },
+                        onApplyClick = { choosingColumnFor = offer },
                     )
                 }
 
@@ -236,9 +254,11 @@ private fun JobsHeader(
     totalRecords: Int,
     onQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier,
+    isRefreshing: Boolean = false,
+    onRefreshClick: () -> Unit = {},
 ) {
     Column(modifier = modifier.padding(horizontal = 12.dp, vertical = 8.dp)) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
+        Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
             Surface(
                 color = MaterialTheme.colorScheme.primaryContainer,
                 shape = RoundedCornerShape(50),
@@ -248,6 +268,19 @@ private fun JobsHeader(
                     style = MaterialTheme.typography.labelSmall,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(horizontal = 10.dp, vertical = 5.dp),
+                )
+            }
+            Spacer(modifier = Modifier.weight(1f))
+            // Busca en JSearch en ese momento: muestra en vivo que las ofertas son reales.
+            TextButton(onClick = onRefreshClick, enabled = !isRefreshing) {
+                if (isRefreshing) {
+                    CircularProgressIndicator(strokeWidth = 2.dp, modifier = Modifier.size(16.dp))
+                } else {
+                    Icon(Icons.Outlined.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
+                }
+                Text(
+                    text = stringResource(if (isRefreshing) R.string.jobs_refreshing else R.string.jobs_refresh),
+                    modifier = Modifier.padding(start = 6.dp),
                 )
             }
         }
@@ -381,6 +414,8 @@ private fun JobCard(
                 else -> null to ""
             }
             if (summaryTitle != null) {
+                // Una línea separa los datos de la oferta de lo que piden, para que no se pegue.
+                HorizontalDivider(modifier = Modifier.padding(top = 14.dp))
                 Text(
                     text = stringResource(summaryTitle),
                     style = MaterialTheme.typography.labelLarge,
@@ -398,26 +433,26 @@ private fun JobCard(
                 )
             }
 
-            // Detalle y postularse lado a lado. Postularse es la acción principal, por eso
-            // va con el botón relleno y el detalle con el delineado.
-            Row(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            // Agregar a postulaciones es la acción principal (botón relleno); el detalle va
+            // debajo, delineado. Uno encima del otro para que el texto entre completo.
+            Column(
+                verticalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(top = 12.dp),
+                    .padding(top = 16.dp),
             ) {
-                OutlinedButton(
-                    onClick = onDetailsClick,
-                    colors = outlinedOnCardColors(),
-                    modifier = Modifier.weight(1f),
-                ) {
-                    Text(stringResource(R.string.jobs_details), maxLines = 1)
-                }
                 ApplyButton(
                     state = applyState,
                     onClick = onApplyClick,
-                    modifier = Modifier.weight(1f),
+                    modifier = Modifier.fillMaxWidth(),
                 )
+                OutlinedButton(
+                    onClick = onDetailsClick,
+                    colors = outlinedOnCardColors(),
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
+                    Text(stringResource(R.string.jobs_details), maxLines = 1)
+                }
             }
         }
     }
@@ -570,7 +605,7 @@ private fun JobsPreview(darkTheme: Boolean) {
                 onFilterChange = {},
                 onRetryClick = {},
                 onLoadMore = {},
-                onApply = {},
+                onApply = { _, _ -> },
             )
         }
     }

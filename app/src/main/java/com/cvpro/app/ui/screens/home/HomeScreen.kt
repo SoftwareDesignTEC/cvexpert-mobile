@@ -57,6 +57,8 @@ import com.cvpro.app.R
 import com.cvpro.app.domain.model.Cv
 import com.cvpro.app.domain.model.JobOffer
 import com.cvpro.app.ui.components.CvDetailSheet
+import com.cvpro.app.ui.components.BlockingProgressDialog
+import com.cvpro.app.ui.components.CvCardActions
 import com.cvpro.app.ui.components.PagePreview
 import com.cvpro.app.ui.components.RemoteImage
 import com.cvpro.app.ui.components.VersionLabel
@@ -104,6 +106,11 @@ fun HomeScreen(
         onJobsClick = onJobsClick,
         onCvsClick = onCvsClick,
         onDownloadCv = viewModel::onDownloadCv,
+        onEditCv = {
+            // Mis Currículums lo abre en el editor apenas se muestre.
+            viewModel.onEditCv(it)
+            onCvsClick()
+        },
         modifier = modifier,
     )
 }
@@ -124,6 +131,7 @@ fun HomeContent(
     onCvsClick: () -> Unit,
     onDownloadCv: (Cv) -> Unit,
     modifier: Modifier = Modifier,
+    onEditCv: (Cv) -> Unit = {},
 ) {
     var detailCv by remember { mutableStateOf<Cv?>(null) }
     // Modo IA abierto. Cuando crea el CV, se va a Mis Currículums, que lo abre en el editor.
@@ -139,19 +147,21 @@ fun HomeContent(
     }
 
     detailCv?.let { cv -> CvDetailSheet(cv = cv, onDismiss = { detailCv = null }) }
+    if (uiState.isGeneratingPdf) BlockingProgressDialog(stringResource(R.string.pdf_preparing))
 
     Column(
         modifier = modifier
             .fillMaxSize()
             .verticalScroll(rememberScrollState())
-            .padding(horizontal = 12.dp, vertical = 12.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+            .padding(horizontal = 16.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
         RecentCvsSection(
             cvs = uiState.recentCvs,
             previews = uiState.cvPreviews,
             onSeeAllClick = onCvsClick,
             onCvClick = { detailCv = it },
+            onEditClick = onEditCv,
             onDownloadClick = onDownloadCv,
         )
 
@@ -178,6 +188,7 @@ private fun RecentCvsSection(
     previews: Map<String, Bitmap>,
     onSeeAllClick: () -> Unit,
     onCvClick: (Cv) -> Unit,
+    onEditClick: (Cv) -> Unit,
     onDownloadClick: (Cv) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -200,6 +211,7 @@ private fun RecentCvsSection(
                         cv = cv,
                         preview = previews[cv.id],
                         onCvClick = { onCvClick(cv) },
+                        onEditClick = { onEditClick(cv) },
                         onDownloadClick = { onDownloadClick(cv) },
                     )
                 }
@@ -213,11 +225,13 @@ private fun RecentCvCard(
     cv: Cv,
     preview: Bitmap?,
     onCvClick: () -> Unit,
+    onEditClick: () -> Unit,
     onDownloadClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Card(
-        modifier = modifier.width(190.dp),
+        onClick = onCvClick,
+        modifier = modifier.width(250.dp),
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
     ) {
         Column {
@@ -254,53 +268,40 @@ private fun RecentCvCard(
                 },
             )
 
-            Column(modifier = Modifier.padding(10.dp)) {
-                Text(
-                    text = cv.title,
-                    style = MaterialTheme.typography.titleSmall,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                Text(
-                    text = stringResource(R.string.home_cv_updated_at, cv.updatedAt),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.primary,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(top = 2.dp),
-                )
+            Column(modifier = Modifier.padding(start = 10.dp, end = 0.dp, top = 6.dp, bottom = 10.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = cv.title,
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Text(
+                            text = stringResource(R.string.home_cv_updated_at, cv.updatedAt),
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.padding(top = 4.dp),
+                        )
+                    }
+                    CvCardActions(onEditClick = onEditClick, onDownloadClick = onDownloadClick)
+                }
 
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    modifier = Modifier.padding(top = 10.dp),
+                Button(
+                    onClick = onCvClick,
+                    contentPadding = TIGHT_BUTTON_PADDING,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 6.dp, end = 10.dp),
                 ) {
-                    Button(
-                        onClick = onCvClick,
-                        contentPadding = TIGHT_BUTTON_PADDING,
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        Text(
-                            text = stringResource(R.string.home_cv_edit),
-                            style = MaterialTheme.typography.labelSmall,
-                            maxLines = 1,
-                        )
-                    }
-                    Button(
-                        onClick = onDownloadClick,
-                        contentPadding = TIGHT_BUTTON_PADDING,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = MaterialTheme.colorScheme.onSurface,
-                            contentColor = MaterialTheme.colorScheme.surface,
-                        ),
-                        modifier = Modifier.weight(1f),
-                    ) {
-                        Text(
-                            text = stringResource(R.string.home_cv_download),
-                            style = MaterialTheme.typography.labelSmall,
-                            maxLines = 1,
-                        )
-                    }
+                    Text(
+                        text = stringResource(R.string.cv_card_view),
+                        style = MaterialTheme.typography.labelLarge,
+                        maxLines = 1,
+                    )
                 }
             }
         }

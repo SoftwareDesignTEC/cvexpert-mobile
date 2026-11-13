@@ -53,6 +53,7 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cvpro.app.R
 import com.cvpro.app.domain.model.CvTemplate
+import com.cvpro.app.ui.components.LoadingState
 import com.cvpro.app.ui.components.EmptyState
 import com.cvpro.app.ui.components.LocalSnackbarHostState
 import com.cvpro.app.ui.components.PagePreview
@@ -141,12 +142,7 @@ fun TemplatesContent(
         TemplatesHeader(count = uiState.templates.size)
 
         when {
-            uiState.isLoading -> Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center,
-            ) {
-                CircularProgressIndicator()
-            }
+            uiState.isLoading -> LoadingState(message = stringResource(R.string.loading_templates))
 
             uiState.error != null -> TemplatesError(message = stringResource(uiState.error), onRetry = onRetry)
 
@@ -162,8 +158,8 @@ fun TemplatesContent(
                 val store = uiState.templates.filterNot { it.availableOffline }
 
                 LazyColumn(
-                    contentPadding = PaddingValues(12.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    contentPadding = PaddingValues(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 24.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
                     modifier = Modifier.fillMaxSize(),
                 ) {
                     if (offline.isNotEmpty()) {

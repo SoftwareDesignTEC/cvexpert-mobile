@@ -1,6 +1,5 @@
 package com.cvpro.app.ui.components
 
-import androidx.activity.compose.BackHandler
 import androidx.annotation.StringRes
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.relocation.BringIntoViewRequester
@@ -9,7 +8,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -25,17 +26,21 @@ import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
-import androidx.compose.material3.SheetValue
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
-import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -51,6 +56,8 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.cvpro.app.R
 import com.cvpro.app.domain.model.Cv
 import com.cvpro.app.domain.model.CvLevel
@@ -71,9 +78,12 @@ import com.cvpro.app.ui.screens.cvs.CvAiUiState
 /**
  * Editor completo de un currículum.
  *
+ * Es una pantalla completa, con la flecha para volver arriba a la izquierda y "Guardar" arriba a
+ * la derecha. Antes era una hoja que sube desde abajo y se cerraba con un deslizón sin querer.
+ *
  * Trabaja sobre un borrador: todo lo que el usuario escribe cambia una copia local del
- * currículum, y recién al tocar "Guardar" se manda al servicio con `PUT /cvs/{id}`. Si
- * cierra la hoja sin guardar, el borrador se descarta y el original queda intacto.
+ * currículum, y recién al tocar "Guardar" se manda al servicio con `PUT /cvs/{id}`. Si sale
+ * sin guardar y hubo cambios, se le pregunta si quiere descartarlos.
  *
  * Las secciones de experiencia, educación, habilidades e idiomas son listas: se puede
  * agregar una entrada vacía al final o quitar cualquiera. Las entradas nuevas van sin id;
@@ -180,25 +190,23 @@ fun CvEditorSheet(
             ?.let { "$KEY_EDUCATION$it" }
     }
 
-    // Cerrar sin querer (un deslizón hacia abajo, tocar fuera o el botón atrás) borraba todo lo
-    // escrito. Con cambios sin guardar, la hoja no se cierra: pregunta si se quieren descartar.
+    // Salir con cambios sin guardar (flecha, botón atrás o "Cancelar") pregunta antes de
+    // descartarlos.
     val hasChanges by rememberUpdatedState(draft != cv)
     var confirmDiscard by remember(cv.id) { mutableStateOf(false) }
-    val sheetState = rememberModalBottomSheetState(
-        skipPartiallyExpanded = true,
-        // Lo consulta la hoja antes de cerrarse por cualquiera de esas tres vías; false la deja
-        // abierta (vuelve a su lugar si se estaba deslizando).
-        confirmValueChange = { value ->
-            if (value == SheetValue.Hidden && hasChanges) {
-                confirmDiscard = true
-                false
-            } else {
-                true
-            }
-        },
-    )
     fun requestClose() {
+        if (isSaving) return
         if (hasChanges) confirmDiscard = true else onDismiss()
+    }
+
+    fun save() {
+        showErrors = true
+        if (!hasErrors) {
+            onSave(draft)
+        } else {
+            // Lleva al primer campo con error en vez de dejar al usuario buscándolo.
+            firstErrorKey()?.let { key -> scope.launch { requester(key).bringIntoView() } }
+        }
     }
 
     if (confirmDiscard) {
@@ -219,27 +227,19 @@ fun CvEditorSheet(
         )
     }
 
-    ModalBottomSheet(
-        onDismissRequest = onDismiss,
-        sheetState = sheetState,
-        containerColor = MaterialTheme.colorScheme.surface,
+    EditorScaffold(
+        isSaving = isSaving,
+        onBack = ::requestClose,
+        onSave = ::save,
         modifier = modifier,
-    ) {
-        // El botón atrás no pasa por confirmValueChange (Material 3 cierra la hoja directo), así
-        // que se intercepta acá. Se registra después que el de la hoja, por eso tiene prioridad.
-        BackHandler(enabled = hasChanges) { confirmDiscard = true }
+    ) { contentModifier ->
         Column(
-            modifier = Modifier
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = contentModifier
                 .verticalScroll(rememberScrollState())
                 .padding(horizontal = 20.dp)
-                .padding(bottom = 32.dp),
+                .padding(top = 8.dp, bottom = 32.dp),
         ) {
-            Text(
-                text = stringResource(R.string.cv_editor_title),
-                style = MaterialTheme.typography.headlineSmall,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-
             FormTextField(
                 value = draft.title,
                 onValueChange = { draft = draft.copy(title = it) },
@@ -288,7 +288,7 @@ fun CvEditorSheet(
                 placeholder = stringResource(R.string.cv_example_phone),
                 modifier = Modifier.bringIntoViewRequester(requester(KEY_PHONE)),
             )
-            FormTextField(
+            LocationField(
                 value = draft.personalInfo.location,
                 onValueChange = {
                     draft = draft.copy(personalInfo = draft.personalInfo.copy(location = it))
@@ -567,15 +567,7 @@ fun CvEditorSheet(
                     Text(stringResource(R.string.cv_editor_cancel))
                 }
                 Button(
-                    onClick = {
-                        showErrors = true
-                        if (!hasErrors) {
-                            onSave(draft)
-                        } else {
-                            // Lleva al primer campo con error en vez de dejar al usuario buscándolo.
-                            firstErrorKey()?.let { key -> scope.launch { requester(key).bringIntoView() } }
-                        }
-                    },
+                    onClick = ::save,
                     enabled = !isSaving,
                     modifier = Modifier.weight(1f),
                 ) {
@@ -590,19 +582,73 @@ fun CvEditorSheet(
     }
 }
 
+/**
+ * Marco de pantalla completa del editor: barra superior con la flecha para volver y "Guardar".
+ *
+ * Es un Dialog a pantalla completa para tapar también la barra y el menú de la app. El botón
+ * atrás del teléfono llega a [onBack], igual que la flecha. [content] recibe el Modifier con el
+ * espacio de la barra y del teclado ya descontado.
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun EditorScaffold(
+    isSaving: Boolean,
+    onBack: () -> Unit,
+    onSave: () -> Unit,
+    modifier: Modifier = Modifier,
+    content: @Composable (Modifier) -> Unit,
+) {
+    Dialog(
+        onDismissRequest = onBack,
+        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
+    ) {
+        Scaffold(
+            modifier = modifier.fillMaxSize(),
+            containerColor = MaterialTheme.colorScheme.surface,
+            topBar = {
+                TopAppBar(
+                    title = { Text(stringResource(R.string.cv_editor_title)) },
+                    navigationIcon = {
+                        IconButton(onClick = onBack, enabled = !isSaving) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.cv_editor_back),
+                            )
+                        }
+                    },
+                    actions = {
+                        TextButton(onClick = onSave, enabled = !isSaving) {
+                            Text(stringResource(if (isSaving) R.string.cv_editor_saving else R.string.cv_editor_save))
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface),
+                )
+            },
+        ) { padding ->
+            content(
+                Modifier
+                    .padding(padding)
+                    .imePadding(),
+            )
+        }
+    }
+}
+
 /** Título de sección con la línea que la separa de la anterior. */
 @Composable
 private fun EditorSection(
     title: String,
     modifier: Modifier = Modifier,
 ) {
-    Column(modifier = modifier.padding(top = 20.dp)) {
+    // Aire de sobra entre secciones: con la línea y el título más grande se ve dónde empieza
+    // cada parte del currículum.
+    Column(modifier = modifier.padding(top = 32.dp)) {
         HorizontalDivider()
         Text(
             text = title,
-            style = MaterialTheme.typography.titleSmall,
+            style = MaterialTheme.typography.titleMedium,
             color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(top = 12.dp, bottom = 4.dp),
+            modifier = Modifier.padding(top = 16.dp, bottom = 8.dp),
         )
     }
 }
@@ -625,9 +671,12 @@ private fun EditorEntry(
         shape = RoundedCornerShape(12.dp),
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = 10.dp),
+            .padding(top = 12.dp),
     ) {
-        Column(modifier = Modifier.padding(12.dp)) {
+        Column(
+            verticalArrangement = Arrangement.spacedBy(8.dp),
+            modifier = Modifier.padding(16.dp),
+        ) {
             content()
             TextButton(
                 onClick = onRemove,
@@ -999,9 +1048,9 @@ private fun AddButton(
         colors = outlinedOnCardColors(),
         modifier = modifier
             .fillMaxWidth()
-            .padding(top = 10.dp),
+            .padding(top = 16.dp),
     ) {
-        Text(text = text, style = MaterialTheme.typography.labelMedium)
+        Text(text = text, style = MaterialTheme.typography.labelLarge)
     }
 }
 

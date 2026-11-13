@@ -59,6 +59,8 @@ class ApiApplicationRepository @Inject constructor(
             location = location,
             modality = modality.toApiValue(),
             status = status.toApiValue(),
+            // El servicio ignora "status" (contrato de la Fase I) y usa este para la columna.
+            initialStatus = status.toApiValue(),
             notes = notes,
         )
 
@@ -98,6 +100,7 @@ private fun JobModality.toApiValue(): String {
 
 private fun ApplicationStatus.toApiValue(): String {
     return when (this) {
+        ApplicationStatus.INTERESTED -> "interested"
         ApplicationStatus.APPLIED -> "applied"
         ApplicationStatus.IN_PROGRESS -> "in-progress"
         ApplicationStatus.INTERVIEW -> "interview"

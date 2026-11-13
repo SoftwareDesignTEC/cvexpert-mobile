@@ -29,7 +29,12 @@ data class JobApplication(
  *
  * Son los cuatro estados del contrato de la web.
  */
+/**
+ * Columnas del tablero. INTERESTED ("Me interesa") guarda una oferta antes de postularse; se
+ * agregó en la Fase II y va primero porque es el paso anterior a aplicar.
+ */
 enum class ApplicationStatus {
+    INTERESTED,
     APPLIED,
     IN_PROGRESS,
     INTERVIEW,

@@ -5,6 +5,7 @@ import com.cvpro.app.data.remote.api.JobApi
 import com.cvpro.app.domain.model.JobOffer
 import com.cvpro.app.domain.model.PagedResult
 import com.cvpro.app.domain.repository.JobOfferRepository
+import com.cvpro.app.domain.repository.RefreshedOffers
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -31,5 +32,10 @@ class ApiJobOfferRepository @Inject constructor(
             pageSize = response.pageSize,
             totalRecords = response.totalRecords,
         )
+    }
+
+    override suspend fun refreshOffers(): RefreshedOffers {
+        val response = api.refreshJobs()
+        return RefreshedOffers(created = response.created, updated = response.updated)
     }
 }

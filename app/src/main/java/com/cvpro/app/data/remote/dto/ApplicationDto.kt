@@ -42,6 +42,8 @@ data class CreateApplicationRequestDto(
     val location: String? = null,
     val modality: String? = null,
     val status: String? = null,
+    /** Columna donde nace la postulación ("interested", "applied"...). Sin valor, "applied". */
+    val initialStatus: String? = null,
     val notes: String? = null,
 )
 
