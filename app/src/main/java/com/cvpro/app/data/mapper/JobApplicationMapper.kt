@@ -34,6 +34,7 @@ private fun String?.toJobModality(): JobModality {
 
 private fun String?.toApplicationStatus(): ApplicationStatus {
     return when (this?.lowercase()) {
+        "interested" -> ApplicationStatus.INTERESTED
         "applied" -> ApplicationStatus.APPLIED
         "in-progress" -> ApplicationStatus.IN_PROGRESS
         "interview" -> ApplicationStatus.INTERVIEW

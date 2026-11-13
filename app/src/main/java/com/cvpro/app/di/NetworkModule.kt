@@ -151,6 +151,9 @@ object NetworkModule {
     // Cabrera); la app espera 190.
     private const val AI_CV_TIMEOUT_SECONDS = 190L
 
+    // "Buscar ofertas nuevas": el servicio hace 6 búsquedas seguidas en JSearch antes de responder.
+    private const val REFRESH_TIMEOUT_SECONDS = 120L
+
     /**
      * Le da más tiempo de espera solo a las rutas de IA del servicio de CVs (/cvs/ai/...).
      * Así no hace falta un segundo cliente HTTP, y el resto de la app sigue cortando a los
@@ -158,7 +161,10 @@ object NetworkModule {
      */
     private val aiTimeoutInterceptor = Interceptor { chain ->
         val path = chain.request().url.encodedPath
-        if (path.contains("/cvs/ai/")) {
+        if (path.endsWith("/jobs/refresh")) {
+            chain.withReadTimeout(REFRESH_TIMEOUT_SECONDS.toInt(), TimeUnit.SECONDS)
+                .proceed(chain.request())
+        } else if (path.contains("/cvs/ai/")) {
             val seconds = if (path.endsWith("/generate-cv")) AI_CV_TIMEOUT_SECONDS else AI_TIMEOUT_SECONDS
             chain.withReadTimeout(seconds.toInt(), TimeUnit.SECONDS)
                 .proceed(chain.request())

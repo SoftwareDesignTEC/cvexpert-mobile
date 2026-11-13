@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.cvpro.app.R
 import com.cvpro.app.domain.model.CvTemplate
 import com.cvpro.app.domain.model.newCvTitle
+import com.cvpro.app.domain.model.personName
 import com.cvpro.app.domain.repository.AuthRepository
 import com.cvpro.app.domain.repository.CvAiRepository
 import com.cvpro.app.domain.repository.ProfileRepository
@@ -73,14 +74,14 @@ class AiCvViewModel @Inject constructor(
     fun onOpened() {
         _uiState.value = AiCvUiState()
         val user = authRepository.currentUser.value
-        _uiState.update { it.copy(fullName = user?.name.orEmpty()) }
+        _uiState.update { it.copy(fullName = personName(user?.name)) }
         viewModelScope.launch {
             // Si el perfil no se puede leer, quedan el nombre de Google y el teléfono vacío.
             val profile = user?.let { safely { profileRepository.getProfile(it.id) } }
             if (profile != null) {
                 _uiState.update {
                     it.copy(
-                        fullName = profile.name.ifBlank { it.fullName },
+                        fullName = personName(profile.name).ifBlank { it.fullName },
                         phone = profile.phone.orEmpty(),
                     )
                 }

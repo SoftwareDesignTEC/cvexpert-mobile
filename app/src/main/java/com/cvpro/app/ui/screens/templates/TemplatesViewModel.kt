@@ -11,6 +11,7 @@ import com.cvpro.app.data.pdf.CvPreviewRenderer
 import com.cvpro.app.domain.model.CvTemplate
 import com.cvpro.app.domain.model.UserProfile
 import com.cvpro.app.domain.model.newCvTitle
+import com.cvpro.app.domain.model.personName
 import com.cvpro.app.domain.repository.AuthRepository
 import com.cvpro.app.domain.repository.CvRepository
 import com.cvpro.app.domain.repository.ProfileRepository
@@ -118,11 +119,11 @@ class TemplatesViewModel @Inject constructor(
             null
         }
         return profile?.copy(
-            name = profile.name.ifBlank { user.name },
+            name = personName(profile.name).ifBlank { personName(user.name) },
             email = profile.email.ifBlank { user.email },
         ) ?: UserProfile(
             id = user.id,
-            name = user.name,
+            name = personName(user.name),
             email = user.email,
             phone = null,
             location = "",

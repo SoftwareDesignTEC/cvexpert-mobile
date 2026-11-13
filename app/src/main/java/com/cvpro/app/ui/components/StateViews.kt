@@ -1,6 +1,9 @@
 package com.cvpro.app.ui.components
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,6 +24,8 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.window.DialogProperties
 import com.cvpro.app.R
 import com.cvpro.app.ui.theme.CvProTheme
 
@@ -29,6 +34,33 @@ import com.cvpro.app.ui.theme.CvProTheme
  * error. Están acá para que se vean iguales en toda la app y no se reescriban en cada
  * pantalla.
  */
+
+/**
+ * Aviso que tapa la pantalla mientras se hace algo que tarda unos segundos (armar el PDF), para
+ * que el usuario sepa que la app está trabajando y no toque otra cosa mientras tanto.
+ */
+@Composable
+fun BlockingProgressDialog(message: String) {
+    Dialog(
+        onDismissRequest = {},
+        properties = DialogProperties(dismissOnBackPress = false, dismissOnClickOutside = false),
+    ) {
+        Surface(shape = RoundedCornerShape(16.dp), color = MaterialTheme.colorScheme.surface) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier.padding(horizontal = 24.dp, vertical = 20.dp),
+            ) {
+                CircularProgressIndicator(modifier = Modifier.size(28.dp), strokeWidth = 3.dp)
+                Text(
+                    text = message,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.padding(start = 16.dp),
+                )
+            }
+        }
+    }
+}
 
 /** Cargando: ocupa la pantalla mientras se esperan datos. */
 @Composable

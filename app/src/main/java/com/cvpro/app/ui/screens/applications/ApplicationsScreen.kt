@@ -63,6 +63,7 @@ import com.cvpro.app.data.mapper.daysSince
 import com.cvpro.app.domain.model.ApplicationStatus
 import com.cvpro.app.domain.model.JobApplication
 import com.cvpro.app.domain.model.JobModality
+import com.cvpro.app.ui.components.LoadingState
 import com.cvpro.app.ui.components.JobApplicationDetailSheet
 import com.cvpro.app.ui.components.LocalSnackbarHostState
 import com.cvpro.app.ui.components.RemoteImage
@@ -167,14 +168,7 @@ fun ApplicationsTracker(
         )
 
         when {
-            uiState.isLoading -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    CircularProgressIndicator()
-                }
-            }
+            uiState.isLoading -> LoadingState(message = stringResource(R.string.loading_applications))
 
             uiState.error != null -> {
                 ApplicationsError(
@@ -412,6 +406,7 @@ private fun Long?.relativeLabel(): String {
 /** Color de cada columna, según el diseño. */
 @Composable
 private fun ApplicationStatus.accentColor(): Color = when (this) {
+    ApplicationStatus.INTERESTED -> MaterialTheme.colorScheme.tertiary
     ApplicationStatus.APPLIED -> MaterialTheme.colorScheme.primary
     ApplicationStatus.IN_PROGRESS -> MaterialTheme.colorScheme.secondary
     ApplicationStatus.INTERVIEW -> MaterialTheme.extraColors.onSuccessContainer
@@ -419,6 +414,7 @@ private fun ApplicationStatus.accentColor(): Color = when (this) {
 }
 
 private fun ApplicationStatus.labelRes(): Int = when (this) {
+    ApplicationStatus.INTERESTED -> R.string.application_status_interested
     ApplicationStatus.APPLIED -> R.string.application_status_applied
     ApplicationStatus.IN_PROGRESS -> R.string.application_status_in_progress
     ApplicationStatus.INTERVIEW -> R.string.application_status_interview
@@ -477,7 +473,7 @@ private fun ApplicationsList(
             end = 12.dp,
             bottom = 16.dp,
         ),
-        verticalArrangement = Arrangement.spacedBy(10.dp),
+        verticalArrangement = Arrangement.spacedBy(14.dp),
         modifier = modifier.fillMaxSize(),
     ) {
         ApplicationStatus.entries.forEach { status ->

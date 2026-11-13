@@ -154,6 +154,7 @@
     <string name="cv_editor_save">Guardar</string>
     <string name="cv_editor_saving">Guardando…</string>
     <string name="cv_editor_cancel">Cancelar</string>
+    <string name="cv_editor_back">Volver</string>
     <string name="cv_editor_discard_title">¿Descartar los cambios?</string>
     <string name="cv_editor_discard_message">Si sales ahora, se pierde lo que cambiaste en este currículum.</string>
     <string name="cv_editor_discard_confirm">Descartar</string>
@@ -206,8 +207,10 @@
     <string name="home_recent_cvs_empty">Todavía no tienes currículums guardados.</string>
     <string name="home_cv_preview">Vista previa</string>
     <string name="home_cv_updated_at">Modificado %1$s</string>
-    <string name="home_cv_edit">Ver/Editar</string>
     <string name="home_cv_download">Descargar</string>
+    <string name="cv_card_view">Ver currículum</string>
+    <string name="cv_card_edit">Editar currículum</string>
+    <string name="cv_card_more">Más opciones</string>
     <string name="create_cv_ai_title">Crea tu currículum con IA</string>
     <string name="create_cv_ai_steps">Cuéntale a la IA tu experiencia con tus palabras (o díctala) y arma tu currículum completo. También puedes elegir una plantilla y usar \"Mejorar con IA\" en el editor.</string>
     <string name="create_cv_ai_action">Elegir plantilla</string>
@@ -250,6 +253,12 @@
 
     <!-- Estados de las pantallas -->
     <string name="state_loading">Cargando…</string>
+    <string name="pdf_preparing">Preparando tu PDF…</string>
+    <string name="loading_applications">Cargando tus postulaciones…</string>
+    <string name="loading_cvs">Cargando tus currículums…</string>
+    <string name="loading_jobs">Buscando ofertas para ti…</string>
+    <string name="loading_profile">Cargando tu perfil…</string>
+    <string name="loading_templates">Cargando plantillas…</string>
     <string name="state_error_title">Algo salió mal</string>
     <string name="state_retry">Reintentar</string>
 
@@ -285,6 +294,12 @@
 
     <string name="jobs_search_placeholder">Buscar ofertas, empresas o puestos</string>
     <string name="jobs_found_count">%1$d ofertas encontradas</string>
+    <string name="jobs_refresh">Buscar ofertas nuevas</string>
+    <string name="jobs_refreshing">Buscando… puede tardar un minuto</string>
+    <string name="jobs_refresh_new">Llegaron %1$s ofertas nuevas y se actualizaron %2$s.</string>
+    <string name="jobs_refresh_none">No hay ofertas nuevas por ahora. Se actualizaron %1$s.</string>
+    <string name="jobs_refresh_too_soon">Ya se buscaron ofertas hace poco. Inténtalo de nuevo en unos minutos.</string>
+    <string name="jobs_refresh_unavailable">La búsqueda de ofertas nuevas no está disponible ahora.</string>
     <string name="jobs_filter_recommended">Recomendadas</string>
     <string name="jobs_filter_remote">Remoto</string>
     <string name="jobs_filter_hybrid">Híbrido</string>
@@ -297,10 +312,22 @@
     <string name="jobs_skills_title">Habilidades que piden</string>
     <string name="jobs_details">Ver Detalles</string>
     <string name="jobs_show_more">Ver más ofertas (%1$d)</string>
-    <string name="jobs_apply">Postularme</string>
-    <string name="jobs_applied">Ya te postulaste</string>
+    <string name="jobs_apply">Agregar a postulaciones</string>
+    <string name="jobs_applied">En tus postulaciones</string>
     <string name="jobs_apply_success">Te postulaste a \"%1$s\". Síguela en Mis Postulaciones.</string>
     <string name="jobs_apply_already">Ya te habías postulado a esta oferta.</string>
+    <string name="application_status_interested">Me interesa</string>
+    <string name="jobs_saved_interested">Guardamos \"%1$s\" en Me interesa. Postúlate cuando estés listo.</string>
+    <string name="jobs_saved_column">Guardamos \"%1$s\" en Mis Postulaciones.</string>
+    <string name="jobs_column_title">¿Dónde la guardas?</string>
+    <string name="jobs_column_message">Elige en qué columna de Mis Postulaciones va esta oferta. Después puedes moverla.</string>
+    <string name="jobs_column_interested_hint">Para postularte más adelante</string>
+    <string name="jobs_column_applied_hint">Ya enviaste tu postulación</string>
+    <string name="jobs_column_applied_hint_external">Abrimos la página de la empresa para que termines</string>
+    <string name="jobs_column_in_progress_hint">La empresa ya te contactó</string>
+    <string name="jobs_column_interview_hint">Tienes una entrevista</string>
+    <string name="jobs_column_rejected_hint">No quedaste esta vez</string>
+    <string name="jobs_column_cancel">Cancelar</string>
     <string name="jobs_apply_success_external">Guardamos \"%1$s\" en Mis Postulaciones. Termina de postularte en la página de la empresa.</string>
     <string name="jobs_open_original">Ver oferta original</string>
     <string name="jobs_empty_title">Sin resultados</string>

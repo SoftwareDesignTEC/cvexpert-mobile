@@ -16,6 +16,7 @@ import androidx.credentials.exceptions.NoCredentialException
 import com.cvpro.app.BuildConfig
 import com.cvpro.app.data.auth.IdTokenClaims
 import com.cvpro.app.domain.model.User
+import com.cvpro.app.domain.model.personName
 import com.cvpro.app.domain.repository.AuthRepository
 import com.cvpro.app.domain.repository.SignInResult
 import com.google.android.gms.auth.api.signin.GoogleSignIn
@@ -111,8 +112,8 @@ class GoogleAuthRepository @Inject constructor(
                 val googleCredential = GoogleIdTokenCredential.createFrom(credential.data)
                 val user = User(
                     id = IdTokenClaims.subject(googleCredential.idToken) ?: googleCredential.id,
-                    // En este tipo de credencial, id es el correo de la cuenta.
-                    name = googleCredential.displayName ?: googleCredential.id,
+                    // Sin nombre en la cuenta queda vacío: el correo no se usa como nombre.
+                    name = personName(googleCredential.displayName),
                     email = googleCredential.id,
                     photoUrl = googleCredential.profilePictureUri?.toString(),
                 )
@@ -167,7 +168,7 @@ class GoogleAuthRepository @Inject constructor(
         } else {
             val user = User(
                 id = IdTokenClaims.subject(idToken) ?: account.id ?: email,
-                name = account.displayName ?: email,
+                name = personName(account.displayName),
                 email = email,
                 photoUrl = account.photoUrl?.toString(),
             )

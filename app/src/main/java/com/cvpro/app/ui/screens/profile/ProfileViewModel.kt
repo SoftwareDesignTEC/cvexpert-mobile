@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.cvpro.app.R
 import com.cvpro.app.data.location.DeviceLocationProvider
 import com.cvpro.app.domain.model.UserProfile
+import com.cvpro.app.domain.model.personName
 import com.cvpro.app.domain.repository.AlertsRepository
 import com.cvpro.app.domain.repository.AuthRepository
 import com.cvpro.app.domain.repository.ProfileRepository
@@ -55,7 +56,7 @@ data class ProfileUiState(
 
 @HiltViewModel
 class ProfileViewModel @Inject constructor(
-    authRepository: AuthRepository,
+    private val authRepository: AuthRepository,
     private val profileRepository: ProfileRepository,
     private val alertsRepository: AlertsRepository,
     private val locationProvider: DeviceLocationProvider,
@@ -82,7 +83,7 @@ class ProfileViewModel @Inject constructor(
             // Se muestran inmediatamente los datos que ya conocemos por Google.
             _uiState.update {
                 it.copy(
-                    name = user.name,
+                    name = personName(user.name),
                     email = user.email,
                 )
             }
@@ -112,7 +113,8 @@ class ProfileViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         profile = profile,
-                        name = profile.name,
+                        // Perfiles viejos guardaron el correo como nombre: se muestra vacío.
+                        name = personName(profile.name).ifBlank { personName(authRepository.currentUser.value?.name) },
                         email = profile.email,
                         phone = profile.phone.orEmpty(),
                         location = profile.location,

@@ -183,8 +183,9 @@ fun JobOfferDetailSheet(
 enum class ApplyState { AVAILABLE, SENDING, APPLIED }
 
 /**
- * Botón "Postularme". Mientras se envía muestra un loader, y si el usuario ya se postuló
- * queda apagado con "Ya te postulaste", para que no lo intente dos veces.
+ * Botón "Agregar a postulaciones". Al tocarlo se elige en qué columna del tablero se guarda
+ * (ver ApplicationColumnDialog). Mientras se envía muestra un loader, y si la oferta ya está
+ * en el tablero queda apagado, para que no se agregue dos veces.
  */
 @Composable
 fun ApplyButton(
@@ -405,6 +406,7 @@ private fun JobModality.labelRes(): Int = when (this) {
 }
 
 private fun ApplicationStatus.labelRes(): Int = when (this) {
+    ApplicationStatus.INTERESTED -> R.string.application_status_interested
     ApplicationStatus.APPLIED -> R.string.application_status_applied
     ApplicationStatus.IN_PROGRESS -> R.string.application_status_in_progress
     ApplicationStatus.INTERVIEW -> R.string.application_status_interview

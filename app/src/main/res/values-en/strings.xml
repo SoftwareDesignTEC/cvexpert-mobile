@@ -156,6 +156,7 @@
     <string name="cv_editor_save">Save</string>
     <string name="cv_editor_saving">Saving…</string>
     <string name="cv_editor_cancel">Cancel</string>
+    <string name="cv_editor_back">Back</string>
     <string name="cv_editor_discard_title">Discard changes?</string>
     <string name="cv_editor_discard_message">If you leave now, the changes to this CV will be lost.</string>
     <string name="cv_editor_discard_confirm">Discard</string>
@@ -208,8 +209,10 @@
     <string name="home_recent_cvs_empty">You don\'t have any saved CVs yet.</string>
     <string name="home_cv_preview">Preview</string>
     <string name="home_cv_updated_at">Modified %1$s</string>
-    <string name="home_cv_edit">View/Edit</string>
     <string name="home_cv_download">Download</string>
+    <string name="cv_card_view">View CV</string>
+    <string name="cv_card_edit">Edit CV</string>
+    <string name="cv_card_more">More options</string>
     <string name="create_cv_ai_title">Create your CV with AI</string>
     <string name="create_cv_ai_steps">Tell the AI about your experience in your own words (or dictate it) and it builds your full CV. You can also pick a template and use \"Improve with AI\" in the editor.</string>
     <string name="create_cv_ai_action">Pick a template</string>
@@ -252,6 +255,12 @@
 
     <!-- Estados de las pantallas -->
     <string name="state_loading">Loading…</string>
+    <string name="pdf_preparing">Preparing your PDF…</string>
+    <string name="loading_applications">Loading your applications…</string>
+    <string name="loading_cvs">Loading your CVs…</string>
+    <string name="loading_jobs">Finding offers for you…</string>
+    <string name="loading_profile">Loading your profile…</string>
+    <string name="loading_templates">Loading templates…</string>
     <string name="state_error_title">Something went wrong</string>
     <string name="state_retry">Try again</string>
 
@@ -287,6 +296,12 @@
 
     <string name="jobs_search_placeholder">Search offers, companies or positions</string>
     <string name="jobs_found_count">%1$d offers found</string>
+    <string name="jobs_refresh">Find new offers</string>
+    <string name="jobs_refreshing">Searching… may take a minute</string>
+    <string name="jobs_refresh_new">%1$s new offers arrived and %2$s were updated.</string>
+    <string name="jobs_refresh_none">No new offers for now. %1$s were updated.</string>
+    <string name="jobs_refresh_too_soon">Offers were searched recently. Try again in a few minutes.</string>
+    <string name="jobs_refresh_unavailable">Finding new offers is not available right now.</string>
     <string name="jobs_filter_recommended">Recommended</string>
     <string name="jobs_filter_remote">Remote</string>
     <string name="jobs_filter_hybrid">Hybrid</string>
@@ -299,10 +314,22 @@
     <string name="jobs_requirements_title">Main requirements</string>
     <string name="jobs_details">See Details</string>
     <string name="jobs_show_more">See more offers (%1$d)</string>
-    <string name="jobs_apply">Apply</string>
-    <string name="jobs_applied">Applied</string>
+    <string name="jobs_apply">Add to applications</string>
+    <string name="jobs_applied">In your applications</string>
     <string name="jobs_apply_success">You applied to \"%1$s\". Track it in My Applications.</string>
     <string name="jobs_apply_already">You had already applied to this offer.</string>
+    <string name="application_status_interested">Interested</string>
+    <string name="jobs_saved_interested">We saved \"%1$s\" in Interested. Apply when you are ready.</string>
+    <string name="jobs_saved_column">We saved \"%1$s\" in My Applications.</string>
+    <string name="jobs_column_title">Where do you want to save it?</string>
+    <string name="jobs_column_message">Choose the column in My Applications for this offer. You can move it later.</string>
+    <string name="jobs_column_interested_hint">To apply later</string>
+    <string name="jobs_column_applied_hint">You already sent your application</string>
+    <string name="jobs_column_applied_hint_external">We open the company page so you can finish</string>
+    <string name="jobs_column_in_progress_hint">The company already contacted you</string>
+    <string name="jobs_column_interview_hint">You have an interview</string>
+    <string name="jobs_column_rejected_hint">Not this time</string>
+    <string name="jobs_column_cancel">Cancel</string>
     <string name="jobs_apply_success_external">We saved \"%1$s\" in My Applications. Finish applying on the company page.</string>
     <string name="jobs_open_original">See original offer</string>
     <string name="jobs_empty_title">No results</string>

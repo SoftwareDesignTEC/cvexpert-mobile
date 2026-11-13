@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cvpro.app.domain.model.Cv
 import com.cvpro.app.domain.model.JobOffer
+import com.cvpro.app.ui.screens.cvs.PendingCvEditor
 import android.graphics.Bitmap
 import android.net.Uri
 import com.cvpro.app.data.pdf.CvPdfGenerator
@@ -43,7 +44,11 @@ class HomeViewModel @Inject constructor(
     private val pdfGenerator: CvPdfGenerator,
     private val templateRepository: TemplateRepository,
     private val previewRenderer: CvPreviewRenderer,
+    private val pendingCvEditor: PendingCvEditor,
 ) : ViewModel() {
+
+    /** El lápiz de una tarjeta: Mis Currículums abrirá ese CV en el editor. */
+    fun onEditCv(cv: Cv) = pendingCvEditor.request(cv.id)
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
