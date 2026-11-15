@@ -72,7 +72,6 @@
     <string name="cv_detail_skills">Skills</string>
     <string name="cv_detail_languages">Languages</string>
     <string name="cv_detail_period">%1$s — %2$s</string>
-    <string name="cv_detail_period_current">%1$s — Present</string>
     <string name="cv_detail_present">Present</string>
     <string name="cv_detail_certifications">Certifications</string>
     <string name="cv_experience_type_formal">Formal job</string>
@@ -161,15 +160,12 @@
     <string name="cv_editor_discard_message">If you leave now, the changes to this CV will be lost.</string>
     <string name="cv_editor_discard_confirm">Discard</string>
     <string name="cv_editor_discard_keep">Keep editing</string>
-    <string name="coming_soon_badge">Coming soon</string>
     <string name="coming_soon_pdf_title">Export to PDF</string>
     <string name="coming_soon_pdf_message">Downloading your CV as a PDF comes in the next phase, together with the editor.</string>
     <string name="coming_soon_use_title">Use this template</string>
     <string name="coming_soon_use_message">Choosing a template will open the editor to fill in your CV. The editor comes in the next phase.</string>
     <string name="coming_soon_template_title">Download template</string>
     <string name="coming_soon_template_message">New templates will be available to download and use offline in the next phase.</string>
-    <string name="coming_soon_preferences_title">Edit preferences</string>
-    <string name="coming_soon_preferences_message">The service doesn\'t save sector, availability or work mode yet. For now you can see them; editing comes with the full service.</string>
 
     <!-- Plantillas -->
     <string name="templates_eyebrow">CREATE ANYWHERE</string>
@@ -279,12 +275,10 @@
     <string name="profile_contact_phone">Phone number</string>
     <string name="profile_contact_email">Email</string>
     <string name="profile_contact_residence">Residence</string>
-    <string name="profile_edit_contact">Edit Contact</string>
     <string name="profile_preferences_title">Preferences</string>
     <string name="profile_pref_sector">Sector of interest</string>
     <string name="profile_pref_availability">Availability</string>
     <string name="profile_pref_modality">Work mode</string>
-    <string name="profile_edit_preferences">Edit Preferences</string>
     <string name="profile_pending_notice">Review your details and save the changes.</string>
     <string name="profile_field_name">Full name</string>
     <string name="profile_field_email">Email</string>
@@ -307,6 +301,8 @@
     <string name="jobs_refresh_too_soon">Offers were searched recently. Try again in a few minutes.</string>
     <string name="jobs_refresh_unavailable">Finding new offers is not available right now.</string>
     <string name="jobs_filter_recommended">Recommended</string>
+    <string name="jobs_ranking_by_preferences">Sorted by your preferences: jobs that match your schedule and work mode come first.</string>
+    <string name="jobs_ranking_no_preferences">Choose your schedule and work mode in My Profile so we can sort jobs by what you\'re looking for.</string>
     <string name="jobs_filter_remote">Remote</string>
     <string name="jobs_filter_hybrid">Hybrid</string>
     <string name="jobs_load_more">Load more (%1$d left)</string>
@@ -585,6 +581,21 @@
     <string name="profile_location_locating">Finding your location…</string>
     <string name="profile_location_unavailable">We couldn\'t get your location. Check that location is on or type it in.</string>
     <string name="profile_location_denied">No location permission. You can type it in.</string>
+    <string name="profile_field_bio">Professional summary</string>
+    <string name="profile_bio_placeholder">E.g.: Business student with customer service experience…</string>
+    <string name="profile_bio_counter">%1$d/%2$d</string>
+    <string name="profile_bio_too_long">That\'s over the character limit: %1$d.</string>
+    <string name="profile_preferences_hint">Jobs that match these show up first in Jobs.</string>
+    <string name="cv_photo_title">Photo</string>
+    <string name="cv_photo_description">CV photo</string>
+    <string name="cv_photo_pick">Choose photo</string>
+    <string name="cv_photo_change">Change photo</string>
+    <string name="cv_photo_remove">Remove</string>
+    <string name="cv_photo_preparing">Preparing…</string>
+    <string name="cv_photo_uploading">Uploading…</string>
+    <string name="cv_photo_hint">It\'s cropped to the center. JPG, PNG or WebP.</string>
+    <string name="cv_photo_error_format">That image can\'t be used. Try a JPG, PNG or WebP photo.</string>
+    <string name="cv_photo_error_size">The photo is too large. Try another one.</string>
     <string name="skills_gap_disabled">Market comparison is unavailable in this version. You can analyze a job in the other tab.</string>
     <string name="skills_gap_select_cv">Select a CV to analyze its skills</string>
     <string name="skills_gap_more_cvs">Load more CVs</string>

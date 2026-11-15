@@ -179,6 +179,19 @@ fun JobsContent(
             onFilterChange = onFilterChange,
         )
 
+        // En "Recomendadas" se explica el orden, como en la web: así se entiende por qué una
+        // oferta con menos compatibilidad sale arriba, y dónde cambiarlo.
+        if (uiState.selectedFilter == JobsFilter.RECOMMENDED && !uiState.isLoading && uiState.offers.isNotEmpty()) {
+            Text(
+                text = stringResource(
+                    if (uiState.preferences.isEmpty) R.string.jobs_ranking_no_preferences else R.string.jobs_ranking_by_preferences,
+                ),
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = 16.dp, vertical = 2.dp),
+            )
+        }
+
         when {
             uiState.isLoading -> LoadingState(message = stringResource(R.string.loading_jobs))
 

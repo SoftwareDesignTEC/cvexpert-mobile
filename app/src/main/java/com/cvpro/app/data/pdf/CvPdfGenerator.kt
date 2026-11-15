@@ -6,6 +6,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.RectF
 import android.graphics.Typeface
 import android.graphics.pdf.PdfDocument
 import android.net.Uri
@@ -37,6 +38,7 @@ import java.time.LocalDate
 import java.time.ZoneOffset
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.math.max
 import kotlin.math.roundToInt
 
 /**
@@ -59,12 +61,20 @@ import kotlin.math.roundToInt
 @Singleton
 class CvPdfGenerator @Inject constructor(
     @param:ApplicationContext private val context: Context,
+    private val photoLoader: CvPhotoLoader,
 ) {
+
+    /**
+     * La foto del CV, solo si la plantilla la pide en el encabezado. Se prepara antes de dibujar
+     * porque dibujar no puede esperar una descarga a mitad de la hoja.
+     */
+    private suspend fun photoFor(cv: Cv, layout: CvLayout): Bitmap? =
+        if (HeaderField.PHOTO in layout.header) photoLoader.load(cv.personalInfo.photoUrl) else null
 
     /** Genera el PDF y devuelve a dónde quedó, listo para abrirse. */
     suspend fun generate(cv: Cv, layout: CvLayout = CvLayout.DEFAULT): Uri = withContext(Dispatchers.IO) {
         val writer = PageWriter(Paints(layout))
-        writer.drawCv(cv, layout)
+        writer.drawCv(cv, layout, photoFor(cv, layout))
 
         val document = PdfDocument()
         writer.render(document)
@@ -85,9 +95,16 @@ class CvPdfGenerator @Inject constructor(
         cv: Cv,
         layout: CvLayout = CvLayout.DEFAULT,
         widthPx: Int = PREVIEW_WIDTH_PX,
+    ): Bitmap = renderFirstPage(cv, layout, widthPx, photoFor(cv, layout))
+
+    private suspend fun renderFirstPage(
+        cv: Cv,
+        layout: CvLayout,
+        widthPx: Int,
+        photo: Bitmap?,
     ): Bitmap = withContext(Dispatchers.Default) {
         val writer = PageWriter(Paints(layout))
-        writer.drawCv(cv, layout)
+        writer.drawCv(cv, layout, photo)
 
         // La hoja mide 595 x 842 puntos; se escala para que entre en widthPx.
         val scale = widthPx / PAGE_WIDTH.toFloat()
@@ -116,7 +133,7 @@ class CvPdfGenerator @Inject constructor(
         widthPx: Int = FULL_PAGE_WIDTH_PX,
     ): List<Bitmap> = withContext(Dispatchers.Default) {
         val writer = PageWriter(Paints(layout))
-        writer.drawCv(cv, layout)
+        writer.drawCv(cv, layout, photoFor(cv, layout))
         val scale = widthPx / PAGE_WIDTH.toFloat()
         (0 until writer.pageCount).map { index ->
             val bitmap = createBitmap(widthPx, (PAGE_HEIGHT * scale).roundToInt(), Bitmap.Config.RGB_565)
@@ -134,8 +151,24 @@ class CvPdfGenerator @Inject constructor(
      * El servicio de CVs no manda una imagen de cada plantilla (su previewUrl es un rectángulo
      * gris con el nombre), así que se dibuja acá con el mismo motor del PDF.
      */
-    suspend fun renderTemplatePreview(layout: CvLayout?): Bitmap =
-        renderPreview(sampleCv(), layout ?: CvLayout.DEFAULT)
+    suspend fun renderTemplatePreview(layout: CvLayout?): Bitmap {
+        val design = layout ?: CvLayout.DEFAULT
+        // Las plantillas con foto muestran una silueta: así se ve cuáles la llevan.
+        val photo = if (HeaderField.PHOTO in design.header) samplePhoto(design) else null
+        return renderFirstPage(sampleCv(), design, PREVIEW_WIDTH_PX, photo)
+    }
+
+    /** Silueta de una persona con los colores suaves de la plantilla, para el CV de ejemplo. */
+    private fun samplePhoto(layout: CvLayout): Bitmap {
+        val side = SAMPLE_PHOTO_PX.toFloat()
+        val bitmap = createBitmap(SAMPLE_PHOTO_PX, SAMPLE_PHOTO_PX)
+        val canvas = Canvas(bitmap)
+        canvas.drawColor(layout.dividerColor)
+        val figure = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = layout.mutedColor }
+        canvas.drawCircle(side / 2, side * 0.38f, side * 0.18f, figure)
+        canvas.drawOval(RectF(side * 0.18f, side * 0.62f, side * 0.82f, side * 1.25f), figure)
+        return bitmap
+    }
 
     /** Currículum inventado para las vistas previas. Los textos salen de strings.xml. */
     private fun sampleCv(): Cv {
@@ -214,8 +247,14 @@ class CvPdfGenerator @Inject constructor(
      * Encabezado arriba, a todo el ancho, y después las secciones en el orden de la plantilla.
      * Con 2 columnas, las dos arrancan a la misma altura, justo debajo del encabezado.
      */
-    private fun PageWriter.drawCv(cv: Cv, layout: CvLayout) {
-        drawHeader(cv, layout)
+    private fun PageWriter.drawCv(cv: Cv, layout: CvLayout, photo: Bitmap?) {
+        if (photo != null) {
+            // La foto a la izquierda y el texto del encabezado a su derecha, como en la web.
+            val firstLine = if (HeaderField.FULL_NAME in layout.header) paints.name else paints.small
+            besidePhoto(photo, firstLine) { drawHeader(cv, layout) }
+        } else {
+            drawHeader(cv, layout)
+        }
 
         if (layout.columns == 2) {
             val start = position()
@@ -507,6 +546,31 @@ class CvPdfGenerator @Inject constructor(
             y += height
         }
 
+        /**
+         * Dibuja [photo] arriba a la izquierda y escribe [block] a su derecha. Lo que sigue
+         * empieza debajo de lo más alto de los dos: la foto o el texto.
+         *
+         * @param firstLine el pincel del primer renglón, para que la foto arranque a la altura
+         * de la parte de arriba de las letras y no de su base.
+         */
+        fun besidePhoto(photo: Bitmap, firstLine: Paint, block: PageWriter.() -> Unit) {
+            val left = x
+            val top = y - firstLine.textSize * CAP_HEIGHT
+            draw { canvas ->
+                canvas.drawBitmap(photo, null, RectF(left, top, left + PHOTO_SIZE, top + PHOTO_SIZE), photoPaint)
+            }
+            val shift = PHOTO_SIZE + PHOTO_GAP
+            x += shift
+            width -= shift
+            block()
+            x -= shift
+            width += shift
+            y = max(y, top + PHOTO_SIZE + PHOTO_BOTTOM_GAP)
+        }
+
+        /** Suaviza la foto al achicarla: sin esto se ve pixelada en la hoja. */
+        private val photoPaint = Paint(Paint.FILTER_BITMAP_FLAG or Paint.ANTI_ALIAS_FLAG)
+
         /** Dibuja solo la primera hoja en un lienzo cualquiera (para las vistas previas). */
         fun renderFirstPage(canvas: Canvas) {
             pages.first().forEach { it(canvas) }
@@ -630,12 +694,25 @@ class CvPdfGenerator @Inject constructor(
         const val ENTRY_GAP = 6f
         const val PDF_MIME = "application/pdf"
 
+        // La foto mide 22 mm y el texto va 5 mm a su derecha, igual que en el PDF de la web.
+        // Un milímetro son 72 / 25,4 puntos.
+        const val MM = 72f / 25.4f
+        const val PHOTO_SIZE = 22 * MM
+        const val PHOTO_GAP = 5 * MM
+        const val PHOTO_BOTTOM_GAP = 2 * MM
+
+        /** Qué tan alta es una mayúscula respecto del tamaño de la letra, más o menos. */
+        const val CAP_HEIGHT = 0.75f
+
         // Ancho de las vistas previas: la tarjeta de Mis Currículums ocupa todo el ancho del
         // teléfono, y con menos se veía borrosa. En RGB_565 son unos 1,5 MB por imagen.
         const val PREVIEW_WIDTH_PX = 720
 
         /** Ancho de cada hoja en "Ver currículum": más que la pantalla, para que se lea nítida al acercarla. */
         const val FULL_PAGE_WIDTH_PX = 1600
+
+        /** Lado de la silueta de las vistas previas de plantillas: ocupa 22 mm, no hace falta más. */
+        const val SAMPLE_PHOTO_PX = 128
 
         // Separación de los títulos de sección, igual que antes: 10 hasta la línea y 16 hasta el texto.
         const val SECTION_TOP = 10f

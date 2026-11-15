@@ -9,6 +9,9 @@ import com.cvpro.app.domain.model.PagedResult
 import com.cvpro.app.domain.model.UserProfile
 import com.cvpro.app.domain.repository.CvRepository
 import javax.inject.Inject
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.MultipartBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import javax.inject.Singleton
 
 @Singleton
@@ -67,5 +70,15 @@ class ApiCvRepository @Inject constructor(
 
     override suspend fun deleteCv(id: String) {
         api.deleteCv(id)
+    }
+
+    override suspend fun uploadPhoto(jpeg: ByteArray): String {
+        // El campo se llama "file", como lo pide el servicio; el nombre del archivo da igual.
+        val part = MultipartBody.Part.createFormData(
+            name = "file",
+            filename = "foto.jpg",
+            body = jpeg.toRequestBody("image/jpeg".toMediaType()),
+        )
+        return api.uploadPhoto(part).url.orEmpty().ifBlank { error("El servicio no devolvió el enlace de la foto") }
     }
 }

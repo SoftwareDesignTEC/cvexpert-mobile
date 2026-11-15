@@ -99,3 +99,8 @@ data class UpdateCvRequestDto(
     val languages: List<LanguageDto>? = null,
     val certifications: List<CertificationDto>? = null,
 )
+
+/** Respuesta de `POST /cvs/photos`: el enlace público de la foto recién subida. */
+data class UploadedPhotoDto(
+    val url: String? = null,
+)

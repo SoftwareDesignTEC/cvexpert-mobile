@@ -46,7 +46,8 @@ private fun String.toJobModalityOrNull(): JobModality? = when (lowercase()) {
     else -> null
 }
 
-private fun JobModality.toWireValue(): String = when (this) {
+/** "remote", "on-site" o "hybrid": como la manda la web. La usan también el perfil y Ofertas. */
+fun JobModality.toWireValue(): String = when (this) {
     JobModality.REMOTE -> "remote"
     JobModality.ON_SITE -> "on-site"
     JobModality.HYBRID -> "hybrid"

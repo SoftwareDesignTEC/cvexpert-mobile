@@ -5,6 +5,7 @@ import android.util.LruCache
 import com.cvpro.app.domain.model.Cv
 import com.cvpro.app.domain.model.CvLayout
 import com.cvpro.app.domain.model.CvTemplate
+import com.cvpro.app.domain.model.HeaderField
 import com.cvpro.app.domain.repository.TemplateRepository
 import kotlinx.coroutines.CancellationException
 import java.util.concurrent.ConcurrentHashMap
@@ -51,6 +52,12 @@ class CvPreviewRenderer @Inject constructor(
 
     /** Todas las hojas del currículum, como en el PDF, para "Ver currículum". */
     suspend fun pagesFor(cv: Cv): List<Bitmap> = pdfGenerator.renderPages(cv, layoutFor(cv.templateId))
+
+    /**
+     * Si la plantilla dibuja la foto. El editor lo consulta para no pedir una foto que esa
+     * plantilla no va a mostrar (Harvard, por ejemplo, no lleva), igual que la web.
+     */
+    suspend fun usesPhoto(templateId: String): Boolean = HeaderField.PHOTO in layoutFor(templateId).header
 
     private suspend fun preview(cv: Cv): Bitmap? =
         cvPreviews.get(cv) ?: safely { pdfGenerator.renderPreview(cv, layoutFor(cv.templateId)) }
