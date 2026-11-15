@@ -98,8 +98,12 @@ enum class HeaderField(val apiName: String) {
     PHONE("personalInfo.phone"),
     ADDRESS("personalInfo.address"),
     BIO("personalInfo.bio"),
-    // El contrato también permite personalInfo.photoUrl y personalInfo.birthDate. No están acá
-    // a propósito: la foto habría que descargarla antes de dibujar el PDF y el perfil de la app
-    // no guarda fecha de nacimiento. Por la regla de "lo desconocido se ignora", el mapper las
-    // salta sin romper.
+    /**
+     * La foto, a la izquierda del encabezado (22 mm, como en la web). Solo la dibujan las
+     * plantillas que la piden: Harvard, por ejemplo, no lleva foto. La descarga CvPhotoLoader.
+     */
+    PHOTO("personalInfo.photoUrl"),
+    // El contrato también permite personalInfo.birthDate. No está acá a propósito: el perfil de
+    // la app no guarda fecha de nacimiento. Por la regla de "lo desconocido se ignora", el
+    // mapper la salta sin romper.
 }

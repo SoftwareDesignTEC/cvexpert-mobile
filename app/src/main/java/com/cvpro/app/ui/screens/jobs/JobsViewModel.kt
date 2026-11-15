@@ -7,9 +7,12 @@ import com.cvpro.app.R
 import com.cvpro.app.domain.model.ApplicationStatus
 import com.cvpro.app.domain.model.JobModality
 import com.cvpro.app.domain.model.JobOffer
+import com.cvpro.app.domain.model.JobPreferences
+import com.cvpro.app.domain.model.rankedFor
 import com.cvpro.app.domain.repository.ApplicationRepository
 import com.cvpro.app.domain.repository.AuthRepository
 import com.cvpro.app.domain.repository.JobOfferRepository
+import com.cvpro.app.domain.repository.ProfileRepository
 import com.cvpro.app.ui.components.UiMessage
 import com.cvpro.app.ui.components.toUserMessage
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -51,6 +54,8 @@ data class JobsUiState(
     val urlToOpen: String? = null,
     /** Se están buscando ofertas nuevas en JSearch ("Buscar ofertas nuevas"). */
     val isRefreshing: Boolean = false,
+    /** Jornada y modalidad que el usuario eligió en su perfil, para ordenar "Recomendadas". */
+    val preferences: JobPreferences = JobPreferences.NONE,
 ) {
     /**
      * Ofertas que se ven con el filtro elegido.
@@ -60,7 +65,8 @@ data class JobsUiState(
      * el filtro ve todas las ofertas y no solo las primeras diez.
      */
     val visibleOffers: List<JobOffer> = when (selectedFilter) {
-        JobsFilter.RECOMMENDED -> offers.sortedByDescending { it.matchScore ?: 0 }
+        // Igual que la web: primero las que encajan con sus preferencias, después por compatibilidad.
+        JobsFilter.RECOMMENDED -> offers.rankedFor(preferences)
         JobsFilter.REMOTE -> offers.filter { it.modality == JobModality.REMOTE }
         JobsFilter.HYBRID -> offers.filter { it.modality == JobModality.HYBRID }
         JobsFilter.RECENT -> offers
@@ -88,6 +94,7 @@ class JobsViewModel @Inject constructor(
     private val jobOfferRepository: JobOfferRepository,
     private val applicationRepository: ApplicationRepository,
     private val authRepository: AuthRepository,
+    private val profileRepository: ProfileRepository,
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(JobsUiState())
@@ -124,6 +131,7 @@ class JobsViewModel @Inject constructor(
         // Si ya había ofertas, se vuelven a pedir sin indicador de carga: el servicio importa
         // ofertas nuevas cada dos días y el menú conserva esta pantalla con lo de antes.
         if (_uiState.value.offers.isNotEmpty()) loadFirstPage(showLoader = false)
+        loadPreferences()
         viewModelScope.launch {
             try {
                 val applications = applicationRepository.getApplications(
@@ -138,6 +146,24 @@ class JobsViewModel @Inject constructor(
             } catch (exception: Exception) {
                 // Si falla no se muestra error: las ofertas se ven igual y, si el usuario se
                 // vuelve a postular, el servicio responde 409 y se marca en ese momento.
+            }
+        }
+    }
+
+    /**
+     * Lee las preferencias del perfil. Se repite al volver a la pantalla porque el usuario pudo
+     * cambiarlas en Mi Perfil (o en la web). Si falla, se ordena como antes, por compatibilidad.
+     */
+    private fun loadPreferences() {
+        val userId = authRepository.currentUser.value?.id ?: return
+        viewModelScope.launch {
+            try {
+                val preferences = JobPreferences.of(profileRepository.getProfile(userId))
+                _uiState.update { it.copy(preferences = preferences) }
+            } catch (exception: CancellationException) {
+                throw exception
+            } catch (exception: Exception) {
+                // Sin preferencias la lista se ve igual, ordenada por compatibilidad.
             }
         }
     }

@@ -70,7 +70,6 @@
     <string name="cv_detail_skills">Habilidades</string>
     <string name="cv_detail_languages">Idiomas</string>
     <string name="cv_detail_period">%1$s — %2$s</string>
-    <string name="cv_detail_period_current">%1$s — Actual</string>
     <string name="cv_detail_present">Actual</string>
     <string name="cv_detail_certifications">Certificaciones</string>
     <string name="cv_experience_type_formal">Empleo formal</string>
@@ -159,15 +158,12 @@
     <string name="cv_editor_discard_message">Si sales ahora, se pierde lo que cambiaste en este currículum.</string>
     <string name="cv_editor_discard_confirm">Descartar</string>
     <string name="cv_editor_discard_keep">Seguir editando</string>
-    <string name="coming_soon_badge">Próximamente</string>
     <string name="coming_soon_pdf_title">Exportar a PDF</string>
     <string name="coming_soon_pdf_message">La descarga del currículum en PDF llega en la siguiente fase, junto con el editor.</string>
     <string name="coming_soon_use_title">Usar esta plantilla</string>
     <string name="coming_soon_use_message">Al elegir una plantilla se va a abrir el editor para llenar tu currículum. El editor llega en la siguiente fase.</string>
     <string name="coming_soon_template_title">Descargar plantilla</string>
     <string name="coming_soon_template_message">Las plantillas nuevas se van a poder descargar y usar sin conexión en la siguiente fase.</string>
-    <string name="coming_soon_preferences_title">Editar preferencias</string>
-    <string name="coming_soon_preferences_message">El servicio todavía no guarda sector, disponibilidad ni modalidad. Por ahora se pueden ver, y editarlas llega con el servicio completo.</string>
 
     <!-- Plantillas -->
     <string name="templates_eyebrow">CREA DONDE QUIERAS</string>
@@ -277,12 +273,10 @@
     <string name="profile_contact_phone">Número de teléfono</string>
     <string name="profile_contact_email">Correo Electrónico</string>
     <string name="profile_contact_residence">Residencia</string>
-    <string name="profile_edit_contact">Editar Contacto</string>
     <string name="profile_preferences_title">Preferencias</string>
     <string name="profile_pref_sector">Sector de interés</string>
     <string name="profile_pref_availability">Disponibilidad</string>
     <string name="profile_pref_modality">Modalidad</string>
-    <string name="profile_edit_preferences">Editar Preferencias</string>
     <string name="profile_pending_notice">Revisa tus datos y guarda los cambios.</string>
     <string name="profile_field_name">Nombre completo</string>
     <string name="profile_field_email">Correo electrónico</string>
@@ -305,6 +299,8 @@
     <string name="jobs_refresh_too_soon">Ya se buscaron ofertas hace poco. Inténtalo de nuevo en unos minutos.</string>
     <string name="jobs_refresh_unavailable">La búsqueda de ofertas nuevas no está disponible ahora.</string>
     <string name="jobs_filter_recommended">Recomendadas</string>
+    <string name="jobs_ranking_by_preferences">Ordenadas según tus preferencias: primero las que encajan con tu jornada y modalidad.</string>
+    <string name="jobs_ranking_no_preferences">Elige tu jornada y modalidad en Mi Perfil para que ordenemos las ofertas según lo que buscas.</string>
     <string name="jobs_filter_remote">Remoto</string>
     <string name="jobs_filter_hybrid">Híbrido</string>
     <string name="jobs_load_more">Cargar más (%1$d restantes)</string>
@@ -599,6 +595,21 @@
     <string name="profile_location_locating">Buscando tu ubicación…</string>
     <string name="profile_location_unavailable">No pudimos obtener tu ubicación. Revisa que la ubicación del teléfono esté activa o escríbela a mano.</string>
     <string name="profile_location_denied">Sin permiso de ubicación. Puedes escribirla a mano.</string>
+    <string name="profile_field_bio">Descripción profesional</string>
+    <string name="profile_bio_placeholder">Ej.: Estudiante de Administración con experiencia en atención al cliente…</string>
+    <string name="profile_bio_counter">%1$d/%2$d</string>
+    <string name="profile_bio_too_long">Te pasaste del máximo de caracteres: %1$d.</string>
+    <string name="profile_preferences_hint">Las ofertas que encajan con esto salen primero en Ofertas.</string>
+    <string name="cv_photo_title">Foto</string>
+    <string name="cv_photo_description">Foto del currículum</string>
+    <string name="cv_photo_pick">Elegir foto</string>
+    <string name="cv_photo_change">Cambiar foto</string>
+    <string name="cv_photo_remove">Quitar</string>
+    <string name="cv_photo_preparing">Preparando…</string>
+    <string name="cv_photo_uploading">Subiendo…</string>
+    <string name="cv_photo_hint">Se recorta al centro. JPG, PNG o WebP.</string>
+    <string name="cv_photo_error_format">Esa imagen no se puede usar. Prueba con una foto JPG, PNG o WebP.</string>
+    <string name="cv_photo_error_size">La foto es muy pesada. Prueba con otra.</string>
     <string name="skills_gap_snapshot_notice">Resultado de la instantánea guardada del usuario. Seleccionar otro CV no cambia la instantánea hasta enviar sus habilidades.</string>
     <string name="skills_gap_manual_replace_notice">Al confirmar, reemplazarás toda tu instantánea de habilidades para el análisis de mercado. Los niveles desconocidos se conservarán como desconocidos.</string>
 </resources>

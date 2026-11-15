@@ -11,11 +11,15 @@ import com.cvpro.app.data.remote.dto.TranslateExperienceRequestDto
 import com.cvpro.app.data.remote.dto.TranslateExperienceResponseDto
 import com.cvpro.app.data.remote.dto.PagedResponseDto
 import com.cvpro.app.data.remote.dto.UpdateCvRequestDto
+import com.cvpro.app.data.remote.dto.UploadedPhotoDto
+import okhttp3.MultipartBody
 import retrofit2.http.Body
 import retrofit2.http.DELETE
 import retrofit2.http.GET
+import retrofit2.http.Multipart
 import retrofit2.http.POST
 import retrofit2.http.PUT
+import retrofit2.http.Part
 import retrofit2.http.Path
 import retrofit2.http.Query
 
@@ -43,6 +47,17 @@ interface CvApi {
         @Path("id") id: String,
         @Body request: UpdateCvRequestDto,
     ): CvDto
+
+    /**
+     * Sube la foto del currículum y devuelve su enlace público (201). El enlace es lo que se
+     * guarda en `personalInfo.photoUrl`. Errores: 413 si pasa de 5 MB, 415 si no es JPG, PNG
+     * o WebP. La ruta no lleva el id del CV, igual que en la web.
+     */
+    @Multipart
+    @POST("cvs/photos")
+    suspend fun uploadPhoto(
+        @Part file: MultipartBody.Part,
+    ): UploadedPhotoDto
 
     @DELETE("cvs/{id}")
     suspend fun deleteCv(

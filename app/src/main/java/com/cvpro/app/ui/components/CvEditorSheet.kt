@@ -43,6 +43,12 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.PickVisualMediaRequest
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.cvpro.app.ui.screens.cvs.CvPhotoViewModel
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -99,9 +105,26 @@ fun CvEditorSheet(
     modifier: Modifier = Modifier,
     aiState: CvAiUiState = CvAiUiState(),
     aiActions: CvAiActions = CvAiActions(),
+    photoViewModel: CvPhotoViewModel = hiltViewModel(),
 ) {
     // El borrador arranca del currículum recibido y se reinicia si llega otro distinto.
     var draft by remember(cv.id) { mutableStateOf(cv) }
+
+    // Foto: solo si la plantilla la dibuja. La foto subida entra al borrador como cualquier
+    // otro campo y se guarda con "Guardar".
+    val photoState by photoViewModel.uiState.collectAsStateWithLifecycle()
+    LaunchedEffect(draft.templateId, draft.personalInfo.photoUrl) {
+        photoViewModel.bind(draft.templateId, draft.personalInfo.photoUrl)
+    }
+    LaunchedEffect(photoViewModel) {
+        photoViewModel.uploaded.collect { url ->
+            draft = draft.copy(personalInfo = draft.personalInfo.copy(photoUrl = url))
+        }
+    }
+    // El selector de fotos de Android: no pide permisos y muestra solo imágenes.
+    val photoPicker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
+        if (uri != null) photoViewModel.onPhotoPicked(uri)
+    }
     // Descripción que tenía una experiencia antes de que la IA la redactara (posición y texto),
     // para poder deshacerlo. Una sola a la vez: la última que se mejoró.
     var undo by remember(cv.id) { mutableStateOf<Pair<Int, String>?>(null) }
@@ -253,6 +276,21 @@ fun CvEditorSheet(
 
             // ----- Información personal -----
             EditorSection(title = stringResource(R.string.cv_detail_personal))
+
+            if (photoState.usesPhoto) {
+                CvPhotoField(
+                    preview = photoState.preview,
+                    hasPhoto = !draft.personalInfo.photoUrl.isNullOrBlank(),
+                    phase = photoState.phase,
+                    errorMessage = photoState.error?.let { stringResource(it) },
+                    onPickClick = {
+                        photoPicker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
+                    },
+                    onRemoveClick = {
+                        draft = draft.copy(personalInfo = draft.personalInfo.copy(photoUrl = null))
+                    },
+                )
+            }
 
             FormTextField(
                 value = draft.personalInfo.name,

@@ -25,4 +25,12 @@ interface CvRepository {
     ): Cv
 
     suspend fun deleteCv(id: String)
+
+    /**
+     * Sube la foto (ya recortada, en JPEG) y devuelve el enlace para `personalInfo.photoUrl`.
+     * Trae una implementación por defecto para que los repositorios de prueba no tengan que
+     * implementarla.
+     */
+    suspend fun uploadPhoto(jpeg: ByteArray): String =
+        throw UnsupportedOperationException("Este repositorio no sube fotos")
 }

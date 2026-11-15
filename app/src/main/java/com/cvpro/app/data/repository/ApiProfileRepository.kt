@@ -1,8 +1,10 @@
 package com.cvpro.app.data.repository
 
 import com.cvpro.app.data.mapper.toDomain
+import com.cvpro.app.data.mapper.toWireValue
 import com.cvpro.app.data.remote.api.ProfileApi
 import com.cvpro.app.data.remote.dto.UpdateProfileRequestDto
+import com.cvpro.app.domain.model.JobModality
 import com.cvpro.app.domain.model.UserProfile
 import com.cvpro.app.domain.repository.ProfileRepository
 import javax.inject.Inject
@@ -25,6 +27,9 @@ class ApiProfileRepository @Inject constructor(
         email: String,
         phone: String?,
         location: String,
+        bio: String?,
+        types: List<String>?,
+        modalities: List<JobModality>?,
     ): UserProfile {
 
         val request = UpdateProfileRequestDto(
@@ -32,6 +37,10 @@ class ApiProfileRepository @Inject constructor(
             email = email,
             phone = phone,
             address = location,
+            bio = bio,
+            types = types,
+            // Mismos valores que manda la web: "remote", "on-site", "hybrid".
+            modalities = modalities?.map { it.toWireValue() },
         )
 
         return api.updateProfile(

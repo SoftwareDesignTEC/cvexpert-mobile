@@ -23,18 +23,18 @@ fun UserProfileDto.toDomain(): UserProfile {
         photoUrl = photoUrl,
         bio = bio,
         types = types.orEmpty(),
-        modalities = modalities.orEmpty().map { it.toJobModality() },
+        // Ahora el perfil se edita y se vuelve a guardar: una modalidad desconocida se descarta
+        // en vez de convertirse en "presencial", que se guardaría como si el usuario la eligiera.
+        modalities = modalities.orEmpty().mapNotNull { it.toJobModalityOrNull() }.distinct(),
         sectors = sectors.orEmpty(),
     )
 }
 
-private fun String?.toJobModality(): JobModality {
-    return when (this?.lowercase()) {
-        "remote" -> JobModality.REMOTE
-        "on-site" -> JobModality.ON_SITE
-        "hybrid" -> JobModality.HYBRID
-        // Sin dato o valor desconocido: se asume presencial en vez de reventar. Una sola
-        // modalidad mal escrita no debería dejar la pantalla sin perfil.
-        else -> JobModality.ON_SITE
-    }
+private fun String?.toJobModalityOrNull(): JobModality? = when (this?.lowercase()) {
+    "remote" -> JobModality.REMOTE
+    "on-site" -> JobModality.ON_SITE
+    "hybrid" -> JobModality.HYBRID
+    // Sin dato o valor desconocido: se ignora en vez de reventar. Una sola modalidad mal
+    // escrita no debería dejar la pantalla sin perfil.
+    else -> null
 }

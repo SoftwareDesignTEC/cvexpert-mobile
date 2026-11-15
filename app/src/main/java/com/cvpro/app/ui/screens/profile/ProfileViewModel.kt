@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cvpro.app.R
 import com.cvpro.app.data.location.DeviceLocationProvider
+import com.cvpro.app.domain.model.JobModality
 import com.cvpro.app.domain.model.UserProfile
 import com.cvpro.app.domain.model.personName
 import com.cvpro.app.domain.repository.AlertsRepository
@@ -28,11 +29,17 @@ data class ProfileUiState(
     val email: String = "",
     val phone: String = "",
     val location: String = "",
+    /** Descripción profesional ("bio"): la que se ve debajo del nombre. */
+    val bio: String = "",
+    /** Jornadas elegidas, con los valores del contrato ("full-time"...). */
+    val types: Set<String> = emptySet(),
+    val modalities: Set<JobModality> = emptySet(),
 
     @param:StringRes val nameError: Int? = null,
     @param:StringRes val emailError: Int? = null,
     @param:StringRes val phoneError: Int? = null,
     @param:StringRes val locationError: Int? = null,
+    @param:StringRes val bioError: Int? = null,
 
     /** Perfil completo tal como lo devuelve el servicio, para la vista de solo lectura. */
     val profile: UserProfile? = null,
@@ -95,8 +102,32 @@ class ProfileViewModel @Inject constructor(
     /** Abre el formulario de edición sobre los datos ya cargados. */
     fun onEditClick() = _uiState.update { it.copy(isEditing = true) }
 
-    /** Vuelve a la ficha sin guardar. */
-    fun onCancelEdit() = _uiState.update { it.copy(isEditing = false) }
+    /** Vuelve a la ficha sin guardar: lo que se escribió se descarta. */
+    fun onCancelEdit() = _uiState.update { state ->
+        val profile = state.profile
+        if (profile == null) state.copy(isEditing = false)
+        else state.withProfile(profile).copy(
+            isEditing = false,
+            nameError = null,
+            emailError = null,
+            phoneError = null,
+            locationError = null,
+            bioError = null,
+        )
+    }
+
+    /** Llena el formulario con [profile] tal como está guardado. */
+    private fun ProfileUiState.withProfile(profile: UserProfile) = copy(
+        profile = profile,
+        // Perfiles viejos guardaron el correo como nombre: se muestra vacío.
+        name = personName(profile.name).ifBlank { personName(authRepository.currentUser.value?.name) },
+        email = profile.email,
+        phone = profile.phone.orEmpty(),
+        location = profile.location,
+        bio = profile.bio.orEmpty(),
+        types = profile.types.toSet(),
+        modalities = profile.modalities.toSet(),
+    )
 
     private fun loadProfile(id: String) {
         viewModelScope.launch {
@@ -111,13 +142,7 @@ class ProfileViewModel @Inject constructor(
                 val profile = profileRepository.getProfile(id)
 
                 _uiState.update {
-                    it.copy(
-                        profile = profile,
-                        // Perfiles viejos guardaron el correo como nombre: se muestra vacío.
-                        name = personName(profile.name).ifBlank { personName(authRepository.currentUser.value?.name) },
-                        email = profile.email,
-                        phone = profile.phone.orEmpty(),
-                        location = profile.location,
+                    it.withProfile(profile).copy(
                         isLoading = false,
                         error = null,
                     )
@@ -146,6 +171,19 @@ class ProfileViewModel @Inject constructor(
 
     fun onLocationChange(value: String) =
         _uiState.update { it.copy(location = value, locationError = null) }
+
+    fun onBioChange(value: String) =
+        _uiState.update { it.copy(bio = value, bioError = null) }
+
+    /** Marca o desmarca una jornada ("full-time"...). Se puede elegir más de una. */
+    fun onTypeToggle(type: String) = _uiState.update {
+        it.copy(types = if (type in it.types) it.types - type else it.types + type)
+    }
+
+    /** Marca o desmarca una modalidad. Se puede elegir más de una. */
+    fun onModalityToggle(modality: JobModality) = _uiState.update {
+        it.copy(modalities = if (modality in it.modalities) it.modalities - modality else it.modalities + modality)
+    }
 
     /**
      * "Usar mi ubicación": la pantalla ya pidió el permiso. Si el teléfono da la ubicación, se
@@ -176,6 +214,8 @@ class ProfileViewModel @Inject constructor(
         val emailError = FormValidation.email(state.email)
         val phoneError = FormValidation.phoneOptional(state.phone)
         val locationError = FormValidation.required(state.location)
+        // El servicio de Usuarios acepta hasta 1000 caracteres.
+        val bioError = if (state.bio.trim().length > BIO_MAX_LENGTH) R.string.profile_bio_too_long else null
 
         _uiState.update {
             it.copy(
@@ -183,6 +223,7 @@ class ProfileViewModel @Inject constructor(
                 emailError = emailError,
                 phoneError = phoneError,
                 locationError = locationError,
+                bioError = bioError,
             )
         }
 
@@ -191,6 +232,7 @@ class ProfileViewModel @Inject constructor(
             emailError,
             phoneError,
             locationError,
+            bioError,
         ).isNotEmpty()
 
         if (hayErrores) {
@@ -222,12 +264,15 @@ class ProfileViewModel @Inject constructor(
                     email = state.email.trim(),
                     phone = state.phone.trim().takeIf { it.isNotEmpty() },
                     location = state.location.trim(),
+                    // Vacío borra la descripción; por eso se manda "" y no null (null la dejaría).
+                    bio = state.bio.trim(),
+                    types = state.types.toList(),
+                    modalities = state.modalities.toList(),
                 )
 
                 // Al guardar bien se vuelve a la ficha, ya con los datos nuevos.
                 _uiState.update {
-                    it.copy(
-                        profile = updated,
+                    it.withProfile(updated).copy(
                         isEditing = false,
                         isSaving = false,
                         error = null,
@@ -254,3 +299,6 @@ class ProfileViewModel @Inject constructor(
         }
     }
 }
+
+/** Largo máximo de la descripción, igual que en el servicio de Usuarios. */
+const val BIO_MAX_LENGTH = 1000

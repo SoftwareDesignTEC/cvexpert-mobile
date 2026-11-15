@@ -25,6 +25,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.MyLocation
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
@@ -51,9 +52,9 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cvpro.app.R
+import com.cvpro.app.domain.model.JobAlertSettings
 import com.cvpro.app.domain.model.JobModality
 import com.cvpro.app.ui.components.LoadingState
-import com.cvpro.app.ui.components.ComingSoonSheet
 import com.cvpro.app.ui.components.FormTextField
 import com.cvpro.app.ui.components.LocalSnackbarHostState
 import com.cvpro.app.ui.components.LocationField
@@ -111,6 +112,9 @@ fun ProfileScreen(
             onEmailChange = viewModel::onEmailChange,
             onPhoneChange = viewModel::onPhoneChange,
             onLocationChange = viewModel::onLocationChange,
+            onBioChange = viewModel::onBioChange,
+            onTypeToggle = viewModel::onTypeToggle,
+            onModalityToggle = viewModel::onModalityToggle,
             onSaveClick = viewModel::onSaveClick,
             onCancelClick = viewModel::onCancelEdit,
             onUseLocationClick = onUseLocationClick,
@@ -129,7 +133,9 @@ fun ProfileScreen(
  * Ficha del perfil, como en el diseño de Samuel.
  *
  * Es de solo lectura: el encabezado con la foto y las etiquetas, la descripción, y abajo los
- * bloques de contacto y preferencias. Editar abre el formulario.
+ * bloques de contacto y preferencias. Un solo botón, "Editar perfil", abre el formulario con
+ * todo: antes había tres ("Editar perfil", "Editar contacto" y "Editar preferencias") y los dos
+ * primeros hacían lo mismo.
  */
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -139,15 +145,6 @@ fun ProfileCard(
     modifier: Modifier = Modifier,
 ) {
     val profile = uiState.profile
-    var showPreferencesNote by remember { mutableStateOf(false) }
-
-    if (showPreferencesNote) {
-        ComingSoonSheet(
-            title = stringResource(R.string.coming_soon_preferences_title),
-            message = stringResource(R.string.coming_soon_preferences_message),
-            onDismiss = { showPreferencesNote = false },
-        )
-    }
 
     Column(
         modifier = modifier
@@ -172,7 +169,7 @@ fun ProfileCard(
             // Etiquetas: residencia, disponibilidad, modalidad y sectores de interés.
             val chips = buildList {
                 if (uiState.location.isNotBlank()) add(uiState.location)
-                profile?.types?.forEach { add(it) }
+                profile?.types?.forEach { add(jobTypeLabel(it)) }
                 profile?.modalities?.forEach { add(stringResource(it.labelRes())) }
                 profile?.sectors?.forEach { add(it) }
             }
@@ -228,15 +225,6 @@ fun ProfileCard(
                 label = stringResource(R.string.profile_contact_residence),
                 value = uiState.location,
             )
-            OutlinedButton(
-                onClick = onEditClick,
-                colors = outlinedOnCardColors(),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 12.dp),
-            ) {
-                Text(stringResource(R.string.profile_edit_contact))
-            }
         }
 
         // Preferencias laborales.
@@ -250,9 +238,10 @@ fun ProfileCard(
                 label = stringResource(R.string.profile_pref_sector),
                 value = profile?.sectors?.joinToString(", ").orEmpty(),
             )
+            val typeLabels = profile?.types?.map { jobTypeLabel(it) }.orEmpty()
             ProfileField(
                 label = stringResource(R.string.profile_pref_availability),
-                value = profile?.types?.joinToString(", ").orEmpty(),
+                value = typeLabels.joinToString(", "),
             )
             // Los nombres se resuelven con map, que es inline y sí admite stringResource;
             // joinToString no lo es, y ahí el compilador lo rechaza.
@@ -263,15 +252,6 @@ fun ProfileCard(
                 label = stringResource(R.string.profile_pref_modality),
                 value = modalityLabels.joinToString(", "),
             )
-            OutlinedButton(
-                onClick = { showPreferencesNote = true },
-                colors = outlinedOnCardColors(),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 12.dp),
-            ) {
-                Text(stringResource(R.string.profile_edit_preferences))
-            }
         }
 
         Spacer(modifier = Modifier.padding(bottom = 8.dp))
@@ -371,6 +351,48 @@ private fun JobModality.labelRes(): Int = when (this) {
 }
 
 /**
+ * "full-time" → "Tiempo completo". El servicio guarda la jornada con el valor del contrato (en
+ * inglés); antes la ficha la mostraba así, tal cual. Una que la app no conoce se muestra igual.
+ */
+@Composable
+private fun jobTypeLabel(type: String): String = when (type.lowercase()) {
+    "full-time" -> stringResource(R.string.job_type_full_time)
+    "part-time" -> stringResource(R.string.job_type_part_time)
+    "freelance" -> stringResource(R.string.job_type_freelance)
+    "internship" -> stringResource(R.string.job_type_internship)
+    else -> type
+}
+
+/** Una fila de chips para elegir varias opciones, con su título arriba. */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun <T> ChoiceChips(
+    title: String,
+    options: List<T>,
+    selected: Set<T>,
+    label: @Composable (T) -> String,
+    onToggle: (T) -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    Column(modifier = modifier) {
+        Text(
+            text = title,
+            style = MaterialTheme.typography.labelLarge,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            options.forEach { option ->
+                FilterChip(
+                    selected = option in selected,
+                    onClick = { onToggle(option) },
+                    label = { Text(label(option)) },
+                )
+            }
+        }
+    }
+}
+
+/**
  * Formulario sin estado: recibe los valores y avisa los cambios hacia arriba.
  *
  * Cada campo usa el componente FormTextField, así que todos validan y muestran los errores
@@ -385,6 +407,9 @@ fun ProfileForm(
     onLocationChange: (String) -> Unit,
     onSaveClick: () -> Unit,
     modifier: Modifier = Modifier,
+    onBioChange: (String) -> Unit = {},
+    onTypeToggle: (String) -> Unit = {},
+    onModalityToggle: (JobModality) -> Unit = {},
     onCancelClick: () -> Unit = {},
     onUseLocationClick: () -> Unit = {},
 ) {
@@ -463,6 +488,48 @@ fun ProfileForm(
                 ),
             )
         }
+
+        // Descripción profesional: la que se ve debajo del nombre en la ficha.
+        FormTextField(
+            value = uiState.bio,
+            onValueChange = onBioChange,
+            label = stringResource(R.string.profile_field_bio),
+            errorMessage = uiState.bioError?.let { stringResource(it, BIO_MAX_LENGTH) },
+            helperText = stringResource(R.string.profile_bio_counter, uiState.bio.trim().length, BIO_MAX_LENGTH),
+            placeholder = stringResource(R.string.profile_bio_placeholder),
+            singleLine = false,
+            imeAction = ImeAction.Default,
+            modifier = Modifier.padding(top = 12.dp),
+        )
+
+        // Preferencias: las mismas que edita la web. Ofertas pone primero las que encajan.
+        Text(
+            text = stringResource(R.string.profile_preferences_title),
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onBackground,
+            modifier = Modifier.padding(top = 24.dp),
+        )
+        Text(
+            text = stringResource(R.string.profile_preferences_hint),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = 4.dp, bottom = 8.dp),
+        )
+        ChoiceChips(
+            title = stringResource(R.string.profile_pref_availability),
+            options = JobAlertSettings.KNOWN_JOB_TYPES,
+            selected = uiState.types,
+            label = { jobTypeLabel(it) },
+            onToggle = onTypeToggle,
+        )
+        ChoiceChips(
+            title = stringResource(R.string.profile_pref_modality),
+            options = JobModality.entries,
+            selected = uiState.modalities,
+            label = { stringResource(it.labelRes()) },
+            onToggle = onModalityToggle,
+            modifier = Modifier.padding(top = 12.dp),
+        )
 
         PrimaryButton(
             text = stringResource(R.string.profile_save),
