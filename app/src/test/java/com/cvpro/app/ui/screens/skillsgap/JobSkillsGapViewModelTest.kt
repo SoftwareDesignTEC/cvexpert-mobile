@@ -27,6 +27,157 @@ class JobSkillsGapViewModelTest {
     @Before fun setup() { Dispatchers.setMain(dispatcher) }
     @After fun teardown() { Dispatchers.resetMain() }
 
+    @Test fun skillIsAddedToTheExplicitlySelectedSecondCv() = runTest(dispatcher) {
+        val cvs = JobGapCvs().apply { detail = jobGapCv("cv2") }
+        val result = Gson().fromJson(jobGapResponse, JobSkillsGapResponseDto::class.java)
+            .toJobAnalysis("cv1", "job1", false).copy(cvId = "cv2", notDocumentedSkills = listOf("Git"))
+        val gaps = JobGapRepository().apply { this.result = result; evaluationResult = result }
+        val vm = JobSkillsGapViewModel(cvs, gaps, com.cvpro.app.data.testJobOffers(), EmptyCourseRepository())
+        vm.open(jobGapOffer()); advanceUntilIdle(); vm.selectCv("cv2"); advanceUntilIdle(); vm.analyze(); advanceUntilIdle()
+        vm.chooseMissingSkill("Git"); vm.addMissingSkill("intermediate"); advanceUntilIdle()
+        assertEquals("cv2", cvs.updates.single().id)
+        assertEquals("Git", cvs.updates.single().skills.last().name)
+        assertTrue(cvs.detailCalls.all { it == "cv2" })
+        assertEquals("cv2", gaps.receivedCv!!.id)
+        assertEquals(listOf("Python"), cvs.items.first { it.id == "cv1" }.skills.map { it.name })
+    }
+
+    @Test fun gitUsesNewBackendMetricsAndClassificationsAfterSaving() = runTest(dispatcher) {
+        val cvs = JobGapCvs()
+        val initial = Gson().fromJson(jobGapResponse, JobSkillsGapResponseDto::class.java)
+            .toJobAnalysis("cv1", "job1", false).copy(notDocumentedSkills = listOf("Git"))
+        val gaps = JobGapRepository().apply { result = initial; evaluationResult = initial }
+        val vm = JobSkillsGapViewModel(cvs, gaps, com.cvpro.app.data.testJobOffers(), EmptyCourseRepository())
+        vm.open(jobGapOffer()); advanceUntilIdle(); vm.selectCv("cv1"); advanceUntilIdle(); vm.analyze(); advanceUntilIdle()
+        val refreshed = initial.copy(status = JobCoverageStatus.COMPLETE, documentedMatchesCount = 2,
+            documentedCoveragePercent = 100.0, matchedSkills = initial.matchedSkills + DocumentedJobSkill("Git", "expert"),
+            notDocumentedSkills = emptyList(), recommendations = emptyList(),
+            assessments = listOf(JobLevelAssessment("Git", SkillLevel.EXPERT, SkillLevel.ADVANCED, null, null,
+                "explicit", null, "documented_skill_meets_required", 0)))
+        gaps.result = refreshed.copy(assessments = null)
+        gaps.evaluationResult = refreshed
+        vm.chooseMissingSkill("Git"); vm.addMissingSkill("expert"); advanceUntilIdle()
+        assertEquals("Git", cvs.updates.single().skills.last().name)
+        assertEquals("expert", cvs.updates.single().skills.last().level)
+        assertEquals(refreshed, vm.uiState.value.analysis)
+        assertEquals(listOf(false, true, false, true), gaps.modes)
+    }
+
+    @Test fun failedReadAfterPutRetriesOnlyReadAndAnalysis() = runTest(dispatcher) {
+        val cvs = JobGapCvs()
+        val gaps = JobGapRepository()
+        val vm = JobSkillsGapViewModel(cvs, gaps, com.cvpro.app.data.testJobOffers(), EmptyCourseRepository())
+        vm.open(jobGapOffer()); advanceUntilIdle(); vm.selectCv("cv1"); advanceUntilIdle(); vm.analyze(); advanceUntilIdle()
+        cvs.postUpdateDetailError = IOException()
+        vm.chooseMissingSkill("SQL"); vm.addMissingSkill("beginner"); advanceUntilIdle()
+        assertNull(vm.uiState.value.analysis)
+        assertNull(vm.uiState.value.skillNotice)
+        assertEquals("SQL", vm.uiState.value.selectedCv!!.skills.last().name)
+        cvs.detailError = null
+        vm.retry(); advanceUntilIdle()
+        assertEquals(1, cvs.updates.size)
+        assertEquals(cvs.detail, gaps.receivedCv)
+        assertNotNull(vm.uiState.value.analysis)
+    }
+
+    @Test fun addSkillPreservesLatestCvAndReanalyzesBackendConfirmedCvInBothEntries() = runTest(dispatcher) {
+        for (locked in listOf(true, false)) for (level in SkillLevel.entries) {
+            val cvs = JobGapCvs()
+            val gaps = JobGapRepository()
+            val jobs = object : com.cvpro.app.domain.repository.JobOfferRepository {
+                override suspend fun getOffers(page: Int, pageSize: Int, query: String) =
+                    PagedResult(listOf(jobGapOffer()), page, pageSize, 1)
+            }
+            val vm = JobSkillsGapViewModel(cvs, gaps, jobs, EmptyCourseRepository())
+            if (locked) vm.open(jobGapOffer()) else vm.start()
+            advanceUntilIdle(); vm.selectCv("cv1"); advanceUntilIdle()
+            if (!locked) vm.selectOffer("job1")
+            vm.analyze(); advanceUntilIdle()
+            // A concurrent edit since the original comparison must survive the PUT.
+            val latest = cvs.detail.copy(title = "Latest title", templateId = "latest-template",
+                personalInfo = cvs.detail.personalInfo.copy(bio = "Latest biography"),
+                workExperiences = listOf(WorkExperience("w", "Company", "Position", 100, 200, false, "Description", "formal")),
+                education = listOf(Education("e", "University", "Degree", "Field", 100, 200, false)),
+                languages = listOf(Language("l", "Spanish", "native")),
+                certifications = listOf(Certification("c", "Certificate", "Issuer", 100, 200, "https://example.org")))
+            cvs.detail = latest
+            vm.chooseMissingSkill("SQL"); vm.addMissingSkill(level.apiValue); vm.addMissingSkill(level.apiValue)
+            advanceUntilIdle()
+            val sent = cvs.updates.single()
+            assertEquals(latest, sent.copy(skills = latest.skills))
+            assertEquals(Skill("", "SQL", level.apiValue, ""), sent.skills.last())
+            assertEquals(cvs.detail, gaps.receivedCv)
+            assertEquals("backend-skill-id", gaps.receivedCv!!.skills.last().id)
+            assertEquals("cv1", vm.uiState.value.selectedCvId)
+            assertEquals("job1", vm.uiState.value.offer!!.id)
+            assertEquals(listOf(false, true, false, true), gaps.modes)
+            assertNotNull(vm.uiState.value.analysis)
+            assertNull(vm.uiState.value.skillToAdd)
+            assertEquals(R.string.gap_skill_saved, vm.uiState.value.skillNotice)
+        }
+    }
+
+    @Test fun cancellationInvalidLevelAndSaveFailureNeverChangeCv() = runTest(dispatcher) {
+        val cvs = JobGapCvs()
+        val vm = JobSkillsGapViewModel(cvs, JobGapRepository(), com.cvpro.app.data.testJobOffers(), EmptyCourseRepository())
+        vm.open(jobGapOffer()); advanceUntilIdle(); vm.selectCv("cv1"); advanceUntilIdle(); vm.analyze(); advanceUntilIdle()
+        val original = vm.uiState.value.analysis
+        vm.chooseMissingSkill("Python"); assertNull(vm.uiState.value.skillToAdd)
+        vm.chooseMissingSkill("SQL"); vm.cancelAddSkill(); vm.addMissingSkill("expert"); advanceUntilIdle()
+        assertTrue(cvs.updates.isEmpty())
+        vm.chooseMissingSkill("SQL"); vm.addMissingSkill("invalid"); advanceUntilIdle()
+        assertTrue(cvs.updates.isEmpty())
+        cvs.updateError = IOException()
+        vm.addMissingSkill("expert"); advanceUntilIdle()
+        assertEquals(original, vm.uiState.value.analysis)
+        assertNotNull(vm.uiState.value.skillSaveError)
+        assertEquals("SQL", vm.uiState.value.skillToAdd)
+        assertEquals(listOf("Python"), cvs.detail.skills.map { it.name })
+        cvs.updateError = null
+        vm.addMissingSkill("expert"); advanceUntilIdle()
+        assertEquals(1, cvs.detail.skills.count { it.name == "SQL" })
+    }
+
+    @Test fun duplicateInLatestCvIsNotSavedOrOverwritten() = runTest(dispatcher) {
+        val cvs = JobGapCvs()
+        val vm = JobSkillsGapViewModel(cvs, JobGapRepository(), com.cvpro.app.data.testJobOffers(), EmptyCourseRepository())
+        vm.open(jobGapOffer()); advanceUntilIdle(); vm.selectCv("cv1"); advanceUntilIdle(); vm.analyze(); advanceUntilIdle()
+        cvs.detail = cvs.detail.copy(skills = cvs.detail.skills + Skill("existing", " sql ", "beginner", "existing category"))
+        vm.chooseMissingSkill("SQL"); vm.addMissingSkill("expert"); advanceUntilIdle()
+        assertTrue(cvs.updates.isEmpty())
+        assertEquals("beginner", vm.uiState.value.selectedCv!!.skills.last().level)
+        assertEquals(R.string.gap_skill_exists, vm.uiState.value.skillNotice)
+    }
+
+    @Test fun successfulSaveThenFailedAnalysisRetriesWithoutAnotherPutOrStaleResults() = runTest(dispatcher) {
+        val cvs = JobGapCvs()
+        val gaps = JobGapRepository()
+        val vm = JobSkillsGapViewModel(cvs, gaps, com.cvpro.app.data.testJobOffers(), EmptyCourseRepository())
+        vm.open(jobGapOffer()); advanceUntilIdle(); vm.selectCv("cv1"); advanceUntilIdle(); vm.analyze(); advanceUntilIdle()
+        gaps.failure = JobSkillsGapFailure.UNAVAILABLE
+        vm.chooseMissingSkill("SQL"); vm.addMissingSkill("advanced"); advanceUntilIdle()
+        assertNull(vm.uiState.value.analysis)
+        assertEquals("SQL", vm.uiState.value.selectedCv!!.skills.last().name)
+        assertNotNull(vm.uiState.value.errorMessage)
+        gaps.failure = null
+        vm.retry(); advanceUntilIdle()
+        assertEquals(1, cvs.updates.size)
+        assertEquals(cvs.detail, gaps.receivedCv)
+        assertNotNull(vm.uiState.value.analysis)
+    }
+
+    @Test fun unsafeDetailBlocksPutAndKeepsOriginalAnalysis() = runTest(dispatcher) {
+        val cvs = JobGapCvs()
+        val vm = JobSkillsGapViewModel(cvs, JobGapRepository(), com.cvpro.app.data.testJobOffers(), EmptyCourseRepository())
+        vm.open(jobGapOffer()); advanceUntilIdle(); vm.selectCv("cv1"); advanceUntilIdle(); vm.analyze(); advanceUntilIdle()
+        val original = vm.uiState.value.analysis
+        cvs.safeReadError = com.cvpro.app.domain.repository.UnsafeCvUpdateException()
+        vm.chooseMissingSkill("SQL"); vm.addMissingSkill("advanced"); advanceUntilIdle()
+        assertTrue(cvs.updates.isEmpty())
+        assertEquals(R.string.gap_skill_unsafe, vm.uiState.value.skillSaveError)
+        assertEquals(original, vm.uiState.value.analysis)
+    }
+
     @Test fun unifiedFlowKeepsCoursesAndAddsBackendLevels() = runTest(dispatcher) {
         val levels = com.cvpro.app.data.evaluationResult()
         val courses = levels.copy(assessments = null, levelAnalysis = null,
@@ -279,6 +430,10 @@ class JobSkillsGapViewModelTest {
 }
 
 private class JobGapCvs : CvRepository {
+    val updates = mutableListOf<Cv>()
+    var updateError: Exception? = null
+    var postUpdateDetailError: Exception? = null
+    var safeReadError: Exception? = null
     var detail = jobGapCv()
     var items = listOf(jobGapCv(), jobGapCv("cv2"))
     var detailError: Exception? = null
@@ -294,7 +449,17 @@ private class JobGapCvs : CvRepository {
         detailError?.let { throw it }
         return pending?.await() ?: detail
     }
-    override suspend fun updateCv(cv: Cv): Cv = error("unused")
+    override suspend fun getCvForSkillUpdate(id: String): Cv {
+        safeReadError?.let { throw it }
+        return getCvById(id)
+    }
+    override suspend fun updateCv(cv: Cv): Cv {
+        updateError?.let { throw it }
+        updates += cv
+        detail = cv.copy(skills = cv.skills.dropLast(1) + cv.skills.last().copy(id = "backend-skill-id"))
+        detailError = postUpdateDetailError
+        return detail
+    }
     override suspend fun createCv(title: String, templateId: String, personalInfo: UserProfile?): Cv = error("unused")
     override suspend fun deleteCv(id: String) = error("unused")
 }

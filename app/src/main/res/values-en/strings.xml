@@ -562,4 +562,10 @@
     <string name="skills_gap_analyze">Submit skills and analyze</string>
     <string name="skills_gap_snapshot_notice">Result from the saved user snapshot. Selecting another CV does not change the snapshot until its skills are submitted.</string>
     <string name="skills_gap_manual_replace_notice">Confirming replaces your entire skills snapshot for market analysis. Unknown levels will remain unknown.</string>
+    <string name="gap_skill_add_hint">Tap a skill to add it to your CV.</string>
+    <string name="gap_skill_add_to_cv">Add %1$s to “%2$s”. Select your proficiency level.</string>
+    <string name="gap_skill_saved">Skill saved in your CV.</string>
+    <string name="gap_skill_exists">This skill is already in your CV. No duplicate was added.</string>
+    <string name="gap_skill_save_error">Could not save the skill. You can try again.</string>
+    <string name="gap_skill_unsafe">Nothing was saved: the current contract cannot safely preserve all the data in this CV.</string>
 </resources>

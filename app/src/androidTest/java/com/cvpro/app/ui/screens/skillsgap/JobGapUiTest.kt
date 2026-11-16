@@ -25,6 +25,38 @@ import java.util.Locale
 class JobGapUiTest {
     @get:Rule val compose = createComposeRule()
 
+    @Test fun mainEntryAddsGitOnlyAfterLevelSelectionAndConfirmation() = skillDialogFlow(false)
+    @Test fun jobsEntryAddsGitOnlyAfterLevelSelectionAndConfirmation() = skillDialogFlow(true)
+
+    private fun skillDialogFlow(locked: Boolean) {
+        val fixture = acceptancePreviewState()
+        val saved = mutableListOf<String>()
+        content {
+            var state by remember { mutableStateOf(fixture.copy(offerLocked = locked,
+                analysis = fixture.analysis!!.copy(notDocumentedSkills = listOf("Git")))) }
+            JobSkillsGapContent(state, {}, {}, {}, {}, {},
+                onAddSkill = { state = state.copy(skillToAdd = it) },
+                onCancelSkill = { state = state.copy(skillToAdd = null) },
+                onSaveSkill = { saved += it; state = state.copy(skillToAdd = null) })
+        }
+        compose.onNodeWithTag("gap-add-skill:Git").performScrollTo().performClick()
+        compose.waitUntil(timeoutMillis = 5_000) {
+            compose.onNodeWithText("Agregar Git a «Mi CV de tecnología». Selecciona tu nivel de dominio.").isDisplayed()
+        }
+        compose.onNodeWithText("Agregar Git a «Mi CV de tecnología». Selecciona tu nivel de dominio.").assertIsDisplayed()
+        compose.onNodeWithTag("gap-save-skill").assertIsNotEnabled()
+        compose.onNodeWithText("Cancelar").performClick()
+        assertTrue(saved.isEmpty())
+        compose.onNodeWithTag("gap-add-skill:Git").performScrollTo().performClick()
+        compose.waitUntil(timeoutMillis = 5_000) { compose.onNodeWithTag("gap-save-skill").isDisplayed() }
+        compose.onNodeWithText("Nivel").performClick()
+        compose.onNodeWithText("Experto").performClick()
+        compose.onNodeWithTag("gap-save-skill").performClick()
+        assertEquals(listOf("expert"), saved)
+        compose.onNodeWithTag("gap-save-skill").assertDoesNotExist()
+        compose.onNodeWithText("CV utilizado: Mi CV de tecnología").assertExists()
+    }
+
     private fun content(locale: String = "es", fontScale: Float = 1f, block: @Composable () -> Unit) {
         compose.setContent {
             val context = LocalContext.current

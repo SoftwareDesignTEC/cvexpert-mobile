@@ -8,6 +8,10 @@ import com.cvpro.app.domain.model.Cv
 import com.cvpro.app.domain.model.PagedResult
 import com.cvpro.app.domain.model.UserProfile
 import com.cvpro.app.domain.repository.CvRepository
+import com.cvpro.app.domain.repository.UnsafeCvUpdateException
+import com.cvpro.app.data.remote.dto.CvDto
+import com.google.gson.Gson
+import com.google.gson.JsonElement
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -40,6 +44,20 @@ class ApiCvRepository @Inject constructor(
         return api.getCvById(id).toDomain()
     }
 
+    override suspend fun getCvForSkillUpdate(id: String): Cv {
+        val raw = api.getCvForSkillUpdate(id)
+        val gson = Gson()
+        val cv = gson.fromJson(raw, CvDto::class.java).toDomain()
+        val editable = raw.deepCopy().apply {
+            // Server-managed metadata is not part of PUT /cvs/{id}.
+            listOf("id", "userId", "createdAt", "updatedAt", "previewUrl", "templatePreviewUrl",
+                "thumbnailUrl", "imageUrl").forEach { remove(it) }
+        }
+        if (cv.id != id || !preservesCvFields(editable, gson.toJsonTree(cv.toUpdateRequest())))
+            throw UnsafeCvUpdateException()
+        return cv
+    }
+
     /**
      * Manda el currículum completo con PUT.
      *
@@ -68,4 +86,15 @@ class ApiCvRepository @Inject constructor(
     override suspend fun deleteCv(id: String) {
         api.deleteCv(id)
     }
+}
+
+/** Reject unknown or lossy fields, including nested profile fields and unparseable dates. */
+internal fun preservesCvFields(original: JsonElement, replacement: JsonElement?): Boolean = when {
+    replacement == null -> original.isJsonNull
+    original.isJsonObject && replacement.isJsonObject -> original.asJsonObject.entrySet().all { (key, value) ->
+        preservesCvFields(value, replacement.asJsonObject.get(key))
+    }
+    original.isJsonArray && replacement.isJsonArray -> original.asJsonArray.size() == replacement.asJsonArray.size() &&
+        original.asJsonArray.zip(replacement.asJsonArray).all { (before, after) -> preservesCvFields(before, after) }
+    else -> original == replacement
 }
