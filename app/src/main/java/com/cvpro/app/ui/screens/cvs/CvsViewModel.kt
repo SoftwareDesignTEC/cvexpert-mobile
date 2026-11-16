@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.cvpro.app.data.pdf.CvPdfGenerator
 import com.cvpro.app.data.pdf.CvPreviewRenderer
 import com.cvpro.app.domain.model.Cv
+import com.cvpro.app.domain.model.byLastEdited
 import com.cvpro.app.domain.repository.CvRepository
 import com.cvpro.app.domain.repository.TemplateRepository
 import com.cvpro.app.domain.repository.layoutFor
@@ -172,7 +173,8 @@ class CvsViewModel @Inject constructor(
 
                 _uiState.update { state ->
                     state.copy(
-                        cvs = state.cvs.map { if (it.id == saved.id) saved else it },
+                        // Se reordena para que el que se acaba de guardar suba de primero.
+                        cvs = state.cvs.map { if (it.id == saved.id) saved else it }.byLastEdited(),
                         isSaving = false,
                     )
                 }
@@ -239,7 +241,8 @@ class CvsViewModel @Inject constructor(
 
                 _uiState.update {
                     it.copy(
-                        cvs = result.items,
+                        // Lo último que se editó, primero (ver CvOrder.kt).
+                        cvs = result.items.byLastEdited(),
                         isLoading = false,
                         error = null,
                     )

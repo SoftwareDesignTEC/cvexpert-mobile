@@ -29,6 +29,7 @@ fun CvDto.toDomain(): Cv {
         // Llegan en epoch (o ISO en los mocks viejos); las tarjetas muestran la fecha legible.
         createdAt = createdAt.toEpochMillis().toDisplayDate(),
         updatedAt = updatedAt.toEpochMillis().toDisplayDate(),
+        updatedAtMillis = updatedAt.toEpochMillis(),
         previewUrl = previewUrl,
         // Sin datos personales el CV se muestra igual, con los campos vacíos.
         personalInfo = personalInfo?.toDomain() ?: UserProfile(

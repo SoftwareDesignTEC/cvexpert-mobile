@@ -274,7 +274,6 @@
     <string name="profile_contact_email">Correo Electrónico</string>
     <string name="profile_contact_residence">Residencia</string>
     <string name="profile_preferences_title">Preferencias</string>
-    <string name="profile_pref_sector">Sector de interés</string>
     <string name="profile_pref_availability">Disponibilidad</string>
     <string name="profile_pref_modality">Modalidad</string>
     <string name="profile_pending_notice">Revisa tus datos y guarda los cambios.</string>
@@ -477,7 +476,6 @@
     <string name="alerts_profile_location">Ubicación</string>
     <string name="alerts_profile_modalities">Modalidad</string>
     <string name="alerts_profile_job_types">Jornada</string>
-    <string name="alerts_profile_sectors">Sectores</string>
     <string name="alerts_profile_line">%1$s: %2$s</string>
     <string name="alerts_missing_location">Tu perfil no tiene ubicación. Complétala para poder guardar las alertas.</string>
     <string name="alerts_go_to_profile">Completar perfil</string>

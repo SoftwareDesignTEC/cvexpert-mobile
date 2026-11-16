@@ -166,12 +166,12 @@ fun ProfileCard(
                 )
             }
 
-            // Etiquetas: residencia, disponibilidad, modalidad y sectores de interés.
+            // Etiquetas: residencia, disponibilidad y modalidad. El sector de interés ya no se
+            // muestra: no hay dónde editarlo, ni acá ni en la web (sigue en el contrato).
             val chips = buildList {
                 if (uiState.location.isNotBlank()) add(uiState.location)
                 profile?.types?.forEach { add(jobTypeLabel(it)) }
                 profile?.modalities?.forEach { add(stringResource(it.labelRes())) }
-                profile?.sectors?.forEach { add(it) }
             }
             if (chips.isNotEmpty()) {
                 FlowRow(
@@ -234,10 +234,6 @@ fun ProfileCard(
                 style = MaterialTheme.typography.titleMedium,
                 color = MaterialTheme.colorScheme.onSurface,
             )
-            ProfileField(
-                label = stringResource(R.string.profile_pref_sector),
-                value = profile?.sectors?.joinToString(", ").orEmpty(),
-            )
             val typeLabels = profile?.types?.map { jobTypeLabel(it) }.orEmpty()
             ProfileField(
                 label = stringResource(R.string.profile_pref_availability),
@@ -273,7 +269,7 @@ private fun ProfileSurface(
     }
 }
 
-/** Una etiqueta del perfil: residencia, disponibilidad, modalidad o sector. */
+/** Una etiqueta del perfil: residencia, disponibilidad o modalidad. */
 @Composable
 private fun ProfileChip(
     text: String,
