@@ -162,6 +162,7 @@ private fun AnalysisDetails(analysis: JobSkillsGapAnalysis) {
     GapDisclosure(stringResource(R.string.gap_details), "gap-details") {
         Text(stringResource(R.string.gap_method), style = MaterialTheme.typography.bodySmall)
         Text(stringResource(R.string.gap_ordinal_scale), style = MaterialTheme.typography.bodySmall)
+        Text(stringResource(R.string.gap_language_projection), style = MaterialTheme.typography.bodySmall)
         if (analysis.assessments == null) Text(stringResource(R.string.gap_levels_absent))
         Text(stringResource(R.string.gap_unknown_explained), style = MaterialTheme.typography.bodySmall)
         analysis.assessments.orEmpty().filter { it.evidenceText != null || it.reason in setOf("optional", "negated", "ambiguous", "contradictory") || (it.deficitSteps ?: 0) > 0 }.forEach { skill ->

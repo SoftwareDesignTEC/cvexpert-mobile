@@ -6,29 +6,29 @@ import java.net.URI
 
 fun Cv.toJobSkillsGapRequest(offer: JobOffer): JobSkillsGapRequestDto {
     validateJobGapInput(offer, includeText = false)
-    return JobSkillsGapRequestDto(JobGapCvDto(id, skills.map { JobGapCvSkillDto(it.name, it.level) }),
+    return JobSkillsGapRequestDto(toJobGapCvProjection(offer.skills),
         listOf(JobGapOfferDto(offer.id, offer.skills)))
 }
 
 fun Cv.toEvaluationRequest(offer: JobOffer): JobSkillsGapEvaluationRequestDto {
     validateJobGapInput(offer, includeText = true)
-    return JobSkillsGapEvaluationRequestDto(JobGapCvDto(id, skills.map { JobGapCvSkillDto(it.name, it.level) }),
+    return JobSkillsGapEvaluationRequestDto(toJobGapCvProjection(offer.skills),
         listOf(EvaluationJobDto(offer.id, offer.skills, offer.description, offer.requirements)))
 }
 
 private fun Cv.validateJobGapInput(offer: JobOffer, includeText: Boolean) {
     if (skills.any { SkillLevel.fromApi(it.level) == null })
         throw JobSkillsGapException(JobSkillsGapFailure.INVALID_CV_LEVEL)
-    if (skills.size > 500 || skills.any { it.name.contractBlank() || !it.name.validText(200, true) })
+    if (skills.size > 500 || skills.any { it.name.contractBlank() || !it.name.validJobGapText(200, true) })
         throw JobSkillsGapException(JobSkillsGapFailure.INVALID_CV)
-    if (id.contractBlank() || !id.validText(200) || offer.id.contractBlank() || !offer.id.validText(200) ||
-        offer.skills.size > 200 || offer.skills.any { !it.validText(200, true) } ||
-        (includeText && (!offer.description.validText(20_000, true) || offer.requirements.size > 100 ||
-            offer.requirements.any { !it.validText(2_000, true) })))
+    if (id.contractBlank() || !id.validJobGapText(200) || offer.id.contractBlank() || !offer.id.validJobGapText(200) ||
+        offer.skills.size > 200 || offer.skills.any { !it.validJobGapText(200, true) } ||
+        (includeText && (!offer.description.validJobGapText(20_000, true) || offer.requirements.size > 100 ||
+            offer.requirements.any { !it.validJobGapText(2_000, true) })))
         throw JobSkillsGapException(JobSkillsGapFailure.INVALID_INPUT)
 }
 
-private fun String.validText(max: Int, multiline: Boolean = false): Boolean =
+internal fun String.validJobGapText(max: Int, multiline: Boolean = false): Boolean =
     codePointCount(0, length) <= max && codePoints().allMatch {
         it !in 0xD800..0xDFFF && (!Character.isISOControl(it) || (multiline && it in listOf(9, 10, 13)))
     }
