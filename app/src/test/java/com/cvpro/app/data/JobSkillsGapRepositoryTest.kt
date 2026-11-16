@@ -172,7 +172,8 @@ class JobSkillsGapRepositoryTest {
             val retrofit = Retrofit.Builder().baseUrl(server.url("/"))
                 .addConverterFactory(GsonConverterFactory.create()).build()
             val repository = ApiJobSkillsGapRepository(retrofit.create(SkillsGapApi::class.java), retrofit.create(JobApi::class.java))
-            val cv = jobGapCv().copy(skills = List(500) { Skill("", "X".repeat(200), "advanced", "") })
+            // Unique names keep this a body-size test after the projection deduplicates skills.
+            val cv = jobGapCv().copy(skills = List(500) { Skill("", it.toString().padStart(3, '0') + "X".repeat(197), "advanced", "") })
             try { repository.analyze(cv, jobGapOffer(), false); fail("Se esperaba límite de cuerpo") }
             catch (error: JobSkillsGapException) { assertEquals(JobSkillsGapFailure.INVALID_INPUT, error.failure) }
             assertEquals(0, server.requestCount)
