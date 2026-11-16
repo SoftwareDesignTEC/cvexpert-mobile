@@ -14,6 +14,11 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cvpro.app.R
 import com.cvpro.app.domain.model.JobOffer
+import com.cvpro.app.ui.components.CvSkillLevelField
+import com.cvpro.app.ui.components.FormValidation
+import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.liveRegion
+import androidx.compose.ui.semantics.semantics
 
 /** The Jobs entry keeps its offer fixed. The main screen uses exactly the same content and VM. */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -31,7 +36,8 @@ fun JobSkillsGapSheet(
         val visible = if (state.offer == offer) state else JobSkillsGapUiState(offer = offer, offerLocked = true, isLoading = true)
         JobSkillsGapContent(visible, viewModel::loadCvs, viewModel::selectCv, { viewModel.analyze() },
             { viewModel.analyze(true) }, onCorrectCv, onRetry = viewModel::retry,
-            modifier = Modifier.fillMaxHeight(0.95f), onLoadCourses = viewModel::loadLevelCourses, onExploreCourses = onExploreCourses)
+            modifier = Modifier.fillMaxHeight(0.95f), onLoadCourses = viewModel::loadLevelCourses, onExploreCourses = onExploreCourses,
+            onAddSkill = viewModel::chooseMissingSkill, onCancelSkill = viewModel::cancelAddSkill, onSaveSkill = viewModel::addMissingSkill)
     }
 }
 
@@ -45,7 +51,8 @@ internal fun JobSkillsGapOfferScreen(
     LaunchedEffect(Unit) { viewModel.start() }
     JobSkillsGapContent(state, viewModel::loadCvs, viewModel::selectCv, { viewModel.analyze() },
         { viewModel.analyze(true) }, onCorrectCv, modifier = modifier, onRetry = viewModel::retry,
-        onOfferQuery = viewModel::changeOfferQuery, onLoadOffers = viewModel::loadOffers, onSelectOffer = viewModel::selectOffer, onLoadCourses = viewModel::loadLevelCourses, onExploreCourses = onExploreCourses)
+        onOfferQuery = viewModel::changeOfferQuery, onLoadOffers = viewModel::loadOffers, onSelectOffer = viewModel::selectOffer, onLoadCourses = viewModel::loadLevelCourses, onExploreCourses = onExploreCourses,
+        onAddSkill = viewModel::chooseMissingSkill, onCancelSkill = viewModel::cancelAddSkill, onSaveSkill = viewModel::addMissingSkill)
 }
 
 @Composable
@@ -57,11 +64,31 @@ internal fun JobSkillsGapContent(
     onRetry: () -> Unit = onAnalyze,
     onLoadCourses: (String, Boolean) -> Unit = { _, _ -> }, onExploreCourses: (String?) -> Unit = {},
     onOfferQuery: (String) -> Unit = {}, onLoadOffers: () -> Unit = {}, onSelectOffer: (String) -> Unit = {},
+    onAddSkill: (String) -> Unit = {}, onCancelSkill: () -> Unit = {}, onSaveSkill: (String) -> Unit = {},
 ) {
     var editCv by rememberSaveable { mutableStateOf(false) }
     var editOffer by rememberSaveable { mutableStateOf(false) }
     val showCvs = state.selectedCv == null || editCv
     val showOffers = state.selectedCv != null && !state.offerLocked && (state.offer == null || editOffer)
+    state.skillToAdd?.let { name ->
+        var level by rememberSaveable(name, state.selectedCvId) { mutableStateOf("") }
+        AlertDialog(onDismissRequest = { if (!state.isLoading) onCancelSkill() },
+            title = { Text(stringResource(R.string.cv_editor_add_skill)) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Text(stringResource(R.string.gap_skill_add_to_cv, name, state.selectedCv?.title.orEmpty()))
+                    if (!state.isLoading) CvSkillLevelField(level, { level = it }, null)
+                    else LinearProgressIndicator(Modifier.fillMaxWidth())
+                    state.skillSaveError?.let { Text(stringResource(it), color = MaterialTheme.colorScheme.error,
+                        modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite }) }
+                }
+            },
+            confirmButton = { TextButton(onClick = { onSaveSkill(level) },
+                enabled = !state.isLoading && FormValidation.skillLevel(level) == null,
+                modifier = Modifier.testTag("gap-save-skill")) { Text(stringResource(R.string.cv_editor_save)) } },
+            dismissButton = { TextButton(onClick = onCancelSkill, enabled = !state.isLoading) {
+                Text(stringResource(R.string.cv_editor_cancel)) } })
+    }
     LazyColumn(modifier = modifier.fillMaxSize().testTag("job-gap-flow"),
         contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
         item {
@@ -123,6 +150,10 @@ internal fun JobSkillsGapContent(
             }
         }
         if (state.isLoading) item { LinearProgressIndicator(Modifier.fillMaxWidth()) }
+        state.skillNotice?.let { notice -> item {
+            Text(stringResource(notice), style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+        } }
         state.errorMessage?.let { message -> item {
             Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)) {
                 Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -143,7 +174,7 @@ internal fun JobSkillsGapContent(
             }
         }
         state.analysis?.let { analysis -> item(key = "result:${analysis.cvId}:${analysis.jobId}") {
-            JobGapResult(analysis, state.levelCourses, onLoadCourses, onExploreCourses)
+            JobGapResult(analysis, state.levelCourses, onLoadCourses, onExploreCourses, onAddSkill, !state.isLoading)
         } }
     }
 }

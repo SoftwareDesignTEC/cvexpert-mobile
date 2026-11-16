@@ -9,6 +9,8 @@ import com.cvpro.app.domain.repository.CourseRepository
 import com.cvpro.app.domain.repository.CvRepository
 import com.cvpro.app.domain.repository.JobOfferRepository
 import com.cvpro.app.domain.repository.JobSkillsGapRepository
+import com.cvpro.app.domain.repository.UnsafeCvUpdateException
+import com.cvpro.app.ui.components.FormValidation
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.sync.Semaphore
@@ -41,6 +43,9 @@ data class JobSkillsGapUiState(
     @param:StringRes val errorMessage: Int? = null,
     val canEvaluateOnly: Boolean = false,
     val needsCvCorrection: Boolean = false,
+    val skillToAdd: String? = null,
+    @param:StringRes val skillSaveError: Int? = null,
+    @param:StringRes val skillNotice: Int? = null,
 )
 
 data class LevelCoursesState(
@@ -101,6 +106,82 @@ class JobSkillsGapViewModel @Inject constructor(
     private var operation: Job? = null
     private var offersOperation: Job? = null
     private var retryAction: (() -> Unit)? = null
+    private var skillUpdateInProgress = false
+    private var lastEvaluationOnly = false
+
+    fun chooseMissingSkill(name: String) {
+        val state = _uiState.value
+        if (state.isLoading || name !in state.analysis?.notDocumentedSkills.orEmpty()) return
+        _uiState.update { it.copy(skillToAdd = name, skillSaveError = null, skillNotice = null) }
+    }
+
+    fun cancelAddSkill() {
+        if (!_uiState.value.isLoading) _uiState.update { it.copy(skillToAdd = null, skillSaveError = null) }
+    }
+
+    fun addMissingSkill(level: String) {
+        val state = _uiState.value
+        val name = state.skillToAdd ?: return
+        val id = state.selectedCvId ?: return
+        val offer = state.offer ?: return
+        if (state.isLoading || FormValidation.required(name) != null || FormValidation.skillLevel(level) != null) return
+        skillUpdateInProgress = true
+        _uiState.update { it.copy(skillSaveError = null) }
+        runOperation(R.string.job_gap_error_generic, { addMissingSkill(level) }) {
+            try {
+                val latest = try {
+                    cvs.getCvForSkillUpdate(id).also {
+                        if (it.id != id) throw UnsafeCvUpdateException()
+                    }
+                } catch (error: CancellationException) { throw error }
+                catch (error: Exception) {
+                    coroutineContext.ensureActive()
+                    _uiState.update { it.copy(skillSaveError = if (error is UnsafeCvUpdateException)
+                        R.string.gap_skill_unsafe else error.jobGapMessage(R.string.gap_skill_save_error)) }
+                    return@runOperation
+                }
+                coroutineContext.ensureActive()
+                val duplicate = latest.skills.any { it.name.trim().equals(name.trim(), ignoreCase = true) }
+                val saved = try {
+                    if (duplicate) latest else cvs.updateCv(latest.copy(skills = latest.skills +
+                        Skill(id = "", name = name.trim(), level = level, category = "")))
+                } catch (error: CancellationException) { throw error }
+                catch (error: Exception) {
+                    coroutineContext.ensureActive()
+                    _uiState.update { it.copy(skillSaveError = error.jobGapMessage(R.string.gap_skill_save_error)) }
+                    return@runOperation
+                }
+                coroutineContext.ensureActive()
+                // From here on, retry only reads and analyzes. Never repeat a successful PUT.
+                resetCourses()
+                _uiState.update { it.copy(skillToAdd = null, skillSaveError = null, analysis = null,
+                    selectedCv = saved.takeIf { cv -> cv.id == id } ?: latest) }
+                val notice = if (duplicate) R.string.gap_skill_exists else R.string.gap_skill_saved
+                val expectedLevel = if (duplicate) latest.skills.first {
+                    it.name.trim().equals(name.trim(), ignoreCase = true)
+                }.level else level
+                retryAction = { refreshSavedCv(id, offer, name, expectedLevel, notice) }
+                refreshAndAnalyze(id, offer, name, expectedLevel, notice)
+            } finally { skillUpdateInProgress = false }
+        }
+    }
+
+    private fun refreshSavedCv(id: String, offer: JobOffer, name: String, level: String, @StringRes notice: Int) {
+        runOperation(R.string.job_gap_error_generic, { refreshSavedCv(id, offer, name, level, notice) }) {
+            refreshAndAnalyze(id, offer, name, level, notice)
+        }
+    }
+
+    private suspend fun refreshAndAnalyze(id: String, offer: JobOffer, name: String, level: String, @StringRes notice: Int) {
+        val updated = cvs.getCvById(id)
+        coroutineContext.ensureActive()
+        if (updated.id != id || updated.skills.none {
+            it.name.trim().equals(name.trim(), ignoreCase = true) && it.level == level
+        }) throw JobSkillsGapException(JobSkillsGapFailure.INCOMPATIBLE_RESPONSE)
+        _uiState.update { it.copy(selectedCv = updated, skillNotice = notice,
+            cvs = it.cvs.map { cv -> if (cv.id == id) updated else cv }) }
+        analyzeResult(updated, offer, lastEvaluationOnly)
+    }
 
     fun start() {
         if (initialized) return
@@ -137,11 +218,13 @@ class JobSkillsGapViewModel @Inject constructor(
     }
 
     fun selectCv(id: String) {
+        if (skillUpdateInProgress) return
         val state = _uiState.value
         if (state.cvs.none { it.id == id } || (state.isLoading && state.selectedCvId == id)) return
         operation?.cancel()
         resetCourses()
-        _uiState.update { it.copy(selectedCvId = id, selectedCv = null, analysis = null) }
+        _uiState.update { it.copy(selectedCvId = id, selectedCv = null, analysis = null,
+            skillToAdd = null, skillSaveError = null, skillNotice = null) }
         runOperation(R.string.job_gap_cv_detail_error, { selectCv(id) }) {
             val cv = cvs.getCvById(id)
             coroutineContext.ensureActive()
@@ -152,6 +235,7 @@ class JobSkillsGapViewModel @Inject constructor(
     }
 
     fun selectOffer(id: String) {
+        if (skillUpdateInProgress) return
         val state = _uiState.value
         if (state.offerLocked || state.selectedCv == null) return
         val offer = state.offers.find { it.id == id } ?: return
@@ -159,6 +243,7 @@ class JobSkillsGapViewModel @Inject constructor(
         retryAction = null
         resetCourses()
         _uiState.update { it.copy(offer = offer, analysis = null, isLoading = false,
+            skillToAdd = null, skillSaveError = null, skillNotice = null,
             errorMessage = null, canEvaluateOnly = false, needsCvCorrection = false) }
     }
 
@@ -201,17 +286,22 @@ class JobSkillsGapViewModel @Inject constructor(
         val cv = state.selectedCv ?: return
         val offer = state.offer ?: return
         if (state.isLoading) return
+        lastEvaluationOnly = evaluationOnly
         resetCourses()
         _uiState.update { it.copy(analysis = null) }
         runOperation(R.string.job_gap_error_generic, { analyze(evaluationOnly) }) {
-            val result = gaps.analyze(cv, offer, evaluationOnly)
-            coroutineContext.ensureActive()
-            _uiState.update { it.copy(analysis = result) }
-            if (!evaluationOnly) {
-                // After courses succeed, an explicit retry repeats only the failed evaluation POST.
-                retryAction = { retryLevels(cv, offer, result) }
-                addLevels(cv, offer, result)
-            }
+            analyzeResult(cv, offer, evaluationOnly)
+        }
+    }
+
+    private suspend fun analyzeResult(cv: Cv, offer: JobOffer, evaluationOnly: Boolean) {
+        val result = gaps.analyze(cv, offer, evaluationOnly)
+        coroutineContext.ensureActive()
+        _uiState.update { it.copy(analysis = result) }
+        if (!evaluationOnly) {
+            // After courses succeed, an explicit retry repeats only the failed evaluation POST.
+            retryAction = { retryLevels(cv, offer, result) }
+            addLevels(cv, offer, result)
         }
     }
 

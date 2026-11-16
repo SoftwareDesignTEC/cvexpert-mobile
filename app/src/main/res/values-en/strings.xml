@@ -605,4 +605,10 @@
     <!-- Push -->
     <string name="push_channel_name">CVExpert alerts</string>
     <string name="push_channel_description">Changes to your applications, new job offers and other account alerts.</string>
+    <string name="gap_skill_add_hint">Tap a skill to add it to your CV.</string>
+    <string name="gap_skill_add_to_cv">Add %1$s to “%2$s”. Select your proficiency level.</string>
+    <string name="gap_skill_saved">Skill saved in your CV.</string>
+    <string name="gap_skill_exists">This skill is already in your CV. No duplicate was added.</string>
+    <string name="gap_skill_save_error">Could not save the skill. You can try again.</string>
+    <string name="gap_skill_unsafe">Nothing was saved: the current contract cannot safely preserve all the data in this CV.</string>
 </resources>

@@ -25,6 +25,10 @@ import retrofit2.http.Query
 
 interface CvApi {
 
+    // Same existing GET, retaining fields unknown to the Android model for preservation checks.
+    @GET("cvs/{id}")
+    suspend fun getCvForSkillUpdate(@Path("id") id: String): com.google.gson.JsonObject
+
     @GET("cvs")
     suspend fun getCvs(
         @Query("page") page: Int,
