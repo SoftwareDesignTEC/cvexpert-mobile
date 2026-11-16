@@ -308,7 +308,6 @@ private fun AlertsForm(
             ProfileLine(stringResource(R.string.alerts_profile_location), uiState.location)
             ProfileLine(stringResource(R.string.alerts_profile_modalities), modalityLabels.joinToString(", "))
             ProfileLine(stringResource(R.string.alerts_profile_job_types), jobTypeLabels.joinToString(", "))
-            ProfileLine(stringResource(R.string.alerts_profile_sectors), uiState.sectors.joinToString(", "))
 
             // Sin ubicación el servicio no acepta las alertas: se explica y se lleva al perfil.
             if (uiState.missingLocation) {

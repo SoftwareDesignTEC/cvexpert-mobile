@@ -19,6 +19,12 @@ data class Cv(
     val skills: List<Skill>,
     val languages: List<Language>,
     val certifications: List<Certification>,
+    /**
+     * La última edición en epoch milisegundos, para ordenar. [updatedAt] es el mismo dato ya
+     * escrito para la pantalla ("15/11/2026") y con texto no se puede ordenar. Es null si el
+     * servicio no manda una fecha que se pueda leer.
+     */
+    val updatedAtMillis: Long? = null,
 )
 
 /*

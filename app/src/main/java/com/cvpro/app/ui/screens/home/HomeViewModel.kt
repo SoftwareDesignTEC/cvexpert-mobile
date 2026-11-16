@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cvpro.app.domain.model.Cv
 import com.cvpro.app.domain.model.JobOffer
+import com.cvpro.app.domain.model.byLastEdited
 import com.cvpro.app.ui.screens.cvs.PendingCvEditor
 import android.graphics.Bitmap
 import android.net.Uri
@@ -99,7 +100,14 @@ class HomeViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = showLoader) }
 
-            val cvs = async { runCatching { cvRepository.getCvs(1, SECTION_SIZE, "").items } }
+            // Se piden más de los tres que se muestran y se ordenan acá: el servicio no los
+            // devuelve por fecha de edición, así que pedir solo tres traería tres cualesquiera
+            // en vez de los tres últimos que se tocaron. La web hace lo mismo.
+            val cvs = async {
+                runCatching {
+                    cvRepository.getCvs(1, CVS_TO_SORT, "").items.byLastEdited().take(SECTION_SIZE)
+                }
+            }
             val offers = async { runCatching { jobOfferRepository.getOffers(1, SECTION_SIZE, "").items } }
 
             _uiState.update {
@@ -118,5 +126,8 @@ class HomeViewModel @Inject constructor(
     private companion object {
         /** El diseño muestra tres elementos por sección. */
         const val SECTION_SIZE = 3
+
+        /** Cuántos CVs se piden para elegir de ahí los tres últimos editados. */
+        const val CVS_TO_SORT = 20
     }
 }

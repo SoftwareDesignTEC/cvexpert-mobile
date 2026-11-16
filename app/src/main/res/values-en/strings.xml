@@ -276,7 +276,6 @@
     <string name="profile_contact_email">Email</string>
     <string name="profile_contact_residence">Residence</string>
     <string name="profile_preferences_title">Preferences</string>
-    <string name="profile_pref_sector">Sector of interest</string>
     <string name="profile_pref_availability">Availability</string>
     <string name="profile_pref_modality">Work mode</string>
     <string name="profile_pending_notice">Review your details and save the changes.</string>
@@ -472,7 +471,6 @@
     <string name="alerts_profile_location">Location</string>
     <string name="alerts_profile_modalities">Work mode</string>
     <string name="alerts_profile_job_types">Schedule</string>
-    <string name="alerts_profile_sectors">Sectors</string>
     <string name="alerts_profile_line">%1$s: %2$s</string>
     <string name="alerts_missing_location">Your profile has no location. Add it to be able to save your alerts.</string>
     <string name="alerts_go_to_profile">Complete profile</string>
