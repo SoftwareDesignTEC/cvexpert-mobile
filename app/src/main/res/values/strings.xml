@@ -613,4 +613,10 @@
     <!-- Push -->
     <string name="push_channel_name">Avisos de CVExpert</string>
     <string name="push_channel_description">Cambios en tus postulaciones, ofertas nuevas y otros avisos de tu cuenta.</string>
+    <string name="gap_skill_add_hint">Toca una habilidad para agregarla al CV.</string>
+    <string name="gap_skill_add_to_cv">Agregar %1$s a «%2$s». Selecciona tu nivel de dominio.</string>
+    <string name="gap_skill_saved">Habilidad guardada en el CV.</string>
+    <string name="gap_skill_exists">La habilidad ya está en el CV. No se agregó un duplicado.</string>
+    <string name="gap_skill_save_error">No se pudo guardar la habilidad. Puedes intentarlo de nuevo.</string>
+    <string name="gap_skill_unsafe">No se guardó: el contrato actual no permite conservar todos los datos de este CV con seguridad.</string>
 </resources>

@@ -1,6 +1,11 @@
 package com.cvpro.app.ui.screens.skillsgap
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.ui.Alignment
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
@@ -21,10 +26,11 @@ import java.text.NumberFormat
 
 @Composable
 internal fun JobGapResult(analysis: JobSkillsGapAnalysis, levelCourses: Map<String, LevelCoursesState> = emptyMap(),
-    onLoadCourses: (String, Boolean) -> Unit = { _, _ -> }, onExploreCourses: (String?) -> Unit = {}) {
+    onLoadCourses: (String, Boolean) -> Unit = { _, _ -> }, onExploreCourses: (String?) -> Unit = {},
+    onAddSkill: (String) -> Unit = {}, canAddSkill: Boolean = true) {
     val presentation = remember(analysis) { JobGapPresentation(analysis) }
     val locale = LocalConfiguration.current.locales[0]
-    Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
         Card(colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
             Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
                 Text(stringResource(R.string.gap_summary), style = MaterialTheme.typography.labelLarge)
@@ -51,9 +57,20 @@ internal fun JobGapResult(analysis: JobSkillsGapAnalysis, levelCourses: Map<Stri
         }
         if (presentation.below.isNotEmpty()) ComparisonGroup(R.string.gap_below_group, presentation.below, MaterialTheme.colorScheme.error)
         if (presentation.meets.isNotEmpty()) ComparisonGroup(R.string.gap_meets_group, presentation.meets, MaterialTheme.colorScheme.primary)
-        if (presentation.missing.isNotEmpty()) CompactSkillGroup(R.string.gap_missing_group, presentation.missingComparisons.map { skill ->
-            skill.requiredLevel?.let { stringResource(R.string.gap_missing_required, skill.name, stringResource(it.labelRes)) } ?: skill.name
-        })
+        if (presentation.missing.isNotEmpty()) Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text(stringResource(R.string.gap_missing_group), style = MaterialTheme.typography.titleMedium)
+            Text(stringResource(R.string.gap_skill_add_hint), style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant)
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                presentation.missingComparisons.forEach { skill ->
+                    SuggestionChip(onClick = { onAddSkill(skill.name) }, enabled = canAddSkill,
+                        modifier = Modifier.testTag("gap-add-skill:${skill.name}"),
+                        label = { Text(skill.requiredLevel?.let {
+                            stringResource(R.string.gap_missing_required, skill.name, stringResource(it.labelRes))
+                        } ?: skill.name) })
+                }
+            }
+        }
         if (presentation.unspecified.isNotEmpty()) {
             Text(stringResource(if (analysis.assessments == null) R.string.gap_unevaluated_group
                 else R.string.gap_unspecified_group), style = MaterialTheme.typography.titleSmall)
@@ -62,6 +79,7 @@ internal fun JobGapResult(analysis: JobSkillsGapAnalysis, levelCourses: Map<Stri
                     skill.name, stringResource(skill.cvLevel!!.labelRes))) }
             }
         }
+        HorizontalDivider()
         AnalysisDetails(analysis)
         CourseRecommendations(presentation, levelCourses, onLoadCourses, onExploreCourses)
     }
@@ -77,7 +95,7 @@ private fun SummaryMetric(count: Int, label: Int) {
 private fun ComparisonGroup(title: Int, skills: List<SkillComparison>, color: Color) {
     var expanded by rememberSaveable { mutableStateOf(false) }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(stringResource(title), style = MaterialTheme.typography.titleSmall, color = color)
+        Text(stringResource(title), style = MaterialTheme.typography.titleMedium, color = color)
         SkillLevelComparisonChart(if (expanded) skills else skills.take(4))
         if (skills.size > 4) TextButton(onClick = { expanded = !expanded }) {
             Text(stringResource(if (expanded) R.string.skills_gap_show_less else R.string.gap_more_skills))
@@ -115,16 +133,6 @@ private fun OrdinalBar(label: String, level: SkillLevel?, color: Color, missing:
 }
 
 @Composable
-private fun CompactSkillGroup(title: Int, skills: List<String>) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        Text(stringResource(title), style = MaterialTheme.typography.titleSmall)
-        FlowRow(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-            skills.forEach { SkillPill(it) }
-        }
-    }
-}
-
-@Composable
 private fun SkillPill(text: String) {
     Surface(color = MaterialTheme.colorScheme.surfaceVariant, shape = RoundedCornerShape(8.dp)) {
         Text(text, style = MaterialTheme.typography.bodySmall, modifier = Modifier.padding(horizontal = 10.dp, vertical = 7.dp))
@@ -135,13 +143,17 @@ private fun SkillPill(text: String) {
 internal fun GapDisclosure(title: String, tag: String, onExpand: () -> Unit = {}, content: @Composable () -> Unit) {
     var expanded by rememberSaveable { mutableStateOf(false) }
     val description = stringResource(if (expanded) R.string.gap_expanded else R.string.gap_collapsed)
-    OutlinedCard(Modifier.fillMaxWidth()) {
-        TextButton(onClick = { expanded = !expanded; if (expanded) onExpand() }, modifier = Modifier.fillMaxWidth().testTag(tag)
-            .semantics { stateDescription = description }) {
-            Text(title, modifier = Modifier.weight(1f))
-            Text(if (expanded) "−" else "+", modifier = Modifier.clearAndSetSemantics {})
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Row(modifier = Modifier.fillMaxWidth().testTag(tag)
+            .clickable(role = Role.Button) { expanded = !expanded; if (expanded) onExpand() }
+            .semantics { stateDescription = description }
+            .heightIn(min = 48.dp).padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Text(title, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+            Icon(if (expanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore, contentDescription = null)
         }
-        if (expanded) Column(Modifier.padding(start = 16.dp, end = 16.dp, bottom = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) { content() }
+        if (expanded) Column(Modifier.fillMaxWidth().padding(bottom = 8.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) { content() }
+        HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
     }
 }
 
@@ -150,6 +162,7 @@ private fun AnalysisDetails(analysis: JobSkillsGapAnalysis) {
     GapDisclosure(stringResource(R.string.gap_details), "gap-details") {
         Text(stringResource(R.string.gap_method), style = MaterialTheme.typography.bodySmall)
         Text(stringResource(R.string.gap_ordinal_scale), style = MaterialTheme.typography.bodySmall)
+        Text(stringResource(R.string.gap_language_projection), style = MaterialTheme.typography.bodySmall)
         if (analysis.assessments == null) Text(stringResource(R.string.gap_levels_absent))
         Text(stringResource(R.string.gap_unknown_explained), style = MaterialTheme.typography.bodySmall)
         analysis.assessments.orEmpty().filter { it.evidenceText != null || it.reason in setOf("optional", "negated", "ambiguous", "contradictory") || (it.deficitSteps ?: 0) > 0 }.forEach { skill ->
