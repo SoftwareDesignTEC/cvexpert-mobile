@@ -1,5 +1,6 @@
 package com.cvpro.app
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -13,6 +14,8 @@ import androidx.compose.ui.Modifier
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.cvpro.app.data.notifications.NotificationDirectorySync
+import com.cvpro.app.data.notifications.PushEvents
+import com.cvpro.app.data.notifications.PushNotifications
 import com.cvpro.app.ui.navigation.CvProApp
 import com.cvpro.app.ui.theme.CvProTheme
 import com.cvpro.app.ui.theme.ThemeViewModel
@@ -43,6 +46,7 @@ class MainActivity : ComponentActivity() {
         // Android recrea la Activity cuando cambia el idioma del sistema: si cambió, se le avisa
         // a Notificaciones para que los avisos lleguen en el idioma nuevo.
         notificationDirectorySync.onLanguageMaybeChanged()
+        handlePushIntent(intent)
         // Dibuja detrás de las barras de sistema (comportamiento estándar en Android 15+).
         enableEdgeToEdge()
         setContent {
@@ -77,5 +81,23 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    /** La app ya estaba abierta y se tocó un aviso: llega por acá en vez de onCreate. */
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        handlePushIntent(intent)
+    }
+
+    /**
+     * Si la Activity se abrió tocando un aviso push, se pide abrir el centro de notificaciones.
+     * El extra lo pone Android (avisos de segundo plano, desde el `data` de FCM) o
+     * PushNotifications (avisos con la app abierta). Se borra para que girar la pantalla no
+     * lo vuelva a abrir.
+     */
+    private fun handlePushIntent(intent: Intent?) {
+        if (intent?.hasExtra(PushNotifications.EXTRA_NOTIFICATION_ID) != true) return
+        intent.removeExtra(PushNotifications.EXTRA_NOTIFICATION_ID)
+        PushEvents.requestOpen()
     }
 }

@@ -610,4 +610,7 @@
     <string name="cv_photo_error_size">La foto es muy pesada. Prueba con otra.</string>
     <string name="skills_gap_snapshot_notice">Resultado de la instantánea guardada del usuario. Seleccionar otro CV no cambia la instantánea hasta enviar sus habilidades.</string>
     <string name="skills_gap_manual_replace_notice">Al confirmar, reemplazarás toda tu instantánea de habilidades para el análisis de mercado. Los niveles desconocidos se conservarán como desconocidos.</string>
+    <!-- Push -->
+    <string name="push_channel_name">Avisos de CVExpert</string>
+    <string name="push_channel_description">Cambios en tus postulaciones, ofertas nuevas y otros avisos de tu cuenta.</string>
 </resources>

@@ -12,6 +12,16 @@ data class DirectoryEntryRequestDto(
 )
 
 /**
+ * Cuerpo de `POST /notifications/devices`: el token de FCM de este teléfono.
+ *
+ * @property platform siempre "android"; es el único valor que manda esta app.
+ */
+data class DeviceRegistrationDto(
+    val token: String,
+    val platform: String = "android",
+)
+
+/**
  * Esquema `Notification` del contrato de Notificaciones.
  *
  * `title` y `body` ya llegan escritos en el idioma del usuario (el servicio los arma con sus

@@ -10,6 +10,8 @@ plugins {
     // KSP genera el código de Hilt en tiempo de compilación (reemplazo moderno de kapt).
     alias(libs.plugins.ksp)
     alias(libs.plugins.hilt)
+    // Lee app/google-services.json (proyecto de Firebase de Cabrera) para el push con FCM.
+    alias(libs.plugins.google.services)
 }
 
 // Valores de configuración que NUNCA se escriben en el código ni se suben al repo.
@@ -70,8 +72,8 @@ android {
         targetSdk = 35
         // Se sube en cada hito etiquetado. versionCode siempre crece: Firebase y Play
         // rechazan una subida con un número igual o menor al anterior.
-        versionCode = 27
-        versionName = "0.9.4"
+        versionCode = 28
+        versionName = "0.9.5"
 
         // Se inyectan como constantes en BuildConfig.
         buildConfigField("String", "APIM_BASE_URL", "\"${configValue("APIM_BASE_URL")}\"")
@@ -145,6 +147,10 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
     implementation(libs.androidx.core.ktx)
+
+    // Push: Firebase Cloud Messaging. El BOM decide la versión de messaging.
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.messaging)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.runtime.compose)
     implementation(libs.androidx.lifecycle.viewmodel.compose)
@@ -182,4 +188,27 @@ dependencies {
 
     implementation(libs.coil.compose)
     implementation(libs.coil.svg)
+}
+
+/*
+ * google-services.json NO está en el repo (.gitignore): en el CI sale del secret
+ * GOOGLE_SERVICES_JSON_BASE64 y en local lo pone cada quien. Sin el archivo el build sigue
+ * funcionando con un aviso, y la app simplemente no recibe push (PushTokenSync lo revisa).
+ * Así nadie queda sin poder compilar por no tener el archivo.
+ */
+googleServices {
+    missingGoogleServicesStrategy = com.google.gms.googleservices.GoogleServicesPlugin.MissingGoogleServicesStrategy.WARN
+}
+
+/*
+ * El json del proyecto de Firebase trae solo la app com.cvpro.app (la del release). El debug
+ * es com.cvpro.app.debug y, sin un cliente para ese paquete, el plugin corta el build. Mientras
+ * no se registre esa app en Firebase, el debug se compila sin Firebase: anda igual, solo que
+ * sin push. Si algún día el json la trae, esto se apaga solo.
+ */
+val googleServicesJson = file("google-services.json")
+val hasDebugFirebaseClient = googleServicesJson.exists() &&
+    googleServicesJson.readText().contains("\"com.cvpro.app.debug\"")
+tasks.matching { it.name == "processDebugGoogleServices" }.configureEach {
+    enabled = hasDebugFirebaseClient
 }

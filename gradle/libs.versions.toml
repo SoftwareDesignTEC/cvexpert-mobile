@@ -33,6 +33,11 @@ googleid = "1.2.0"
 playServicesAuth = "21.1.1"
 retrofit = "2.12.0"
 coil = "2.7.0"
+# Push con Firebase Cloud Messaging. El BOM fija las versiones de Firebase; 35.2.0 trae
+# firebase-messaging 26.0.2, que no exige un compileSdk mínimo (aar-metadata minCompileSdk=1).
+firebaseBom = "35.2.0"
+# Plugin que lee app/google-services.json y genera la configuración de Firebase.
+googleServices = "4.6.0"
 
 [libraries]
 junit = { group = "junit", name = "junit", version.ref = "junit" }
@@ -86,6 +91,9 @@ coil-compose = { group = "io.coil-kt", name = "coil-compose", version.ref = "coi
 # de fabrica: sin esto la imagen falla en silencio y queda la inicial de respaldo.
 coil-svg = { group = "io.coil-kt", name = "coil-svg", version.ref = "coil" }
 
+firebase-bom = { group = "com.google.firebase", name = "firebase-bom", version.ref = "firebaseBom" }
+firebase-messaging = { group = "com.google.firebase", name = "firebase-messaging" }
+
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }
 # Con AGP 8 el soporte de Kotlin lo da este plugin (el Kotlin integrado es solo de AGP 9).
@@ -93,3 +101,4 @@ kotlin-android = { id = "org.jetbrains.kotlin.android", version.ref = "kotlin" }
 kotlin-compose = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 ksp = { id = "com.google.devtools.ksp", version.ref = "ksp" }
 hilt = { id = "com.google.dagger.hilt.android", version.ref = "hilt" }
+google-services = { id = "com.google.gms.google-services", version.ref = "googleServices" }
