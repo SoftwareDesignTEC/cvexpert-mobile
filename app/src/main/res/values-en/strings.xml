@@ -602,4 +602,7 @@
     <string name="skills_gap_analyze">Submit skills and analyze</string>
     <string name="skills_gap_snapshot_notice">Result from the saved user snapshot. Selecting another CV does not change the snapshot until its skills are submitted.</string>
     <string name="skills_gap_manual_replace_notice">Confirming replaces your entire skills snapshot for market analysis. Unknown levels will remain unknown.</string>
+    <!-- Push -->
+    <string name="push_channel_name">CVExpert alerts</string>
+    <string name="push_channel_description">Changes to your applications, new job offers and other account alerts.</string>
 </resources>

@@ -3,6 +3,7 @@ package com.cvpro.app.ui.navigation
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.cvpro.app.data.local.ConnectivityObserver
+import com.cvpro.app.data.notifications.PushTokenSync
 import com.cvpro.app.domain.model.User
 import com.cvpro.app.domain.repository.AuthRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -16,6 +17,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SessionViewModel @Inject constructor(
     private val authRepository: AuthRepository,
+    private val pushTokenSync: PushTokenSync,
     connectivityObserver: ConnectivityObserver,
 ) : ViewModel() {
 
@@ -35,7 +37,11 @@ class SessionViewModel @Inject constructor(
         )
 
     fun signOut() {
-        viewModelScope.launch { authRepository.signOut() }
+        viewModelScope.launch {
+            // Primero se da de baja el push de este teléfono: la llamada necesita la sesión.
+            pushTokenSync.unregister()
+            authRepository.signOut()
+        }
     }
 
     private companion object {

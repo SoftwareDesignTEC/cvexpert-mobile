@@ -24,7 +24,9 @@ import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import com.cvpro.app.BuildConfig
 import com.cvpro.app.R
+import com.cvpro.app.data.notifications.PushEvents
 import com.cvpro.app.ui.components.LocalSnackbarHostState
 import com.cvpro.app.ui.screens.login.LoginRoute
 import com.cvpro.app.ui.screens.notifications.NotificationBadgeViewModel
@@ -56,6 +58,22 @@ fun CvProApp(
     val unreadNotifications by badgeViewModel.unreadCount.collectAsStateWithLifecycle()
     LaunchedEffect(user.id) { badgeViewModel.refresh() }
     var showNotifications by remember { mutableStateOf(false) }
+
+    // Push: se pide el permiso de avisos, se abre el centro al tocar uno y, si llega uno con
+    // la app abierta, la campana se actualiza.
+    if (BuildConfig.NOTIFICATIONS_ENABLED) {
+        NotificationPermissionRequest(userId = user.id)
+        val openRequested by PushEvents.openRequested.collectAsStateWithLifecycle()
+        LaunchedEffect(openRequested) {
+            if (openRequested) {
+                showNotifications = true
+                PushEvents.onOpenHandled()
+            }
+        }
+        LaunchedEffect(Unit) {
+            PushEvents.received.collect { badgeViewModel.refresh() }
+        }
+    }
 
     val navController = rememberNavController()
     val drawerState = rememberDrawerState(DrawerValue.Closed)

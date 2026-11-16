@@ -9,6 +9,8 @@
     <!-- Ubicación aproximada (red/wifi) para "Usar mi ubicación" en el perfil. No se pide la
          precisa: para llenar ciudad y provincia no hace falta el GPS. -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- Avisos push (Android 13+ lo pide en tiempo de ejecución, después del login). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
     <application
         android:name=".CvApplication"
@@ -34,6 +36,27 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <!-- Recibe los push de FCM y los tokens nuevos. exported=false: solo lo llama Google Play. -->
+        <service
+            android:name=".data.notifications.CvMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
+        </service>
+
+        <!-- Cómo dibuja Android los avisos que llegan con la app cerrada: canal, ícono y color.
+             El canal lo crea CvApplication con el mismo id (PushNotifications.CHANNEL_ID). -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="cvexpert_avisos" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_launcher_monochrome" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/brand_blue" />
 
         <!-- Permite entregarle el PDF generado al visor que tenga el usuario, sin exponer
              la ruta real del archivo. Solo hace falta en Android 9 y anteriores: desde

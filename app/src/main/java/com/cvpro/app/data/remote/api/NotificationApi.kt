@@ -1,11 +1,13 @@
 package com.cvpro.app.data.remote.api
 
+import com.cvpro.app.data.remote.dto.DeviceRegistrationDto
 import com.cvpro.app.data.remote.dto.DirectoryEntryRequestDto
 import com.cvpro.app.data.remote.dto.NotificationDto
 import com.cvpro.app.data.remote.dto.PagedResponseDto
 import com.cvpro.app.data.remote.dto.UnreadCountDto
 import retrofit2.Response
 import retrofit2.http.Body
+import retrofit2.http.DELETE
 import retrofit2.http.GET
 import retrofit2.http.PATCH
 import retrofit2.http.POST
@@ -52,4 +54,20 @@ interface NotificationApi {
     /** Marca todas como leídas. Responde 204 sin cuerpo. */
     @POST("notifications/read-all")
     suspend fun markAllRead(): Response<Unit>
+
+    /**
+     * Registra el token de FCM del teléfono para recibir push. Idempotente por token: 201 la
+     * primera vez, 200 si ya existía (también si era de otra cuenta, que queda reemplazada).
+     */
+    @POST("notifications/devices")
+    suspend fun registerDevice(@Body body: DeviceRegistrationDto): Response<Unit>
+
+    /**
+     * Deja de mandar push a ese token (al cerrar sesión). 204 aunque no existiera.
+     *
+     * `encoded = true` porque el token ya va codificado para URL: los de FCM traen ":" y el
+     * contrato pide mandarlo como "%3A".
+     */
+    @DELETE("notifications/devices/{token}")
+    suspend fun unregisterDevice(@Path("token", encoded = true) token: String): Response<Unit>
 }

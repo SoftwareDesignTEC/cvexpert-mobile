@@ -5,6 +5,8 @@ import coil.ImageLoader
 import coil.ImageLoaderFactory
 import coil.decode.SvgDecoder
 import com.cvpro.app.data.notifications.NotificationDirectorySync
+import com.cvpro.app.data.notifications.PushNotifications
+import com.cvpro.app.data.notifications.PushTokenSync
 import dagger.hilt.android.HiltAndroidApp
 import javax.inject.Inject
 
@@ -24,10 +26,16 @@ class CvApplication : Application(), ImageLoaderFactory {
     @Inject
     lateinit var notificationDirectorySync: NotificationDirectorySync
 
+    @Inject
+    lateinit var pushTokenSync: PushTokenSync
+
     override fun onCreate() {
         super.onCreate()
         // Registro en el directorio de Notificaciones cada vez que alguien inicia sesión.
         notificationDirectorySync.start()
+        // Push: el canal de avisos y el registro del token de FCM de este teléfono.
+        PushNotifications.createChannel(this)
+        pushTokenSync.start()
     }
 
     /**
